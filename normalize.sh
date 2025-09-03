@@ -51,3 +51,5 @@ echo "performance" | sudo tee $cpu/cpu*{0..9}/cpufreq/scaling_governor
 if test -d "$cpu/smt"; then
     echo off | sudo tee $cpu/smt/control >/dev/null 2>&1
 fi
+
+sudo sysctl kernel.perf_event_paranoid=-1
