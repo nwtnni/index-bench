@@ -3,6 +3,7 @@ use hwlocality::Topology;
 use hwlocality::memory::binding::MemoryBindingFlags;
 use hwlocality::memory::binding::MemoryBindingPolicy;
 use hwlocality::memory::nodeset::NodeSet;
+use hwlocality::topology::support;
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -41,8 +42,25 @@ impl Numa {
             .bind_memory(
                 &nodeset,
                 policy,
-                MemoryBindingFlags::PROCESS
-                    | MemoryBindingFlags::STRICT
+                // hwloc doesn't support `MemoryBindingFlags::PROCESS`, but
+                // thread still calls `set_mempolicy` for Linux, which should
+                // be inherited by new threads.
+                //
+                // See:
+                // - https://github.com/open-mpi/hwloc/blob/c124d197dfae0d8382128e610c542f4a84393bb9/hwloc/topology-linux.c#L1966-L2038
+                // - https://www.kernel.org/doc/Documentation/vm/numa_memory_policy.txt
+                //
+                // > In a multi-threaded task, task policies apply only to the thread
+                // > [Linux kernel task] that installs the policy and any threads
+                // > subsequently created by that thread.
+                if topology.supports(
+                    support::FeatureSupport::memory_binding,
+                    support::MemoryBindingSupport::set_current_process,
+                ) {
+                    MemoryBindingFlags::PROCESS
+                } else {
+                    MemoryBindingFlags::THREAD
+                } | MemoryBindingFlags::STRICT
                     | MemoryBindingFlags::MIGRATE
                     | MemoryBindingFlags::NO_CPU_BINDING,
             )
