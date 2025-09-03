@@ -1,4 +1,8 @@
-use anyhow::anyhow;
+use anyhow::Context as _;
+use hwlocality::Topology;
+use hwlocality::memory::binding::MemoryBindingFlags;
+use hwlocality::memory::binding::MemoryBindingPolicy;
+use hwlocality::memory::nodeset::NodeSet;
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -10,37 +14,36 @@ pub enum Numa {
 }
 
 impl Numa {
-    pub fn set_mempolicy(&self) -> anyhow::Result<()> {
-        // Call syscall to avoid external C dependency on `libnuma`.
-        //
-        // https://man7.org/linux/man-pages/man2/set_mempolicy.2.html
-        unsafe fn set_mempolicy_syscall(
-            mode: libc::c_int,
-            mask: *const libc::c_ulong,
-            maxnode: libc::c_ulong,
-        ) -> i64 {
-            unsafe { libc::syscall(libc::SYS_set_mempolicy, mode, mask, maxnode) }
-        }
-
-        let (mode, mask) = self.to_mode_mask();
-
-        unsafe {
-            match set_mempolicy_syscall(mode, &mask, 64) {
-                -1 => Err(anyhow!("Failed to call set_mempolicy with {:?}", self)),
-                _ => Ok(()),
-            }
-        }
-    }
-
-    fn to_mode_mask(&self) -> (libc::c_int, libc::c_ulong) {
-        let (mode, mask) = match self {
-            Numa::Bind { node } => (libc::MPOL_BIND, 1u64 << node),
+    pub(crate) fn bind(&self, topology: &Topology) -> anyhow::Result<()> {
+        let (nodeset, policy) = match self {
+            Numa::Bind { node } => (
+                topology
+                    .node_with_os_index(*node)
+                    .expect("No NUMA node")
+                    .nodeset()
+                    .expect("No nodeset")
+                    .clone_target(),
+                MemoryBindingPolicy::Bind,
+            ),
             Numa::Interleave { nodes } => (
-                libc::MPOL_INTERLEAVE,
-                nodes.iter().map(|node| 1u64 << node).fold(0, |l, r| l | r),
+                nodes
+                    .iter()
+                    .map(|node| topology.node_with_os_index(*node).expect("No NUMA node"))
+                    .map(|node| node.nodeset().expect("No nodeset"))
+                    .fold(NodeSet::new(), |set, node| set | node),
+                MemoryBindingPolicy::Interleave,
             ),
         };
 
-        (mode | libc::MPOL_F_STATIC_NODES, mask)
+        topology
+            .bind_memory(
+                &nodeset,
+                policy,
+                MemoryBindingFlags::PROCESS
+                    | MemoryBindingFlags::STRICT
+                    | MemoryBindingFlags::MIGRATE
+                    | MemoryBindingFlags::NO_CPU_BINDING,
+            )
+            .context("Bind process to NUMA node")
     }
 }

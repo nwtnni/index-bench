@@ -1,6 +1,4 @@
-use core::mem;
 use std::env;
-use std::io;
 use std::sync::Barrier;
 use std::thread;
 use std::time::Instant;
@@ -8,7 +6,9 @@ use std::time::SystemTime;
 
 use anyhow::Context as _;
 use anyhow::anyhow;
-use hwloc2::Topology;
+use hwlocality::Topology;
+use hwlocality::cpu::binding::CpuBindingFlags;
+use hwlocality::object::types::ObjectType;
 
 use crate::config;
 use crate::measure;
@@ -19,17 +19,13 @@ pub fn run(config: &config::Global) -> anyhow::Result<()> {
         .unwrap_or_default()
         .as_nanos();
 
-    config.numa.set_mempolicy()?;
-
-    let topology = Topology::new().ok_or_else(|| anyhow!("Failed to retrieve hwloc2 topology"))?;
+    let topology = &Topology::new().context("Initialize hwloc topology")?;
     let depth = topology
-        .depth_for_type(&hwloc2::ObjectType::PU)
+        .depth_for_type(ObjectType::PU)
         .map_err(|error| anyhow!("Failed to get processing unit depth: {:?}", error))?;
-    let cores = topology
-        .objects_at_depth(depth)
-        .into_iter()
-        .map(|core| core.os_index())
-        .collect::<Vec<_>>();
+    let cores = topology.objects_at_depth(depth).cycle();
+
+    config.numa.bind(topology)?;
 
     let barrier = &Barrier::new(config.thread_count);
 
@@ -45,35 +41,24 @@ pub fn run(config: &config::Global) -> anyhow::Result<()> {
 
     thread::scope(|scope| -> anyhow::Result<_> {
         let workers = (0..config.thread_count)
-            .map(|thread_id| {
-                let cores = &cores;
-
+            .zip(cores)
+            .map(|(thread_id, core)| {
                 scope.spawn(move || -> anyhow::Result<_> {
                     crate::THREAD_ID.set(thread_id);
 
-                    let core = cores[thread_id % cores.len()];
-
-                    let set = unsafe {
-                        // Seems like we should use `MaybeUninit<libc::cpu_set_t>`,
-                        // but `CPU_ZERO` macro takes `&mut`, not `*mut`.
-                        let mut set = mem::zeroed::<libc::cpu_set_t>();
-                        libc::CPU_ZERO(&mut set);
-                        libc::CPU_SET(core as usize, &mut set);
-                        set
-                    };
-
                     log::debug!("Pin thread {thread_id} to core {core}");
 
-                    // `hwloc2::Topology::set_cpubind_for_thread` takes `&mut self`,
-                    // so just call `sched_setaffinity` ourselves.
-                    if unsafe { libc::sched_setaffinity(0, libc::CPU_SETSIZE as usize, &set) } != 0
-                    {
-                        return Err(io::Error::last_os_error())
-                            .with_context(|| anyhow!("sched_setaffinity({})", core));
-                    }
+                    topology
+                        .bind_cpu(
+                            core.cpuset().expect("No cpuset for core"),
+                            CpuBindingFlags::THREAD
+                                | CpuBindingFlags::STRICT
+                                | CpuBindingFlags::NO_MEMORY_BINDING,
+                        )
+                        .context("Bind thread to CPU")?;
 
                     let mut perf = perf_internal
-                        .then(|| measure::Perf::new(core as usize))
+                        .then(|| measure::Perf::new(core.os_index().expect("No OS index for core")))
                         .transpose()
                         .context("Initialize perf-event")?;
 

@@ -22,7 +22,7 @@
       in
       with pkgs; {
         devShells.default = mkShell {
-          nativeBuildInputs = [ rustToolchain ];
+          nativeBuildInputs = [ rustToolchain pkg-config hwloc ];
         };
       }
     );
