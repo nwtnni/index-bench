@@ -9,11 +9,13 @@ use anyhow::anyhow;
 use hwlocality::Topology;
 use hwlocality::cpu::binding::CpuBindingFlags;
 use hwlocality::object::types::ObjectType;
+use serde::Deserialize;
+use serde::Serialize;
 
 use crate::config;
 use crate::measure;
 
-pub fn run(config: &config::Global) -> anyhow::Result<()> {
+pub fn run(global: config::Global, benchmark: Benchmark) -> anyhow::Result<()> {
     let date = SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap_or_default()
@@ -25,9 +27,9 @@ pub fn run(config: &config::Global) -> anyhow::Result<()> {
         .map_err(|error| anyhow!("Failed to get processing unit depth: {:?}", error))?;
     let cores = topology.objects_at_depth(depth).cycle();
 
-    config.numa.bind(topology)?;
+    global.numa.bind(topology)?;
 
-    let barrier = &Barrier::new(config.thread_count);
+    let barrier = &Barrier::new(global.thread_count);
 
     let mut perf_external = match (env::var("PERF_CTL_FIFO"), env::var("PERF_ACK_FIFO")) {
         (Ok(ctl), Ok(ack)) => Some(measure::perf::Sync::new(ctl, ack)?),
@@ -35,12 +37,17 @@ pub fn run(config: &config::Global) -> anyhow::Result<()> {
     };
     let perf_internal = perf_external.is_none();
 
+    let art = art::Map::default();
+
     if let Some(perf) = &mut perf_external {
         perf.enable()?;
     }
 
-    thread::scope(|scope| -> anyhow::Result<_> {
-        let workers = (0..config.thread_count)
+    let workers = thread::scope(|scope| -> anyhow::Result<_> {
+        let benchmark = &benchmark;
+        let art = &art;
+
+        (0..global.thread_count)
             .zip(cores)
             .map(|(thread_id, core)| {
                 scope.spawn(move || -> anyhow::Result<_> {
@@ -62,6 +69,12 @@ pub fn run(config: &config::Global) -> anyhow::Result<()> {
                         .transpose()
                         .context("Initialize perf-event")?;
 
+                    let mut loader = match benchmark {
+                        Benchmark::YcsbLoad(workload) => {
+                            workload.loader(global.thread_count, thread_id)
+                        }
+                    };
+
                     let _ = barrier.wait();
                     let before = measure::Resource::new().context("Get resource usage")?;
                     if let Some(perf) = &mut perf {
@@ -70,9 +83,12 @@ pub fn run(config: &config::Global) -> anyhow::Result<()> {
 
                     let start = Instant::now();
 
-                    todo!();
+                    while let Some(key) = loader.next_key() {
+                        let id = key.id();
+                        art.insert(id, id as u32);
+                    }
 
-                    let total = start.elapsed();
+                    let time = start.elapsed();
 
                     let report = perf
                         .as_mut()
@@ -82,39 +98,53 @@ pub fn run(config: &config::Global) -> anyhow::Result<()> {
                     let after = measure::Resource::new().context("Get resource usage")?;
                     let _ = barrier.wait();
 
-                    Ok((thread_id, total.as_nanos(), after - before, report))
+                    Ok((thread_id, time.as_nanos(), after - before, report))
                 })
             })
-            .collect::<Vec<_>>();
-
-        let output_workers = workers
+            .collect::<Vec<_>>()
             .into_iter()
             .map(|handle| handle.join().unwrap())
             .collect::<anyhow::Result<Vec<_>>>()
-            .unwrap();
+    })?;
 
-        if let Some(perf) = &mut perf_external {
-            perf.disable()?;
+    if let Some(perf) = &mut perf_external {
+        perf.disable()?;
+    }
+
+    let operation_count = benchmark.operation_count(global.thread_count) as u64;
+    let mut stdout = std::io::stdout().lock();
+    serde_json::ser::to_writer(
+        &mut stdout,
+        &measure::Global {
+            date,
+            global: global.clone(),
+            benchmark,
+            thread: workers
+                .into_iter()
+                .map(|(id, time, resource, perf)| measure::Thread {
+                    id,
+                    time,
+                    operation_count,
+                    resource,
+                    perf,
+                })
+                .collect(),
+        },
+    )?;
+
+    Ok(())
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(tag = "benchmark", rename_all = "snake_case")]
+pub enum Benchmark {
+    YcsbLoad(ycsb::Workload),
+}
+
+impl Benchmark {
+    fn operation_count(&self, thread_count: usize) -> usize {
+        match self {
+            Benchmark::YcsbLoad(workload) => workload.record_count() / thread_count,
         }
-
-        let mut stdout = std::io::stdout().lock();
-        serde_json::ser::to_writer(
-            &mut stdout,
-            &measure::Global {
-                date,
-                config: config.clone(),
-                thread: output_workers
-                    .into_iter()
-                    .map(|(id, time, resource, perf)| measure::Thread {
-                        id,
-                        time,
-                        resource,
-                        perf,
-                    })
-                    .collect(),
-            },
-        )?;
-
-        Ok(())
-    })
+    }
 }
