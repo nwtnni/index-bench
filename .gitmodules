@@ -1,0 +1,3 @@
+[submodule "extern/ARTSynchronized"]
+	path = extern/ARTSynchronized
+	url = git@github.com:nwtnni/ARTSynchronized.git
