@@ -23,9 +23,10 @@ checksum = "7c02d123df017efcdfbd739ef81735b36c5ba83ec3c59c80a9d7ecc718f92e50"
 [[package]]
 name = "art"
 version = "0.1.0"
-source = "git+ssh://github.com/nwtnni/art#9f5e323c8739eed28ccb5a371df77bdbeec887b3"
+source = "git+ssh://github.com/nwtnni/art#7b7823ed9c46e9d326387a453356af5dda7b339e"
 dependencies = [
  "ribbit",
+ "serde",
 ]
 
 [[package]]

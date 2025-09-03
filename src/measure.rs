@@ -27,4 +27,5 @@ pub struct Thread {
     pub resource: Resource,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub perf: Option<perf::Report>,
+    pub index: serde_json::Value,
 }

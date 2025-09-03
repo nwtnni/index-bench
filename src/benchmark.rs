@@ -111,6 +111,7 @@ pub fn run(crate::Config { global, ycsb }: crate::Config) -> anyhow::Result<meas
                         operation_count,
                         resource: after - before,
                         perf: report,
+                        index: serde_json::to_value(art::stat::thread()).unwrap(),
                     })
                 })
             })
