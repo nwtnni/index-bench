@@ -12,3 +12,14 @@ thread_local! {
 
 pub use benchmark::Benchmark;
 pub use benchmark::run;
+use cartesian::Cartesian;
+use serde::Deserialize;
+use serde::Serialize;
+
+#[derive(Cartesian)]
+#[rustfmt::skip]
+#[derive(Serialize, Deserialize)]
+pub struct Config {
+    global: config::Global,
+    ycsb: ycsb::Workload,
+}

@@ -17,7 +17,7 @@ use serde::Deserialize;
 use serde::Serialize;
 
 #[derive(Debug, Deserialize, Serialize)]
-pub(crate) struct Report {
+pub struct Report {
     cpu_cycle_count: u64,
     instruction_count: u64,
     // l1d_rm: u64,

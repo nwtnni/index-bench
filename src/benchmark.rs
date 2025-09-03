@@ -12,14 +12,16 @@ use hwlocality::object::types::ObjectType;
 use serde::Deserialize;
 use serde::Serialize;
 
-use crate::config;
 use crate::measure;
 
-pub fn run(global: config::Global, benchmark: Benchmark) -> anyhow::Result<measure::Global> {
+pub fn run(crate::Config { global, ycsb }: crate::Config) -> anyhow::Result<measure::Global> {
     let date = SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap_or_default()
         .as_nanos();
+
+    // FIXME: support other benchmarks
+    let benchmark = Benchmark::YcsbLoad(ycsb);
 
     let topology = &Topology::new().context("Initialize hwloc topology")?;
     let depth = topology
