@@ -9,6 +9,7 @@ use serde::Serialize;
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(tag = "policy", rename_all = "snake_case")]
 pub enum Numa {
+    None,
     Bind { node: usize },
     Interleave { nodes: Vec<usize> },
 }
@@ -16,6 +17,7 @@ pub enum Numa {
 impl Numa {
     pub(crate) fn bind(&self, topology: &Topology) -> anyhow::Result<()> {
         let (nodeset, policy) = match self {
+            Numa::None => return Ok(()),
             Numa::Bind { node } => (
                 topology
                     .node_with_os_index(*node)

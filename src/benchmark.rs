@@ -15,7 +15,7 @@ use serde::Serialize;
 use crate::config;
 use crate::measure;
 
-pub fn run(global: config::Global, benchmark: Benchmark) -> anyhow::Result<()> {
+pub fn run(global: config::Global, benchmark: Benchmark) -> anyhow::Result<measure::Global> {
     let date = SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap_or_default()
@@ -122,18 +122,12 @@ pub fn run(global: config::Global, benchmark: Benchmark) -> anyhow::Result<()> {
         perf.disable()?;
     }
 
-    let mut stdout = std::io::stdout().lock();
-    serde_json::ser::to_writer(
-        &mut stdout,
-        &measure::Global {
-            date,
-            global: global.clone(),
-            benchmark,
-            thread: threads,
-        },
-    )?;
-
-    Ok(())
+    Ok(measure::Global {
+        date,
+        global: global.clone(),
+        benchmark,
+        thread: threads,
+    })
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
