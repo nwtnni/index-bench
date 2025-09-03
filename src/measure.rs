@@ -21,6 +21,7 @@ pub struct Global {
 #[derive(Deserialize, Serialize)]
 pub struct Thread {
     pub id: usize,
+    pub core: usize,
     pub time: u128,
     pub operation_count: u64,
     pub resource: Resource,

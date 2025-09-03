@@ -39,11 +39,13 @@ pub fn run(global: config::Global, benchmark: Benchmark) -> anyhow::Result<()> {
 
     let art = art::Map::default();
 
+    let operation_count = benchmark.operation_count(global.thread_count) as u64;
+
     if let Some(perf) = &mut perf_external {
         perf.enable()?;
     }
 
-    let workers = thread::scope(|scope| -> anyhow::Result<_> {
+    let threads = thread::scope(|scope| -> anyhow::Result<_> {
         let benchmark = &benchmark;
         let art = &art;
 
@@ -52,6 +54,8 @@ pub fn run(global: config::Global, benchmark: Benchmark) -> anyhow::Result<()> {
             .map(|(thread_id, core)| {
                 scope.spawn(move || -> anyhow::Result<_> {
                     crate::THREAD_ID.set(thread_id);
+
+                    let core_id = core.os_index().expect("No OS index for core");
 
                     log::debug!("Pin thread {thread_id} to core {core}");
 
@@ -65,7 +69,7 @@ pub fn run(global: config::Global, benchmark: Benchmark) -> anyhow::Result<()> {
                         .context("Bind thread to CPU")?;
 
                     let mut perf = perf_internal
-                        .then(|| measure::Perf::new(core.os_index().expect("No OS index for core")))
+                        .then(|| measure::Perf::new(core_id))
                         .transpose()
                         .context("Initialize perf-event")?;
 
@@ -98,7 +102,14 @@ pub fn run(global: config::Global, benchmark: Benchmark) -> anyhow::Result<()> {
                     let after = measure::Resource::new().context("Get resource usage")?;
                     let _ = barrier.wait();
 
-                    Ok((thread_id, time.as_nanos(), after - before, report))
+                    Ok(measure::Thread {
+                        id: thread_id,
+                        core: core_id,
+                        time: time.as_nanos(),
+                        operation_count,
+                        resource: after - before,
+                        perf: report,
+                    })
                 })
             })
             .collect::<Vec<_>>()
@@ -111,7 +122,6 @@ pub fn run(global: config::Global, benchmark: Benchmark) -> anyhow::Result<()> {
         perf.disable()?;
     }
 
-    let operation_count = benchmark.operation_count(global.thread_count) as u64;
     let mut stdout = std::io::stdout().lock();
     serde_json::ser::to_writer(
         &mut stdout,
@@ -119,16 +129,7 @@ pub fn run(global: config::Global, benchmark: Benchmark) -> anyhow::Result<()> {
             date,
             global: global.clone(),
             benchmark,
-            thread: workers
-                .into_iter()
-                .map(|(id, time, resource, perf)| measure::Thread {
-                    id,
-                    time,
-                    operation_count,
-                    resource,
-                    perf,
-                })
-                .collect(),
+            thread: threads,
         },
     )?;
 
