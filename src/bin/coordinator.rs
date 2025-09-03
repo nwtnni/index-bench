@@ -18,6 +18,8 @@ fn main() -> anyhow::Result<()> {
         .map(BufWriter::new)?;
 
     for config in configs.cartesian() {
+        eprintln!("{config:?}");
+
         let mut child = Command::new("./target/release/worker")
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())

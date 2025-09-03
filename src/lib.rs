@@ -18,8 +18,9 @@ use serde::Serialize;
 
 #[derive(Cartesian)]
 #[rustfmt::skip]
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Config {
+    #[cartesian(compose)]
     global: config::Global,
     ycsb: ycsb::Workload,
 }
