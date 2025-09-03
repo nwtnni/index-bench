@@ -19,6 +19,8 @@ pub fn run(config: &config::Global) -> anyhow::Result<()> {
         .unwrap_or_default()
         .as_nanos();
 
+    config.numa.set_mempolicy()?;
+
     let topology = Topology::new().ok_or_else(|| anyhow!("Failed to retrieve hwloc2 topology"))?;
     let depth = topology
         .depth_for_type(&hwloc2::ObjectType::PU)
@@ -60,7 +62,7 @@ pub fn run(config: &config::Global) -> anyhow::Result<()> {
                         set
                     };
 
-                    log::debug!("Pin thread {} to core {}", thread_id, core);
+                    log::debug!("Pin thread {thread_id} to core {core}");
 
                     // `hwloc2::Topology::set_cpubind_for_thread` takes `&mut self`,
                     // so just call `sched_setaffinity` ourselves.
