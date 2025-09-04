@@ -38,17 +38,14 @@ CHOICES_INDEPENDENT = [
     ]
 ]
 
-OPS = {
-    "mean": pl.Expr.mean,
-    "sum": pl.Expr.sum,
-    "show": lambda x: x,
-}
-
 
 class Col:
-    def __init__(self, name: str, selector, aggregate=False, distribution=False):
+    def __init__(
+        self, name: str, selector, output=False, aggregate=False, distribution=False
+    ):
         self.name = name
         self.selector = selector
+        self.output = output
         self.aggregate = aggregate
         self.distribution = distribution
 
@@ -64,15 +61,7 @@ class Col:
         return {"type": TYPE_COL, "index": self.name}
 
     def choices(self):
-        if self.distribution:
-            return [
-                {"label": label, "value": value}
-                for label, value in [
-                    ("Show", "show"),
-                    ("Hide", "ignore"),
-                ]
-            ]
-        else:
+        if self.aggregate:
             return [
                 {"label": label, "value": value}
                 for label, value in [
@@ -81,22 +70,38 @@ class Col:
                     ("Hide", "ignore"),
                 ]
             ]
+        else:
+            return [
+                {"label": label, "value": value}
+                for label, value in [
+                    ("Show", "show"),
+                    ("Hide", "ignore"),
+                ]
+            ]
 
 
 def main():
     ui_control = [html.H2("Control")]
     ui_independent = [html.H2("Independent")]
-    ui_dependent = [html.H2("Dependent")]
+
+    ui_process = [html.H2("Process")]
+    ui_thread = [html.H2("Thread")]
 
     for col in flatten(DF):
-        if col.name.startswith("output"):
+        if col.output:
             COLS.append(col)
             choices = col.choices()
-            ui_dependent.append(
+
+            ui = ui_thread if col.aggregate else ui_process
+            ui.append(
                 dbc.Row(
                     [
                         col.store(),
-                        dbc.Col(html.Span(col.name)),
+                        dbc.Col(
+                            html.Span(
+                                col.name.removeprefix("output/").removeprefix("thread/")
+                            )
+                        ),
                         dbc.Col(
                             dcc.RadioItems(
                                 choices,
@@ -166,7 +171,12 @@ def main():
             [
                 dbc.Col(ui_control),
                 dbc.Col(ui_independent),
-                dbc.Col(ui_dependent),
+            ]
+        ),
+        dbc.Row(
+            [
+                dbc.Col(ui_process),
+                dbc.Col(ui_thread),
             ]
         ),
         html.Div(id=ID_FIGURE),
@@ -175,23 +185,27 @@ def main():
 
 
 def flatten(df):
-    def recurse(columns, namespace, selector):
+    def recurse(columns, namespace, selector, aggregate):
         select = pl.col if selector is None else lambda col: selector.struct.field(col)
 
         for col in columns:
             dtype = df.select(select(col)).to_series().dtype
             name = col if namespace == "" else f"{namespace}/{col}"
+            output = name.startswith("output")
 
             if hasattr(dtype, "fields"):
                 # FIXME: more robust distribution detection
                 if any([field.name == "p50" for field in dtype.fields]):
-                    yield Col(name, select(col), distribution=True)
+                    assert not aggregate
+                    assert output
+                    yield Col(name, select(col), distribution=True, output=output)
                     continue
 
                 yield from recurse(
                     [field.name for field in dtype.fields],
                     name,
                     select(col),
+                    aggregate,
                 )
 
             # FIXME: only supports lists of structs, which
@@ -201,11 +215,17 @@ def flatten(df):
                     [field.name for field in dtype.inner.fields],
                     name,
                     select(col).list.explode(),
+                    True,
                 )
             else:
-                yield Col(name, select(col))
+                yield Col(
+                    name,
+                    select(col),
+                    aggregate=aggregate,
+                    output=output,
+                )
 
-    yield from recurse(df.columns, "", None)
+    yield from recurse(df.columns, "", None, False)
 
 
 def unique(selector):
@@ -251,30 +271,32 @@ def update(
 
     # Validate
     for col, value in zip(COLS, values):
-        if value == "x":
-            if x is not None:
-                return {}
-            x = col
-        elif value in OPS:
-            ys.append((col, value))
-        elif value == "facet_row":
-            if facet_row is not None:
-                return {}
-            facet_row = col
-        elif value == "facet_column":
-            if facet_column is not None:
-                return {}
-            facet_column = col
-        elif value == "facet_color":
-            if facet_color is not None:
-                return {}
-            facet_color = col
-        elif value == "ignore":
+        if value == "ignore":
             continue
-        elif value == NULL:
-            filters.append(col.selector.is_null())
-        elif value is not None:
-            filters.append(col.selector == value)
+
+        if col.output:
+            ys.append((col, value))
+        else:
+            if value == "x":
+                if x is not None:
+                    return {}
+                x = col
+            elif value == "facet_row":
+                if facet_row is not None:
+                    return {}
+                facet_row = col
+            elif value == "facet_column":
+                if facet_column is not None:
+                    return {}
+                facet_column = col
+            elif value == "facet_color":
+                if facet_color is not None:
+                    return {}
+                facet_color = col
+            elif value == NULL:
+                filters.append(col.selector.is_null())
+            elif value is not None:
+                filters.append(col.selector == value)
 
     if x is None or len(ys) == 0:
         raise dash.exceptions.PreventUpdate
@@ -323,13 +345,12 @@ def update(
                 variable_name="metric",
                 value_name="value",
             )
-            print(filtered)
 
         fig = px.line(
             filtered,
             x=x.name,
             y="value" if y.distribution else y.name,
-            # error_y=f"{y.name}_std",
+            error_y=f"{y.name}_std" if op == "mean" else None,
             facet_row=facet_row.name if facet_row is not None else None,
             facet_col=facet_column.name if facet_column is not None else None,
             color="metric"
