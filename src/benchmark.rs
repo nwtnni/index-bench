@@ -39,7 +39,7 @@ pub fn run(crate::Config { global, ycsb }: crate::Config) -> anyhow::Result<meas
     };
     let perf_internal = perf_external.is_none();
 
-    let art = art::Map::default();
+    let mut art = art::Map::default();
 
     let operation_count = benchmark.operation_count(global.thread_count) as u64;
 
@@ -129,7 +129,10 @@ pub fn run(crate::Config { global, ycsb }: crate::Config) -> anyhow::Result<meas
         date,
         global: global.clone(),
         benchmark,
-        thread: threads,
+        output: measure::Process {
+            index: serde_json::to_value(art::stat::process(&mut art)).unwrap(),
+            thread: threads,
+        },
     })
 }
 

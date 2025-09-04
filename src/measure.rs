@@ -15,6 +15,12 @@ pub struct Global {
     pub date: u128,
     pub global: config::Global,
     pub benchmark: Benchmark,
+    pub output: Process,
+}
+
+#[derive(Deserialize, Serialize)]
+pub struct Process {
+    pub index: serde_json::Value,
     pub thread: Vec<Thread>,
 }
 
