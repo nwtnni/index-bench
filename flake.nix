@@ -23,6 +23,18 @@
       with pkgs; {
         devShells.default = mkShell {
           nativeBuildInputs = [ rustToolchain pkg-config hwloc ];
+          buildInputs = [
+            (python3.withPackages (python-pkgs: with python-pkgs; [
+              dash
+              dash-bootstrap-components
+              pandas
+              plotly
+              polars
+              pyarrow
+              python-lsp-ruff
+              python-lsp-server
+            ]))
+          ];
         };
       }
     );
