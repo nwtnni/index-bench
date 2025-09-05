@@ -6,7 +6,7 @@ use serde::Serialize;
 pub mod scc;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(tag = "index", rename_all = "snake_case")]
+#[serde(tag = "name", rename_all = "snake_case")]
 pub enum Config {
     Art,
     Scc,
