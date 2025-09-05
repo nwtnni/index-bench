@@ -14,7 +14,7 @@ pub struct Global {
     pub thread_count: usize,
 
     #[serde(default)]
-    #[cartesian(skip)]
+    #[cartesian(single)]
     cargo: Cargo,
 
     pub numa: Numa,
