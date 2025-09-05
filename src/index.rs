@@ -44,6 +44,7 @@ impl Index for Art {
         Self(Arc::clone(&self.0))
     }
 
+    #[cfg(feature = "stat")]
     fn report(&mut self) -> serde_json::Value {
         serde_json::to_value(art::stat::process(Arc::get_mut(&mut self.0).unwrap())).unwrap()
     }
@@ -58,6 +59,7 @@ impl Handle for Art {
         (*self.0).insert(key, value)
     }
 
+    #[cfg(feature = "stat")]
     fn report(&mut self) -> serde_json::Value {
         serde_json::to_value(art::stat::thread()).unwrap()
     }
