@@ -16,6 +16,8 @@ ycsb = { git = "https://github.com/nwtnni/ycsb.git", features = ["serde"] }
 art = { git = "ssh://github.com/nwtnni/art", features = ["stat"] }
 cartesian = { git = "ssh://github.com/nwtnni/cartesian" }
 toml = "0.9.5"
+scc = "3.0.2"
+rapidhash = "4.0.0"
 
 # [features]
 # default = []

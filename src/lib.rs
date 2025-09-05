@@ -2,15 +2,16 @@ use core::cell::Cell;
 
 pub(crate) mod benchmark;
 pub mod config;
-pub(crate) mod index;
+pub mod index;
 pub(crate) mod measure;
 pub(crate) mod workload;
+
+pub(crate) use index::Index;
 
 thread_local! {
     pub(crate) static THREAD_ID: Cell<usize> = const { Cell::new(0) };
 }
 
-pub use benchmark::Benchmark;
 pub use benchmark::run;
 use cartesian::Cartesian;
 use serde::Deserialize;
@@ -20,7 +21,8 @@ use serde::Serialize;
 #[rustfmt::skip]
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Config {
-    #[cartesian(compose)]
+    pub index: index::Config,
+    #[cartesian(flatten)]
     global: config::Global,
     ycsb: ycsb::Workload,
 }

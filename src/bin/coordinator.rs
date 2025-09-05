@@ -5,6 +5,7 @@ use std::process::Command;
 use std::process::Stdio;
 
 use anyhow::Context as _;
+use cartesian::IntoIterCartesian as _;
 use index_bench::ConfigCartesian;
 
 fn main() -> anyhow::Result<()> {
@@ -17,7 +18,7 @@ fn main() -> anyhow::Result<()> {
         .open("result.ndjson")
         .map(BufWriter::new)?;
 
-    for config in configs.cartesian() {
+    for config in configs.into_iter_cartesian() {
         eprintln!("{config:?}");
 
         let mut child = Command::new("./target/release/worker")

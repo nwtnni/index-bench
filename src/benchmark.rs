@@ -12,16 +12,18 @@ use hwlocality::object::types::ObjectType;
 use serde::Deserialize;
 use serde::Serialize;
 
+use crate::Index;
+use crate::index::Handle as _;
 use crate::measure;
 
-pub fn run(crate::Config { global, ycsb }: crate::Config) -> anyhow::Result<measure::Global> {
+pub fn run<I: Index>(config: crate::Config) -> anyhow::Result<measure::Global> {
     let date = SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap_or_default()
         .as_nanos();
 
     // FIXME: support other benchmarks
-    let benchmark = Benchmark::YcsbLoad(ycsb);
+    let benchmark = Config::YcsbLoad(config.ycsb.clone());
 
     let topology = &Topology::new().context("Initialize hwloc topology")?;
     let depth = topology
@@ -29,9 +31,9 @@ pub fn run(crate::Config { global, ycsb }: crate::Config) -> anyhow::Result<meas
         .map_err(|error| anyhow!("Failed to get processing unit depth: {:?}", error))?;
     let cores = topology.objects_at_depth(depth).cycle();
 
-    global.numa.bind(topology)?;
+    config.global.numa.bind(topology)?;
 
-    let barrier = &Barrier::new(global.thread_count);
+    let barrier = &Barrier::new(config.global.thread_count);
 
     let mut perf_external = match (env::var("PERF_CTL_FIFO"), env::var("PERF_ACK_FIFO")) {
         (Ok(ctl), Ok(ack)) => Some(measure::perf::Sync::new(ctl, ack)?),
@@ -39,9 +41,9 @@ pub fn run(crate::Config { global, ycsb }: crate::Config) -> anyhow::Result<meas
     };
     let perf_internal = perf_external.is_none();
 
-    let mut art = art::Map::default();
+    let mut map = I::new();
 
-    let operation_count = benchmark.operation_count(global.thread_count) as u64;
+    let operation_count = benchmark.operation_count(config.global.thread_count) as u64;
 
     if let Some(perf) = &mut perf_external {
         perf.enable()?;
@@ -49,9 +51,9 @@ pub fn run(crate::Config { global, ycsb }: crate::Config) -> anyhow::Result<meas
 
     let threads = thread::scope(|scope| -> anyhow::Result<_> {
         let benchmark = &benchmark;
-        let art = &art;
+        let map = &map;
 
-        (0..global.thread_count)
+        (0..config.global.thread_count)
             .zip(cores)
             .map(|(thread_id, core)| {
                 scope.spawn(move || -> anyhow::Result<_> {
@@ -76,10 +78,12 @@ pub fn run(crate::Config { global, ycsb }: crate::Config) -> anyhow::Result<meas
                         .context("Initialize perf-event")?;
 
                     let mut loader = match benchmark {
-                        Benchmark::YcsbLoad(workload) => {
-                            workload.loader(global.thread_count, thread_id)
+                        Config::YcsbLoad(workload) => {
+                            workload.loader(config.global.thread_count, thread_id)
                         }
                     };
+
+                    let mut map = map.pin();
 
                     let _ = barrier.wait();
                     let before = measure::Resource::new().context("Get resource usage")?;
@@ -91,17 +95,19 @@ pub fn run(crate::Config { global, ycsb }: crate::Config) -> anyhow::Result<meas
 
                     while let Some(key) = loader.next_key() {
                         let id = key.id();
-                        art.insert(id, id as u32);
+                        map.insert(id, id as u32);
                     }
 
                     let time = start.elapsed();
 
-                    let report = perf
+                    let perf_report = perf
                         .as_mut()
                         .map(|perf| perf.stop())
                         .transpose()
                         .context("Stop perf-event")?;
                     let after = measure::Resource::new().context("Get resource usage")?;
+                    let index_report = map.report();
+
                     let _ = barrier.wait();
 
                     Ok(measure::Thread {
@@ -110,8 +116,8 @@ pub fn run(crate::Config { global, ycsb }: crate::Config) -> anyhow::Result<meas
                         time: time.as_nanos(),
                         operation_count,
                         resource: after - before,
-                        perf: report,
-                        index: serde_json::to_value(art::stat::thread()).unwrap(),
+                        perf: perf_report,
+                        index: index_report,
                     })
                 })
             })
@@ -127,10 +133,9 @@ pub fn run(crate::Config { global, ycsb }: crate::Config) -> anyhow::Result<meas
 
     Ok(measure::Global {
         date,
-        global: global.clone(),
-        benchmark,
+        config,
         output: measure::Process {
-            index: serde_json::to_value(art::stat::process(&mut art)).unwrap(),
+            index: map.report(),
             thread: threads,
         },
     })
@@ -138,14 +143,14 @@ pub fn run(crate::Config { global, ycsb }: crate::Config) -> anyhow::Result<meas
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(tag = "benchmark", rename_all = "snake_case")]
-pub enum Benchmark {
+pub enum Config {
     YcsbLoad(ycsb::Workload),
 }
 
-impl Benchmark {
+impl Config {
     fn operation_count(&self, thread_count: usize) -> usize {
         match self {
-            Benchmark::YcsbLoad(workload) => workload.record_count() / thread_count,
+            Config::YcsbLoad(workload) => workload.record_count() / thread_count,
         }
     }
 }

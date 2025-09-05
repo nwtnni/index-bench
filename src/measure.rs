@@ -7,14 +7,10 @@ pub(crate) use resource::Resource;
 use serde::Deserialize;
 use serde::Serialize;
 
-use crate::benchmark::Benchmark;
-use crate::config;
-
 #[derive(Deserialize, Serialize)]
 pub struct Global {
     pub date: u128,
-    pub global: config::Global,
-    pub benchmark: Benchmark,
+    pub config: crate::Config,
     pub output: Process,
 }
 
