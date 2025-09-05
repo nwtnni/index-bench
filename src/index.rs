@@ -43,6 +43,10 @@ impl Index for Art {
     fn pin(&self) -> Self::Handle {
         Self(Arc::clone(&self.0))
     }
+
+    fn report(&mut self) -> serde_json::Value {
+        serde_json::to_value(art::stat::process(Arc::get_mut(&mut self.0).unwrap())).unwrap()
+    }
 }
 
 impl Handle for Art {
@@ -52,5 +56,9 @@ impl Handle for Art {
 
     fn insert(&mut self, key: u64, value: u32) -> Option<u32> {
         (*self.0).insert(key, value)
+    }
+
+    fn report(&mut self) -> serde_json::Value {
+        serde_json::to_value(art::stat::thread()).unwrap()
     }
 }
