@@ -26,15 +26,9 @@ where
     }
 }
 
-pub trait Key: art::Key + Hash + Eq + Send + Sync + Sized {
-    fn from_index(index: u64) -> Self;
-}
+pub trait Key: art::Key + Hash + Eq + Send + Sync + Sized {}
 
-impl Key for u64 {
-    fn from_index(index: u64) -> Self {
-        index
-    }
-}
+impl Key for u64 {}
 
 pub trait Handle<K: Key> {
     fn get(&mut self, key: &K) -> Option<u32>;

@@ -11,11 +11,13 @@ use hwlocality::cpu::binding::CpuBindingFlags;
 use hwlocality::object::types::ObjectType;
 
 use crate::Index;
-use crate::index;
 use crate::index::Handle as _;
 use crate::measure;
+use crate::workload::KeyDistribution;
 
-pub fn run<K: index::Key, I: Index<K>>(config: crate::Config) -> anyhow::Result<measure::Global> {
+pub fn run<K: KeyDistribution, I: Index<K::Key>>(
+    config: crate::Config,
+) -> anyhow::Result<measure::Global> {
     let date = SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap_or_default()

@@ -12,19 +12,19 @@ fn main() -> anyhow::Result<()> {
 
 fn specialize_key(config: index_bench::Config) -> anyhow::Result<index_bench::measure::Global> {
     match config.workload.key {
-        index_bench::workload::Key::U64 => specialize_index::<u64>(config),
+        index_bench::workload::Key::U64 => specialize_index::<index_bench::workload::U64>(config),
     }
 }
 
-fn specialize_index<K: index_bench::index::Key>(
+fn specialize_index<K: index_bench::workload::KeyDistribution>(
     config: index_bench::Config,
 ) -> anyhow::Result<index_bench::measure::Global> {
     match config.index {
         index_bench::index::Config::Art => {
-            index_bench::run::<K, index_bench::index::Art<K>>(config)
+            index_bench::run::<K, index_bench::index::Art<K::Key>>(config)
         }
         index_bench::index::Config::Scc => {
-            index_bench::run::<K, index_bench::index::scc::Map<K>>(config)
+            index_bench::run::<K, index_bench::index::scc::Map<K::Key>>(config)
         }
     }
 }

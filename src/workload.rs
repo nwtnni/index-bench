@@ -1,5 +1,3 @@
-use core::marker::PhantomData;
-
 use cartesian::Cartesian;
 use serde::Deserialize;
 use serde::Serialize;
@@ -30,25 +28,44 @@ impl Config {
         self.ycsb.record_count() / thread_count
     }
 
-    pub(crate) fn loader<K: index::Key>(&self, thread_count: usize, thread_id: usize) -> Loader<K> {
+    pub(crate) fn loader<K: KeyDistribution>(
+        &self,
+        thread_count: usize,
+        thread_id: usize,
+    ) -> Loader<K> {
         Loader {
             inner: self.ycsb.loader(thread_count, thread_id),
-            _key: PhantomData,
+            keys: K::default(),
         }
     }
 }
 
 pub struct Loader<K> {
     inner: ycsb::Loader,
-    _key: PhantomData<K>,
+    keys: K,
 }
 
 impl<K> Loader<K>
 where
-    K: index::Key,
+    K: KeyDistribution,
 {
     #[inline]
-    pub(crate) fn next_key(&mut self) -> Option<K> {
-        Some(K::from_index(self.inner.next_key()?.id()))
+    pub(crate) fn next_key(&mut self) -> Option<K::Key> {
+        Some(self.keys.get(self.inner.next_key()?.id()))
+    }
+}
+
+pub trait KeyDistribution: Default {
+    type Key: index::Key;
+    fn get(&self, index: u64) -> Self::Key;
+}
+
+#[derive(Default)]
+pub struct U64;
+
+impl KeyDistribution for U64 {
+    type Key = u64;
+    fn get(&self, index: u64) -> Self::Key {
+        index
     }
 }
