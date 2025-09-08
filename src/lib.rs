@@ -3,8 +3,8 @@ use core::cell::Cell;
 pub(crate) mod benchmark;
 pub mod config;
 pub mod index;
-pub(crate) mod measure;
-pub(crate) mod workload;
+pub mod measure;
+pub mod workload;
 
 pub(crate) use index::Index;
 
@@ -24,5 +24,6 @@ pub struct Config {
     pub index: index::Config,
     #[cartesian(flatten)]
     global: config::Global,
-    ycsb: ycsb::Workload,
+    #[cartesian(flatten)]
+    pub workload: workload::Config,
 }

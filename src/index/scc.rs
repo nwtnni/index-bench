@@ -3,9 +3,9 @@ use std::sync::Arc;
 use crate::Index;
 use crate::index;
 
-pub struct Map(Arc<scc::HashMap<u64, u32, rapidhash::fast::RandomState>>);
+pub struct Map<K>(Arc<scc::HashMap<K, u32, rapidhash::fast::RandomState>>);
 
-impl Index for Map {
+impl<K: index::Key> Index<K> for Map<K> {
     type Handle = Self;
 
     fn new() -> Self {
@@ -19,12 +19,12 @@ impl Index for Map {
     }
 }
 
-impl index::Handle for Map {
-    fn get(&mut self, key: u64) -> Option<u32> {
-        self.0.read_sync(&key, |_, value| *value)
+impl<K: index::Key> index::Handle<K> for Map<K> {
+    fn get(&mut self, key: &K) -> Option<u32> {
+        self.0.read_sync(key, |_, value| *value)
     }
 
-    fn insert(&mut self, key: u64, value: u32) -> Option<u32> {
+    fn insert(&mut self, key: K, value: u32) -> Option<u32> {
         self.0.insert_sync(key, value).err().map(|(_, value)| value)
     }
 }

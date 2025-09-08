@@ -9,21 +9,17 @@ use anyhow::anyhow;
 use hwlocality::Topology;
 use hwlocality::cpu::binding::CpuBindingFlags;
 use hwlocality::object::types::ObjectType;
-use serde::Deserialize;
-use serde::Serialize;
 
 use crate::Index;
+use crate::index;
 use crate::index::Handle as _;
 use crate::measure;
 
-pub fn run<I: Index>(config: crate::Config) -> anyhow::Result<measure::Global> {
+pub fn run<K: index::Key, I: Index<K>>(config: crate::Config) -> anyhow::Result<measure::Global> {
     let date = SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap_or_default()
         .as_nanos();
-
-    // FIXME: support other benchmarks
-    let benchmark = Config::YcsbLoad(config.ycsb.clone());
 
     let topology = &Topology::new().context("Initialize hwloc topology")?;
     let depth = topology
@@ -43,14 +39,14 @@ pub fn run<I: Index>(config: crate::Config) -> anyhow::Result<measure::Global> {
 
     let mut map = I::new();
 
-    let operation_count = benchmark.operation_count(config.global.thread_count) as u64;
+    let operation_count = config.workload.operation_count(config.global.thread_count) as u64;
 
     if let Some(perf) = &mut perf_external {
         perf.enable()?;
     }
 
     let threads = thread::scope(|scope| -> anyhow::Result<_> {
-        let benchmark = &benchmark;
+        let workload = &config.workload;
         let map = &map;
 
         (0..config.global.thread_count)
@@ -77,11 +73,7 @@ pub fn run<I: Index>(config: crate::Config) -> anyhow::Result<measure::Global> {
                         .transpose()
                         .context("Initialize perf-event")?;
 
-                    let mut loader = match benchmark {
-                        Config::YcsbLoad(workload) => {
-                            workload.loader(config.global.thread_count, thread_id)
-                        }
-                    };
+                    let mut loader = workload.loader::<K>(config.global.thread_count, thread_id);
 
                     let mut map = map.pin();
 
@@ -94,8 +86,7 @@ pub fn run<I: Index>(config: crate::Config) -> anyhow::Result<measure::Global> {
                     let start = Instant::now();
 
                     while let Some(key) = loader.next_key() {
-                        let id = key.id();
-                        map.insert(id, id as u32);
+                        map.insert(key, 0);
                     }
 
                     let time = start.elapsed();
@@ -139,18 +130,4 @@ pub fn run<I: Index>(config: crate::Config) -> anyhow::Result<measure::Global> {
             thread: threads,
         },
     })
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(tag = "benchmark", rename_all = "snake_case")]
-pub enum Config {
-    YcsbLoad(ycsb::Workload),
-}
-
-impl Config {
-    fn operation_count(&self, thread_count: usize) -> usize {
-        match self {
-            Config::YcsbLoad(workload) => workload.record_count() / thread_count,
-        }
-    }
 }

@@ -23,7 +23,7 @@ checksum = "7c02d123df017efcdfbd739ef81735b36c5ba83ec3c59c80a9d7ecc718f92e50"
 [[package]]
 name = "art"
 version = "0.1.0"
-source = "git+ssh://github.com/nwtnni/art#5376161123ed814c1f94d6e2aab2b6fa2589da3f"
+source = "git+ssh://github.com/nwtnni/art#b88b0b5b479b1dbdadedf63da0619d1d27422f0a"
 dependencies = [
  "hdrhistogram",
  "ribbit",
@@ -55,31 +55,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "bon"
-version = "3.7.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c2529c31017402be841eb45892278a6c21a000c0a17643af326c73a73f83f0fb"
-dependencies = [
- "bon-macros",
- "rustversion",
-]
-
-[[package]]
-name = "bon-macros"
-version = "3.7.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d82020dadcb845a345591863adb65d74fa8dc5c18a0b6d408470e13b7adc7005"
-dependencies = [
- "darling 0.21.3",
- "ident_case",
- "prettyplease",
- "proc-macro2",
- "quote",
- "rustversion",
- "syn 2.0.106",
-]
-
-[[package]]
 name = "byteorder"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -94,7 +69,7 @@ checksum = "cd17eb909a8c6a894926bfcc3400a4bb0e732f5a57d37b1f14e8b29e329bace8"
 [[package]]
 name = "cartesian"
 version = "0.1.0"
-source = "git+ssh://github.com/nwtnni/cartesian#5a015364c36239440b47efee90e0d40bab4d8556"
+source = "git+ssh://github.com/nwtnni/cartesian#9acedd94518a86e8596dbbc4592af17ff535e47d"
 dependencies = [
  "cartesian-derive",
 ]
@@ -102,7 +77,7 @@ dependencies = [
 [[package]]
 name = "cartesian-derive"
 version = "0.1.0"
-source = "git+ssh://github.com/nwtnni/cartesian#5a015364c36239440b47efee90e0d40bab4d8556"
+source = "git+ssh://github.com/nwtnni/cartesian#9acedd94518a86e8596dbbc4592af17ff535e47d"
 dependencies = [
  "proc-macro-error",
  "proc-macro2",
@@ -131,18 +106,8 @@ version = "0.20.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fc7f46116c46ff9ab3eb1597a45688b6715c6e628b5c133e288e709a29bcb4ee"
 dependencies = [
- "darling_core 0.20.11",
- "darling_macro 0.20.11",
-]
-
-[[package]]
-name = "darling"
-version = "0.21.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9cdf337090841a411e2a7f3deb9187445851f91b309c0c0a29e05f74a00a48c0"
-dependencies = [
- "darling_core 0.21.3",
- "darling_macro 0.21.3",
+ "darling_core",
+ "darling_macro",
 ]
 
 [[package]]
@@ -160,37 +125,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "darling_core"
-version = "0.21.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1247195ecd7e3c85f83c8d2a366e4210d588e802133e1e355180a9870b517ea4"
-dependencies = [
- "fnv",
- "ident_case",
- "proc-macro2",
- "quote",
- "strsim",
- "syn 2.0.106",
-]
-
-[[package]]
 name = "darling_macro"
 version = "0.20.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fc34b93ccb385b40dc71c6fceac4b2ad23662c7eeb248cf10d529b7e055b6ead"
 dependencies = [
- "darling_core 0.20.11",
- "quote",
- "syn 2.0.106",
-]
-
-[[package]]
-name = "darling_macro"
-version = "0.21.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d38308df82d1080de0afee5d069fa14b0326a88c14f15c5ccda35b4a6c414c81"
-dependencies = [
- "darling_core 0.21.3",
+ "darling_core",
  "quote",
  "syn 2.0.106",
 ]
@@ -449,16 +389,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "prettyplease"
-version = "0.2.37"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "479ca8adacdd7ce8f1fb39ce9ecccbfe93a3f1344b3d0d97f20bc0196208f62b"
-dependencies = [
- "proc-macro2",
- "syn 2.0.106",
-]
-
-[[package]]
 name = "proc-macro-error"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -559,7 +489,7 @@ dependencies = [
 [[package]]
 name = "ribbit"
 version = "0.1.0"
-source = "git+https://github.com/nwtnni/ribbit.git#3864d5d2900363a2f98b6605aa571f0af8b7af17"
+source = "git+https://github.com/nwtnni/ribbit.git#f3766b7957383da6ccaedd3044e4a21ceda13cd1"
 dependencies = [
  "arbitrary-int",
  "const_panic",
@@ -571,10 +501,10 @@ dependencies = [
 [[package]]
 name = "ribbit-derive"
 version = "0.1.0"
-source = "git+https://github.com/nwtnni/ribbit.git#3864d5d2900363a2f98b6605aa571f0af8b7af17"
+source = "git+https://github.com/nwtnni/ribbit.git#f3766b7957383da6ccaedd3044e4a21ceda13cd1"
 dependencies = [
  "bitvec",
- "darling 0.20.11",
+ "darling",
  "heck",
  "proc-macro2",
  "quote",
@@ -912,9 +842,9 @@ dependencies = [
 [[package]]
 name = "ycsb"
 version = "0.1.0"
-source = "git+https://github.com/nwtnni/ycsb.git#e9b18eb371cc0f96bcfeb4cf81eec947d9dc7021"
+source = "git+https://github.com/nwtnni/ycsb.git#b8a8f9fed7ecd9c81e36bcc5a5463d6d3018eb81"
 dependencies = [
- "bon",
+ "cartesian",
  "rand",
  "rapidhash 1.4.0",
  "serde",

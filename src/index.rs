@@ -1,3 +1,4 @@
+use core::hash::Hash;
 use std::sync::Arc;
 
 use serde::Deserialize;
@@ -12,8 +13,11 @@ pub enum Config {
     Scc,
 }
 
-pub trait Index: Send + Sync {
-    type Handle: Handle;
+pub trait Index<K>: Send + Sync
+where
+    K: Key,
+{
+    type Handle: Handle<K>;
     fn new() -> Self;
     fn pin(&self) -> Self::Handle;
 
@@ -22,19 +26,32 @@ pub trait Index: Send + Sync {
     }
 }
 
-pub trait Handle {
-    fn get(&mut self, key: u64) -> Option<u32>;
+pub trait Key: art::Key + Hash + Eq + Send + Sync + Sized {
+    fn from_index(index: u64) -> Self;
+}
 
-    fn insert(&mut self, key: u64, value: u32) -> Option<u32>;
+impl Key for u64 {
+    fn from_index(index: u64) -> Self {
+        index
+    }
+}
+
+pub trait Handle<K: Key> {
+    fn get(&mut self, key: &K) -> Option<u32>;
+
+    fn insert(&mut self, key: K, value: u32) -> Option<u32>;
 
     fn report(&mut self) -> serde_json::Value {
         serde_json::Value::Null
     }
 }
 
-pub struct Art(Arc<art::Map<u64, u32>>);
+pub struct Art<K>(Arc<art::Map<K, u32>>);
 
-impl Index for Art {
+impl<K> Index<K> for Art<K>
+where
+    K: Key,
+{
     type Handle = Self;
     fn new() -> Self {
         Self(Arc::new(art::Map::default()))
@@ -50,13 +67,13 @@ impl Index for Art {
     }
 }
 
-impl Handle for Art {
-    fn get(&mut self, key: u64) -> Option<u32> {
+impl<K: Key> Handle<K> for Art<K> {
+    fn get(&mut self, key: &K) -> Option<u32> {
         (*self.0).get(key)
     }
 
-    fn insert(&mut self, key: u64, value: u32) -> Option<u32> {
-        (*self.0).insert(key, value)
+    fn insert(&mut self, key: K, value: u32) -> Option<u32> {
+        (*self.0).insert(&key, value)
     }
 
     #[cfg(feature = "stat")]
