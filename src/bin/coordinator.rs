@@ -18,6 +18,19 @@ fn main() -> anyhow::Result<()> {
         .map(BufWriter::new)?;
 
     for config in configs.into_iter_cartesian() {
+        if (config.workload.ycsb.read_proportion
+            + config.workload.ycsb.update_proportion
+            + config.workload.ycsb.insert_proportion
+            + config.workload.ycsb.scan_proportion
+            + config.workload.ycsb.delete_proportion
+            + config.workload.ycsb.read_modify_write_proportion
+            - 1.0)
+            .abs()
+            > 1e-5
+        {
+            continue;
+        }
+
         eprintln!("{config:?}");
 
         let mut child = Command::new("./target/release/worker")

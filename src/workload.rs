@@ -17,7 +17,7 @@ pub struct Config {
 
     #[cartesian(flatten)]
     #[serde(flatten)]
-    ycsb: ycsb::Workload,
+    pub ycsb: ycsb::Workload,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
