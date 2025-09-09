@@ -30,7 +30,12 @@ pub trait Key: art::Key + Hash + Eq + Send + Sync + Sized {}
 
 impl Key for u64 {}
 
-pub trait Handle<K: Key> {
+impl Key for String {}
+
+pub trait Handle<K>
+where
+    K: Key,
+{
     fn get(&mut self, key: &K) -> Option<u32>;
 
     fn insert(&mut self, key: K, value: u32) -> Option<u32>;
@@ -61,7 +66,10 @@ where
     }
 }
 
-impl<K: Key> Handle<K> for Art<K> {
+impl<K> Handle<K> for Art<K>
+where
+    K: Key,
+{
     fn get(&mut self, key: &K) -> Option<u32> {
         (*self.0).get(key)
     }

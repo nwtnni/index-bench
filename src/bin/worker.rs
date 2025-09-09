@@ -13,6 +13,9 @@ fn main() -> anyhow::Result<()> {
 fn specialize_key(config: index_bench::Config) -> anyhow::Result<index_bench::measure::Global> {
     match config.workload.key {
         index_bench::workload::Key::U64 => specialize_index::<index_bench::workload::U64>(config),
+        index_bench::workload::Key::Email => {
+            specialize_index::<index_bench::workload::Email>(config)
+        }
     }
 }
 
