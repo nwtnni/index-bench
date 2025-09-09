@@ -1,7 +1,8 @@
 import click
+import rarfile
+import string
 import typing
 from tqdm import tqdm
-import rarfile
 import zipfile
 
 
@@ -48,14 +49,6 @@ def iter_email(progress, root):
     seen = set()
 
     for email in iter_file(progress, root):
-        email = email.strip().lower()
-
-        try:
-            email = email.decode("utf-8")
-        except UnicodeError:
-            progress.write(f"Failed to decode email to utf-8: {email}")
-            continue
-
         canonical = canonicalize(email)
 
         if canonical is None:
@@ -73,7 +66,8 @@ def iter_file(progress, root):
     with rarfile.RarFile(root) as archive:
         for index, (archive, info) in enumerate(iter_info(progress, archive)):
             with archive.open(info) as file:
-                yield from file
+                for email in file:
+                    yield from email.split()
 
 
 def iter_info(progress, archive):
@@ -105,12 +99,17 @@ def iter_info(progress, archive):
             yield (archive, info)
 
 
-def canonicalize(email: str) -> typing.Optional[str]:
-    if "@" in email:
-        username, domain = email.split("@", 1)
-        return f"{'.'.join(reversed(domain.split('.')))}@{username}"
-    else:
+def canonicalize(email: bytes) -> typing.Optional[str]:
+    try:
+        email = email.decode("utf-8")
+    except UnicodeError:
         return None
+
+    if "@" not in email:
+        return None
+
+    username, domain = email.lower().split("@", 1)
+    return f"{'.'.join(reversed(domain.split('.')))}@{username}"
 
 
 if __name__ == "__main__":
