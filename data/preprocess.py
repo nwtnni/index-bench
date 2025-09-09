@@ -47,7 +47,10 @@ def main(input, output, count):
 
 def iter_email(progress, root):
     seen = set()
-    count = 0
+
+    unique = 0
+    total = 0
+
     prev = None
 
     for info, email in iter_file(progress, root):
@@ -57,21 +60,26 @@ def iter_email(progress, root):
             progress.write(f"Failed to canonicalize email: {email}")
             continue
 
+        if prev is not None and info.filename != prev.filename:
+            progress.write(
+                f"Processed {unique}/{total} emails from {prev.filename} ({prev.file_size}B)"
+            )
+            unique = 0
+            total = 0
+
+        total += 1
+        prev = info
+
         if canonical in seen:
             continue
 
-        if prev is not None and info.filename != prev.filename:
-            progress.write(
-                f"Processed {count} emails from {prev.filename} ({prev.file_size}B)"
-            )
-            count = 0
-
-        prev = info
-        count += 1
+        unique += 1
         seen.add(canonical)
         yield canonical
 
-    progress.write(f"Processed {count} emails from {prev.filename} ({prev.file_size}B)")
+    progress.write(
+        f"Processed {unique}/{total} emails from {prev.filename} ({prev.file_size}B)"
+    )
 
 
 def iter_file(progress, root):
