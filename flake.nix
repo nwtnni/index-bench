@@ -28,6 +28,9 @@
             pkg-config
             hwloc
 
+            linuxPackages_latest.perf
+            gdb
+
             # Preprocess emails
             unrar
           ];
