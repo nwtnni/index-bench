@@ -5,6 +5,9 @@ edition = "2024"
 
 [features]
 stat = ["art/stat"]
+opt-node3-get = ["art/opt-node3-get"]
+opt-empty-match = ["art/opt-empty-match"]
+opt = ["opt-node3-get", "opt-empty-match"]
 
 [dependencies]
 anyhow = "1.0.99"
