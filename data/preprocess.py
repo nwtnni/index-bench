@@ -46,9 +46,9 @@ def main(input, output, count):
 
 
 def iter_email(progress, root):
-    seen = set()
+    # seen = set()
+    # unique = 0
 
-    unique = 0
     total = 0
 
     prev = None
@@ -62,33 +62,33 @@ def iter_email(progress, root):
 
         if prev is not None and info.filename != prev.filename:
             progress.write(
-                f"Processed {unique}/{total} emails from {prev.filename} ({prev.file_size}B)"
+                f"Processed {total} emails from {prev.filename} ({prev.file_size}B)"
             )
-            unique = 0
             total = 0
 
         total += 1
         prev = info
 
-        if canonical in seen:
-            continue
-
-        unique += 1
-        seen.add(canonical)
+        # if canonical in seen:
+        #     continue
+        # unique += 1
+        # seen.add(canonical)
         yield canonical
 
-    progress.write(
-        f"Processed {unique}/{total} emails from {prev.filename} ({prev.file_size}B)"
-    )
+    progress.write(f"Processed {total} emails from {prev.filename} ({prev.file_size}B)")
 
 
 def iter_file(progress, root):
     with rarfile.RarFile(root) as archive:
         for index, (archive, info) in enumerate(iter_info(progress, archive)):
             with archive.open(info) as file:
-                for email in file:
-                    for segment in email.split():
-                        yield (info, segment)
+                try:
+                    for email in file:
+                        for segment in email.split():
+                            yield (info, segment)
+                except rarfile.BadRarFile:
+                    progress.write(f"Skipping bad RAR file {info.filename}")
+                    continue
 
 
 def iter_info(progress, archive):
