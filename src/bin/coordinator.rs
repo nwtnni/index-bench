@@ -6,11 +6,10 @@ use std::process::Stdio;
 
 use anyhow::Context as _;
 use cartesian::IntoIterCartesian as _;
-use index_bench::ConfigCartesian;
 
 fn main() -> anyhow::Result<()> {
     let data = std::fs::read_to_string(std::env::args().nth(1).expect("Expected config file"))?;
-    let configs = toml::from_str::<ConfigCartesian>(&data)?;
+    let configs = toml::from_str::<cartesian::IntoIter<index_bench::Config>>(&data)?;
 
     let mut out = File::options()
         .create_new(true)
