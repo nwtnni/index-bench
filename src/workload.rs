@@ -31,7 +31,10 @@ static ACKNOWLEDGED: Acknowledged = Acknowledged::new();
 
 impl Config {
     pub(crate) fn operation_count(&self, thread_count: usize) -> usize {
-        self.ycsb.record_count() / thread_count
+        (match self.load {
+            true => self.ycsb.record_count,
+            false => self.ycsb.operation_count,
+        }) / thread_count
     }
 
     pub(crate) fn loader<K: KeyDistribution>(

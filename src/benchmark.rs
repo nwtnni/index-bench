@@ -44,8 +44,6 @@ pub fn run<K: KeyDistribution, I: Index<K::Key>>(
 
     let mut map = I::new();
 
-    let operation_count = config.workload.operation_count(config.global.thread_count) as u64;
-
     if let Some(perf) = &mut perf_external {
         perf.enable()?;
     }
@@ -100,7 +98,8 @@ pub fn run<K: KeyDistribution, I: Index<K::Key>>(
 
                     if workload.load {
                         while let Some(key) = loader.next_key() {
-                            map.insert(key, 0);
+                            let checksum = key.checksum();
+                            map.insert(key, checksum);
                         }
                     } else {
                         for _ in 0..workload.operation_count(config.global.thread_count) {
