@@ -26,6 +26,10 @@ pub fn run<K: KeyDistribution, I: Index<K::Key>>(
         .unwrap_or_default()
         .as_nanos();
 
+    let operation_count_per_thread = config
+        .workload
+        .operation_count_per_thread(config.global.thread_count);
+
     let topology = &Topology::new().context("Initialize hwloc topology")?;
     let depth = topology
         .depth_for_type(ObjectType::PU)
@@ -102,7 +106,7 @@ pub fn run<K: KeyDistribution, I: Index<K::Key>>(
                             map.insert(key, checksum);
                         }
                     } else {
-                        for _ in 0..workload.operation_count(config.global.thread_count) {
+                        for _ in 0..operation_count_per_thread {
                             let operation = runner.next_operation(&mut rng);
                             match operation {
                                 ycsb::Operation::Read => {
@@ -143,7 +147,7 @@ pub fn run<K: KeyDistribution, I: Index<K::Key>>(
                         id: thread_id,
                         core: core_id,
                         time: time.as_nanos(),
-                        operation_count,
+                        operation_count: operation_count_per_thread as u64,
                         resource: after - before,
                         perf: perf_report,
                         index: index_report,

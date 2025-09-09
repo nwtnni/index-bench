@@ -30,7 +30,7 @@ pub enum Key {
 static ACKNOWLEDGED: Acknowledged = Acknowledged::new();
 
 impl Config {
-    pub(crate) fn operation_count(&self, thread_count: usize) -> usize {
+    pub(crate) fn operation_count_per_thread(&self, thread_count: usize) -> usize {
         (match self.load {
             true => self.ycsb.record_count,
             false => self.ycsb.operation_count,
