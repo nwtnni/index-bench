@@ -38,25 +38,40 @@ pub fn run<K: KeyDistribution, I: Index<K::Key>>(
 
     config.global.numa.bind(topology)?;
 
-    let barrier = &Barrier::new(config.global.thread_count);
-
-    let mut perf_external = match (env::var("PERF_CTL_FIFO"), env::var("PERF_ACK_FIFO")) {
-        (Ok(ctl), Ok(ack)) => Some(measure::perf::Sync::new(ctl, ack)?),
-        _ => None,
-    };
-    let perf_internal = perf_external.is_none();
-
+    let barrier = &Barrier::new(config.global.thread_count + 1);
     let mut map = I::new();
-
-    if let Some(perf) = &mut perf_external {
-        perf.enable()?;
-    }
 
     let threads = thread::scope(|scope| -> anyhow::Result<_> {
         let workload = &config.workload;
         let map = &map;
 
-        (0..config.global.thread_count)
+        let mut perf_external = match (env::var("PERF_CTL_FIFO"), env::var("PERF_ACK_FIFO")) {
+            (Ok(ctl), Ok(ack)) => Some(measure::perf::Sync::new(ctl, ack)?),
+            _ => None,
+        };
+        let perf_internal = perf_external.is_none();
+
+        let coordinator = scope.spawn(move || -> anyhow::Result<_> {
+            // Thread setup complete
+            let _ = barrier.wait();
+
+            if let Some(perf) = &mut perf_external {
+                perf.enable()?;
+            }
+
+            let _ = barrier.wait();
+
+            if let Some(perf) = &mut perf_external {
+                perf.disable()?;
+            }
+
+            // Threads complete
+            let _ = barrier.wait();
+
+            Ok(())
+        });
+
+        let threads = (0..config.global.thread_count)
             .zip(cores)
             .map(|(thread_id, core)| {
                 scope.spawn(move || -> anyhow::Result<_> {
@@ -92,7 +107,12 @@ pub fn run<K: KeyDistribution, I: Index<K::Key>>(
                         .transpose()
                         .context("Initialize perf-event")?;
 
+                    // Setup complete
                     let _ = barrier.wait();
+
+                    // External perf enabled
+                    let _ = barrier.wait();
+
                     let before = measure::Resource::new().context("Get resource usage")?;
                     if let Some(perf) = &mut perf {
                         perf.start().context("Start perf-event")?;
@@ -157,12 +177,12 @@ pub fn run<K: KeyDistribution, I: Index<K::Key>>(
             .collect::<Vec<_>>()
             .into_iter()
             .map(|handle| handle.join().unwrap())
-            .collect::<anyhow::Result<Vec<_>>>()
-    })?;
+            .collect::<anyhow::Result<Vec<_>>>()?;
 
-    if let Some(perf) = &mut perf_external {
-        perf.disable()?;
-    }
+        coordinator.join().unwrap()?;
+
+        Ok(threads)
+    })?;
 
     Ok(measure::Global {
         date,
