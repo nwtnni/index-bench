@@ -115,15 +115,17 @@ impl KeyDistribution for U64 {
     }
 }
 
-static EMAILS: LazyLock<String> = LazyLock::new(|| {
+static EMAIL_BUFFER: LazyLock<String> = LazyLock::new(|| {
     std::fs::read_to_string("data/email.txt").expect("Failed to find data/email.txt")
 });
 
-pub struct Email(Vec<&'static str>);
+static EMAIL: LazyLock<Vec<&'static str>> = LazyLock::new(|| EMAIL_BUFFER.lines().collect());
+
+pub struct Email(&'static [&'static str]);
 
 impl Default for Email {
     fn default() -> Self {
-        Self(EMAILS.lines().collect())
+        Self(&EMAIL)
     }
 }
 
