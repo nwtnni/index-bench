@@ -17,12 +17,20 @@
         overlays = [ (import rust-overlay) ];
         pkgs = import nixpkgs {
           inherit system overlays;
+          config.allowUnfree = true;
         };
         rustToolchain = pkgs.pkgsBuildHost.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
       in
       with pkgs; {
         devShells.default = mkShell {
-          nativeBuildInputs = [ rustToolchain pkg-config hwloc ];
+          nativeBuildInputs = [
+            rustToolchain
+            pkg-config
+            hwloc
+
+            # Preprocess emails
+            unrar
+          ];
           buildInputs = [
             (python3.withPackages (python-pkgs: with python-pkgs; [
               dash
@@ -33,6 +41,11 @@
               pyarrow
               python-lsp-ruff
               python-lsp-server
+
+              # Preprocess emails
+              click
+              rarfile
+              tqdm
             ]))
           ];
         };
