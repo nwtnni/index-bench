@@ -26,11 +26,21 @@ where
     }
 }
 
-pub trait Key: art::Key + Hash + Eq + Send + Sync + Sized {}
+pub trait Key: art::Key + Hash + Eq + Send + Sync + Sized {
+    fn checksum(&self) -> u32;
+}
 
-impl Key for u64 {}
+impl Key for u64 {
+    fn checksum(&self) -> u32 {
+        *self as u32
+    }
+}
 
-impl Key for String {}
+impl Key for String {
+    fn checksum(&self) -> u32 {
+        self.len() as u32
+    }
+}
 
 pub trait Handle<K>
 where

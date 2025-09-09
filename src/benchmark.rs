@@ -9,9 +9,12 @@ use anyhow::anyhow;
 use hwlocality::Topology;
 use hwlocality::cpu::binding::CpuBindingFlags;
 use hwlocality::object::types::ObjectType;
+use rand::SeedableRng as _;
+use rand::rngs::SmallRng;
 
 use crate::Index;
 use crate::index::Handle as _;
+use crate::index::Key as _;
 use crate::measure;
 use crate::workload::KeyDistribution;
 
@@ -70,14 +73,22 @@ pub fn run<K: KeyDistribution, I: Index<K::Key>>(
                         )
                         .context("Bind thread to CPU")?;
 
+                    let mut map = map.pin();
+                    let mut loader = workload.loader::<K>(config.global.thread_count, thread_id);
+                    let mut runner = workload.runner::<K>();
+                    let mut rng = SmallRng::seed_from_u64(thread_id as u64);
+
+                    if !workload.load {
+                        while let Some(key) = loader.next_key() {
+                            let checksum = key.checksum();
+                            map.insert(key, checksum);
+                        }
+                    }
+
                     let mut perf = perf_internal
                         .then(|| measure::Perf::new(core_id))
                         .transpose()
                         .context("Initialize perf-event")?;
-
-                    let mut loader = workload.loader::<K>(config.global.thread_count, thread_id);
-
-                    let mut map = map.pin();
 
                     let _ = barrier.wait();
                     let before = measure::Resource::new().context("Get resource usage")?;
@@ -87,8 +98,34 @@ pub fn run<K: KeyDistribution, I: Index<K::Key>>(
 
                     let start = Instant::now();
 
-                    while let Some(key) = loader.next_key() {
-                        map.insert(key, 0);
+                    if workload.load {
+                        while let Some(key) = loader.next_key() {
+                            map.insert(key, 0);
+                        }
+                    } else {
+                        for _ in 0..workload.operation_count(config.global.thread_count) {
+                            let operation = runner.next_operation(&mut rng);
+                            match operation {
+                                ycsb::Operation::Read => {
+                                    let (_, key) = runner.next_key_read(&mut rng);
+                                    assert_eq!(map.get(&key), Some(key.checksum()));
+                                }
+                                ycsb::Operation::Update => {
+                                    let (_, key) = runner.next_key_read(&mut rng);
+                                    let checksum = key.checksum();
+                                    assert_eq!(map.insert(key, checksum), Some(checksum));
+                                }
+                                ycsb::Operation::Scan => todo!(),
+                                ycsb::Operation::Insert => {
+                                    let (id, key) = runner.next_key_insert(&mut rng, 1);
+                                    let checksum = key.checksum();
+                                    assert_eq!(map.insert(key, checksum), None);
+                                    runner.acknowledge(id);
+                                }
+                                ycsb::Operation::ReadModifyWrite => todo!(),
+                                ycsb::Operation::Delete => todo!(),
+                            }
+                        }
                     }
 
                     let time = start.elapsed();

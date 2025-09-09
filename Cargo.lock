@@ -263,6 +263,7 @@ dependencies = [
  "libc",
  "log",
  "perf-event2",
+ "rand",
  "rapidhash 4.0.0",
  "scc",
  "serde",
@@ -842,7 +843,7 @@ dependencies = [
 [[package]]
 name = "ycsb"
 version = "0.1.0"
-source = "git+https://github.com/nwtnni/ycsb.git#47d599cb2706376f9ad9a25b348d000eb8fbc225"
+source = "git+https://github.com/nwtnni/ycsb.git#c8ccb91149afb59950e4b64887c696398a8a586d"
 dependencies = [
  "cartesian",
  "rand",

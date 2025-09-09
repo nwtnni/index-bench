@@ -3,6 +3,7 @@ use std::sync::LazyLock;
 use cartesian::Cartesian;
 use serde::Deserialize;
 use serde::Serialize;
+use ycsb::Acknowledged;
 
 use crate::index;
 
@@ -26,6 +27,8 @@ pub enum Key {
     Email,
 }
 
+static ACKNOWLEDGED: Acknowledged = Acknowledged::new();
+
 impl Config {
     pub(crate) fn operation_count(&self, thread_count: usize) -> usize {
         self.ycsb.record_count() / thread_count
@@ -38,6 +41,13 @@ impl Config {
     ) -> Loader<K> {
         Loader {
             inner: self.ycsb.loader(thread_count, thread_id),
+            keys: K::default(),
+        }
+    }
+
+    pub(crate) fn runner<K: KeyDistribution>(&self) -> Runner<K> {
+        Runner {
+            inner: self.ycsb.runner(&ACKNOWLEDGED),
             keys: K::default(),
         }
     }
@@ -55,6 +65,35 @@ where
     #[inline]
     pub(crate) fn next_key(&mut self) -> Option<K::Key> {
         Some(self.keys.get(self.inner.next_key()?.id()))
+    }
+}
+
+pub struct Runner<K> {
+    inner: ycsb::Runner<'static>,
+    keys: K,
+}
+
+impl<K: KeyDistribution> Runner<K> {
+    pub(crate) fn next_operation<R: rand::Rng>(&mut self, rng: &mut R) -> ycsb::Operation {
+        self.inner.next_operation(rng)
+    }
+
+    pub(crate) fn next_key_read<R: rand::Rng>(&mut self, rng: &mut R) -> (ycsb::Key, K::Key) {
+        let key = self.inner.next_key_read(rng);
+        (key, self.keys.get(key.id()))
+    }
+
+    pub(crate) fn next_key_insert<R: rand::Rng>(
+        &mut self,
+        rng: &mut R,
+        window: u64,
+    ) -> (ycsb::Key, K::Key) {
+        let key = self.inner.next_key_insert(rng, window);
+        (key, self.keys.get(key.id()))
+    }
+
+    pub(crate) fn acknowledge(&mut self, key: ycsb::Key) {
+        self.inner.acknowledge(key)
     }
 }
 
