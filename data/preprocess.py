@@ -47,8 +47,10 @@ def main(input, output, count):
 
 def iter_email(progress, root):
     seen = set()
+    count = 0
+    prev = None
 
-    for email in iter_file(progress, root):
+    for info, email in iter_file(progress, root):
         canonical = canonicalize(email)
 
         if canonical is None:
@@ -58,8 +60,18 @@ def iter_email(progress, root):
         if canonical in seen:
             continue
 
+        if prev is not None and info.filename != prev.filename:
+            progress.write(
+                f"Processed {count} emails from {prev.filename} ({prev.file_size}B)"
+            )
+            count = 0
+
+        prev = info
+        count += 1
         seen.add(canonical)
         yield canonical
+
+    progress.write(f"Processed {count} emails from {prev.filename} ({prev.file_size}B)")
 
 
 def iter_file(progress, root):
@@ -67,7 +79,8 @@ def iter_file(progress, root):
         for index, (archive, info) in enumerate(iter_info(progress, archive)):
             with archive.open(info) as file:
                 for email in file:
-                    yield from email.split()
+                    for segment in email.split():
+                        yield (info, segment)
 
 
 def iter_info(progress, archive):
