@@ -23,7 +23,7 @@ checksum = "7c02d123df017efcdfbd739ef81735b36c5ba83ec3c59c80a9d7ecc718f92e50"
 [[package]]
 name = "art"
 version = "0.1.0"
-source = "git+ssh://github.com/nwtnni/art#511f96e4de2ecfad0e6a8b2c31042f8d614182e2"
+source = "git+ssh://github.com/nwtnni/art#419fe72902d19c0f64452bf357772a83addc08f7"
 dependencies = [
  "hdrhistogram",
  "ribbit",
