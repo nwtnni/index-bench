@@ -23,7 +23,7 @@ checksum = "7c02d123df017efcdfbd739ef81735b36c5ba83ec3c59c80a9d7ecc718f92e50"
 [[package]]
 name = "art"
 version = "0.1.0"
-source = "git+ssh://github.com/nwtnni/art#419fe72902d19c0f64452bf357772a83addc08f7"
+source = "git+ssh://github.com/nwtnni/art#d3f744e5f6200718adcf48d3a2cde0a7023f834b"
 dependencies = [
  "hdrhistogram",
  "ribbit",
@@ -375,12 +375,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7edddbd0b52d732b21ad9a5fab5c704c14cd949e5e9a1ec5929a24fded1b904c"
 
 [[package]]
-name = "portable-atomic"
-version = "1.11.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f84267b20a16ea918e43c6a88433c2d54fa145c92a811b5b047ccbe153674483"
-
-[[package]]
 name = "ppv-lite86"
 version = "0.2.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -490,11 +484,10 @@ dependencies = [
 [[package]]
 name = "ribbit"
 version = "0.1.0"
-source = "git+https://github.com/nwtnni/ribbit.git#f3766b7957383da6ccaedd3044e4a21ceda13cd1"
+source = "git+https://github.com/nwtnni/ribbit.git#fa50ac7278239462ff2eff35cc71a1fd08a1fa00"
 dependencies = [
  "arbitrary-int",
  "const_panic",
- "portable-atomic",
  "ribbit-derive",
  "static_assertions",
 ]
@@ -502,7 +495,7 @@ dependencies = [
 [[package]]
 name = "ribbit-derive"
 version = "0.1.0"
-source = "git+https://github.com/nwtnni/ribbit.git#f3766b7957383da6ccaedd3044e4a21ceda13cd1"
+source = "git+https://github.com/nwtnni/ribbit.git#fa50ac7278239462ff2eff35cc71a1fd08a1fa00"
 dependencies = [
  "bitvec",
  "darling",

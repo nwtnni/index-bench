@@ -2,7 +2,4 @@
 rustflags = [
     "-C",
     "target-cpu=native",
-    # https://docs.rs/portable-atomic/latest/portable_atomic/#optional-cfg-no-outline-atomics
-    "--cfg",
-    "portable_atomic_no_outline_atomics",
 ]
