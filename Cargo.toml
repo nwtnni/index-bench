@@ -9,7 +9,8 @@ opt-node3-get = ["art/opt-node3-get"]
 opt-node15-get = ["art/opt-node15-get"]
 opt-empty-match = ["art/opt-empty-match"]
 opt-memcpy = ["art/opt-memcpy"]
-opt = ["opt-node3-get", "opt-node15-get", "opt-empty-match", "opt-memcpy"]
+opt-prefix = ["art/opt-prefix"]
+opt = ["opt-node3-get", "opt-node15-get", "opt-empty-match", "opt-memcpy", "opt-prefix"]
 
 [dependencies]
 anyhow = "1.0.99"
