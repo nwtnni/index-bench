@@ -8,7 +8,8 @@ stat = ["art/stat"]
 opt-node3-get = ["art/opt-node3-get"]
 opt-node15-get = ["art/opt-node15-get"]
 opt-empty-match = ["art/opt-empty-match"]
-opt = ["opt-node3-get", "opt-node15-get", "opt-empty-match"]
+opt-memcpy = ["art/opt-memcpy"]
+opt = ["opt-node3-get", "opt-node15-get", "opt-empty-match", "opt-memcpy"]
 
 [dependencies]
 anyhow = "1.0.99"
