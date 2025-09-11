@@ -9,7 +9,7 @@ pub mod scc;
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(tag = "name", rename_all = "snake_case")]
 pub enum Config {
-    Art,
+    Arctic,
     Scc,
 }
 
@@ -26,7 +26,7 @@ where
     }
 }
 
-pub trait Key: art::Key + Hash + Eq + Send + Sync + Sized {
+pub trait Key: arctic::Key + Hash + Eq + Send + Sync + Sized {
     fn checksum(&self) -> u32;
 }
 
@@ -55,15 +55,15 @@ where
     }
 }
 
-pub struct Art<K>(Arc<art::Map<K, u32>>);
+pub struct Arctic<K>(Arc<arctic::Map<K, u32>>);
 
-impl<K> Index<K> for Art<K>
+impl<K> Index<K> for Arctic<K>
 where
     K: Key,
 {
     type Handle = Self;
     fn new() -> Self {
-        Self(Arc::new(art::Map::default()))
+        Self(Arc::new(arctic::Map::default()))
     }
 
     fn pin(&self) -> Self::Handle {
@@ -72,11 +72,11 @@ where
 
     #[cfg(feature = "stat")]
     fn report(&mut self) -> serde_json::Value {
-        serde_json::to_value(art::stat::process(Arc::get_mut(&mut self.0).unwrap())).unwrap()
+        serde_json::to_value(arctic::stat::process(Arc::get_mut(&mut self.0).unwrap())).unwrap()
     }
 }
 
-impl<K> Handle<K> for Art<K>
+impl<K> Handle<K> for Arctic<K>
 where
     K: Key,
 {
@@ -90,6 +90,6 @@ where
 
     #[cfg(feature = "stat")]
     fn report(&mut self) -> serde_json::Value {
-        serde_json::to_value(art::stat::thread()).unwrap()
+        serde_json::to_value(arctic::stat::thread()).unwrap()
     }
 }

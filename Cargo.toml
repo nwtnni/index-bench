@@ -4,12 +4,12 @@ version = "0.1.0"
 edition = "2024"
 
 [features]
-stat = ["art/stat"]
-opt-node3-get = ["art/opt-node3-get"]
-opt-node15-get = ["art/opt-node15-get"]
-opt-empty-match = ["art/opt-empty-match"]
-opt-memcpy = ["art/opt-memcpy"]
-opt-prefix = ["art/opt-prefix"]
+stat = ["arctic/stat"]
+opt-node3-get = ["arctic/opt-node3-get"]
+opt-node15-get = ["arctic/opt-node15-get"]
+opt-empty-match = ["arctic/opt-empty-match"]
+opt-memcpy = ["arctic/opt-memcpy"]
+opt-prefix = ["arctic/opt-prefix"]
 opt = ["opt-node3-get", "opt-node15-get", "opt-empty-match", "opt-memcpy", "opt-prefix"]
 
 [dependencies]
@@ -21,8 +21,8 @@ perf-event2 = "0.7.4"
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.143"
 ycsb = { git = "https://github.com/nwtnni/ycsb.git", features = ["cartesian", "serde"] }
-art = { git = "ssh://github.com/nwtnni/art" }
-cartesian = { git = "ssh://github.com/nwtnni/cartesian" }
+arctic = { git = "ssh://github.com/nwtnni/arctic" }
+cartesian = { git = "https://github.com/nwtnni/cartesian.git" }
 toml = "0.9.5"
 scc = "3.0.2"
 rapidhash = "4.0.0"

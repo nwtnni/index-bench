@@ -23,8 +23,8 @@ fn specialize_index<K: index_bench::workload::KeyDistribution>(
     config: index_bench::Config,
 ) -> anyhow::Result<index_bench::measure::Global> {
     match config.index {
-        index_bench::index::Config::Art => {
-            index_bench::run::<K, index_bench::index::Art<K::Key>>(config)
+        index_bench::index::Config::Arctic => {
+            index_bench::run::<K, index_bench::index::Arctic<K::Key>>(config)
         }
         index_bench::index::Config::Scc => {
             index_bench::run::<K, index_bench::index::scc::Map<K::Key>>(config)
