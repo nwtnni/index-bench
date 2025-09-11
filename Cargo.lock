@@ -17,7 +17,7 @@ checksum = "c858caffa49edfc4ecc45a4bec37abd3e88041a2903816f10f990b7b41abc281"
 [[package]]
 name = "arctic"
 version = "0.1.0"
-source = "git+ssh://github.com/nwtnni/arctic#9362522cb658ebb8e112af0f39971b98c388c394"
+source = "git+ssh://github.com/nwtnni/arctic#9ac499d28aca16feef62a576618739ce438dc213"
 dependencies = [
  "hdrhistogram",
  "ribbit",
