@@ -71,14 +71,18 @@ where
     }
 }
 
-pub struct Runner<K> {
-    inner: ycsb::Runner<'static>,
+pub struct Runner<'ycsb, K> {
+    inner: ycsb::Runner<'ycsb>,
     keys: K,
 }
 
-impl<K: KeyDistribution> Runner<K> {
+impl<'ycsb, K: KeyDistribution> Runner<'ycsb, K> {
     pub(crate) fn next_operation<R: rand::Rng>(&mut self, rng: &mut R) -> ycsb::Operation {
         self.inner.next_operation(rng)
+    }
+
+    pub(crate) fn next_scan_length<R: rand::Rng>(&mut self, rng: &mut R) -> usize {
+        self.inner.next_scan_length(rng)
     }
 
     pub(crate) fn next_key_read<R: rand::Rng>(&mut self, rng: &mut R) -> (ycsb::Key, K::Key) {

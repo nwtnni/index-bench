@@ -50,6 +50,8 @@ where
 
     fn insert(&mut self, key: K, value: u32) -> Option<u32>;
 
+    fn scan(&mut self, key: &K, count: usize) -> impl Iterator<Item = u32>;
+
     fn report(&mut self) -> serde_json::Value {
         serde_json::Value::Null
     }
@@ -91,5 +93,9 @@ where
     #[cfg(feature = "stat")]
     fn report(&mut self) -> serde_json::Value {
         serde_json::to_value(arctic::stat::thread()).unwrap()
+    }
+
+    fn scan(&mut self, key: &K, count: usize) -> impl Iterator<Item = u32> {
+        (*self.0).scan(key, count)
     }
 }

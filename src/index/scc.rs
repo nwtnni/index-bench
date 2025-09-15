@@ -27,4 +27,8 @@ impl<K: index::Key> index::Handle<K> for Map<K> {
     fn insert(&mut self, key: K, value: u32) -> Option<u32> {
         self.0.insert_sync(key, value).err().map(|(_, value)| value)
     }
+
+    fn scan(&mut self, _key: &K, _count: usize) -> impl Iterator<Item = u32> {
+        core::iter::empty()
+    }
 }

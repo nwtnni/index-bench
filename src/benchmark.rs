@@ -138,7 +138,11 @@ pub fn run<K: KeyDistribution, I: Index<K::Key>>(
                                     let checksum = key.checksum();
                                     assert_eq!(map.insert(key, checksum), Some(checksum));
                                 }
-                                ycsb::Operation::Scan => todo!(),
+                                ycsb::Operation::Scan => {
+                                    let (_, key) = runner.next_key_read(&mut rng);
+                                    let length = runner.next_scan_length(&mut rng);
+                                    map.scan(&key, length).count();
+                                }
                                 ycsb::Operation::Insert => {
                                     let (id, key) = runner.next_key_insert(&mut rng, 1);
                                     let checksum = key.checksum();

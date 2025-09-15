@@ -17,7 +17,7 @@ checksum = "c858caffa49edfc4ecc45a4bec37abd3e88041a2903816f10f990b7b41abc281"
 [[package]]
 name = "arctic"
 version = "0.1.0"
-source = "git+ssh://github.com/nwtnni/arctic#9ac499d28aca16feef62a576618739ce438dc213"
+source = "git+ssh://github.com/nwtnni/arctic#f6f2197c824749b6402447e245c465fed142abd1"
 dependencies = [
  "hdrhistogram",
  "ribbit",
@@ -836,7 +836,7 @@ dependencies = [
 [[package]]
 name = "ycsb"
 version = "0.1.0"
-source = "git+https://github.com/nwtnni/ycsb.git#c8ccb91149afb59950e4b64887c696398a8a586d"
+source = "git+https://github.com/nwtnni/ycsb.git#c23ecf31b1b7c9b95c2d520c541c8cbf49397da5"
 dependencies = [
  "cartesian",
  "rand",
