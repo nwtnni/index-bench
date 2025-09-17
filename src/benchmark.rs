@@ -61,12 +61,12 @@ pub fn run<K: KeyDistribution, I: Index<K::Key>>(
 
             let _ = barrier.wait();
 
+            // Threads complete
+            let _ = barrier.wait();
+
             if let Some(perf) = &mut perf_external {
                 perf.disable()?;
             }
-
-            // Threads complete
-            let _ = barrier.wait();
 
             Ok(())
         });
