@@ -1,5 +1,8 @@
 import sys
+from pathlib import PurePath
+from typing import Optional
 
+import click
 import dash
 from dash import Dash, html, dcc, Input, State, Output, callback
 import dash_bootstrap_components as dbc
@@ -8,16 +11,7 @@ import polars as pl
 from polars import selectors as cs
 
 
-DF = pl.read_ndjson(sys.argv[1]).with_columns(
-    output=pl.col("output").struct.with_fields(
-        thread=pl.field("thread").list.eval(
-            pl.element().struct.with_fields(
-                throughput=pl.field("operation_count") * 1e9 / pl.field("time"),
-            )
-        )
-    )
-)
-
+DF = None
 
 NULL = "null"
 TYPE_COL = "col"
@@ -78,14 +72,30 @@ class Col:
             ]
 
 
-def main():
+@click.command
+@click.option("--vary")
+@click.argument(
+    "paths",
+    nargs=-1,
+    type=click.Path(
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        resolve_path=True,
+        path_type=PurePath,
+    ),
+)
+def main(vary, paths):
+    df = pl.concat([load(vary, path) for path in paths])
+
     ui_control = [html.H2("Control")]
     ui_independent = [html.H2("Independent")]
 
     ui_process = [html.H2("Process")]
     ui_thread = [html.H2("Thread")]
 
-    for col in flatten(DF):
+    for col in flatten(df):
         if col.output:
             COLS.append(col)
             choices = col.choices()
@@ -113,7 +123,7 @@ def main():
             )
             continue
 
-        values = unique(col.selector)
+        values = unique(df, col.selector)
 
         if len(values) == 1:
             value = values[0]
@@ -156,6 +166,9 @@ def main():
             )
         )
 
+    global DF
+    DF = df
+
     app = Dash(
         external_stylesheets=[dbc.themes.BOOTSTRAP],
     )
@@ -182,52 +195,92 @@ def main():
     app.run(debug=True)
 
 
-def flatten(df):
-    def recurse(columns, namespace, selector, aggregate):
-        select = pl.col if selector is None else lambda col: selector.struct.field(col)
+def flatten(df: pl.LazyFrame):
+    def recurse(
+        name: str, dtype: pl.DataType, namespace: list[str], selector, aggregate: bool
+    ):
+        namespace.append(name)
+        output = namespace[0] == "output"
 
-        for col in columns:
-            dtype = df.select(select(col)).to_series().dtype
-            name = col if namespace == "" else f"{namespace}/{col}"
-            output = name.startswith("output")
-
-            if hasattr(dtype, "fields"):
-                # FIXME: more robust distribution detection
-                if any([field.name == "p50" for field in dtype.fields]):
-                    assert not aggregate
-                    assert output
-                    yield Col(name, select(col), distribution=True, output=output)
-                    continue
-
-                yield from recurse(
-                    [field.name for field in dtype.fields],
-                    name,
-                    select(col),
-                    aggregate,
-                )
+        match dtype:
+            case pl.Struct(fields=fields):
+                for field in fields:
+                    # FIXME: more robust distribution detection
+                    if any([field.name == "p50" for field in fields]):
+                        assert not aggregate
+                        assert output
+                        yield Col(
+                            "/".join(namespace),
+                            selector(name),
+                            distribution=True,
+                            output=output,
+                        )
+                    else:
+                        yield from recurse(
+                            field.name,
+                            field.dtype,
+                            namespace,
+                            lambda inner: selector(name).struct.field(inner),
+                            aggregate,
+                        )
 
             # FIXME: only supports lists of structs, which
             # is true in our case (`output/thread`)
-            elif hasattr(dtype, "inner"):
-                yield from recurse(
-                    [field.name for field in dtype.inner.fields],
-                    name,
-                    select(col).list.explode(),
-                    True,
-                )
-            else:
+            case pl.List(inner=pl.Struct(fields=fields)):
+                for field in fields:
+                    yield from recurse(
+                        field.name,
+                        field.dtype,
+                        namespace,
+                        lambda inner: selector(name).list.explode().struct.field(inner),
+                        True,
+                    )
+            case _:
                 yield Col(
-                    name,
-                    select(col),
+                    "/".join(namespace),
+                    selector(name),
                     aggregate=aggregate,
                     output=output,
                 )
 
-    yield from recurse(df.columns, "", None, False)
+        namespace.pop()
+
+    schema = df.collect_schema()
+    for name, dtype in zip(schema.names(), schema.dtypes()):
+        yield from recurse(name, dtype, [], pl.col, False)
 
 
-def unique(selector):
-    return DF.select(selector).unique().to_series().sort()
+def unique(df, selector):
+    return df.select(selector).unique().sort(cs.all()).collect().to_series()
+
+
+def load(vary: Optional[str], path: PurePath):
+    name = pl.field("name")
+
+    if vary is not None:
+        suffix = "-" + path.name.removesuffix(".gz").removesuffix(".ndjson")
+        name = (
+            pl.when(pl.field("name") == vary)
+            .then(pl.field("name") + suffix)
+            .otherwise(pl.field("name"))
+        )
+
+    return pl.scan_ndjson(str(path)).with_columns(
+        # Rename system variants
+        config=pl.col("config").struct.with_fields(
+            pl.field("index").struct.with_fields(
+                name=name,
+            )
+        ),
+        # Compute throughput per thread
+        output=pl.col("output").struct.with_fields(
+            thread=pl.field("thread").list.eval(
+                pl.element().struct.with_fields(
+                    throughput=pl.field("operation_count") * 1e9 / pl.field("time"),
+                )
+            )
+        ),
+    )
 
 
 @callback(
@@ -257,7 +310,7 @@ def update(
     ts,
     values,
 ):
-    if ts is None or any([value is None for value in values]):
+    if DF is None or ts is None or any([value is None for value in values]):
         raise dash.exceptions.PreventUpdate
 
     x = None
@@ -348,6 +401,8 @@ def update(
                 variable_name="metric",
                 value_name="value",
             )
+
+        filtered = filtered.collect()
 
         fig = px.line(
             filtered,
