@@ -1,5 +1,3 @@
-import enum
-from enum import Enum
 import sys
 
 import dash
@@ -127,7 +125,7 @@ def main():
             ui_control.append(
                 dbc.Row(
                     [
-                        dbc.Col(html.Span(col.name)),
+                        dbc.Col(html.Span(col.name.removeprefix("config/"))),
                         dbc.Col(dcc.Dropdown([value], value=value, disabled=True)),
                     ]
                 )
@@ -139,7 +137,7 @@ def main():
             dbc.Row(
                 [
                     col.store(),
-                    dbc.Col(html.Span(col.name)),
+                    dbc.Col(html.Span(col.name.removeprefix("config/"))),
                     dbc.Col(
                         dcc.Dropdown(
                             CHOICES_INDEPENDENT
@@ -311,29 +309,34 @@ def update(
             x.selector.first().alias(x.name),
         ]
 
+        # Keep all y statistics consistent (list of values to be averaged across experiments)
         if op == "mean":
-            cols.extend(
-                [
-                    y.selector.mean().alias(f"{y.name}"),
-                    y.selector.std().alias(f"{y.name}_std"),
-                ]
-            )
-        elif op == "sum":
-            cols.append(
-                y.selector.sum().alias(f"{y.name}"),
-            )
-        elif op == "show":
             cols.append(y.selector.alias(f"{y.name}"))
-
+        elif op == "sum":
+            cols.append(y.selector.sum().alias(f"{y.name}").implode())
+        elif op == "show":
+            cols.append(y.selector.alias(f"{y.name}").implode())
         else:
             assert False
 
         for col in [v for v in [facet_row, facet_column, facet_color] if v is not None]:
+            cols.append(col.selector.first().alias(col.name))
             sorts.append(col.name)
-            if col.name not in filtered.columns:
-                cols.append(col.selector.first().alias(col.name))
 
-        filtered = filtered.group_by(cs.exclude("output", "date")).agg(cols).sort(sorts)
+        filtered = (
+            # Aggregate y values within a single experiment (date)
+            filtered.group_by("config", "date")
+            .agg(cols)
+            .explode(y.name)
+            # Aggregate y values across experiments with the same configuration
+            .group_by("config")
+            .agg(
+                cs.exclude(y.name).first(),
+                pl.col(y.name).mean(),
+                pl.col(y.name).std().alias(f"{y.name}_std"),
+            )
+            .sort(sorts)
+        )
 
         if y.distribution:
             filtered = filtered.select(
@@ -350,7 +353,7 @@ def update(
             filtered,
             x=x.name,
             y="value" if y.distribution else y.name,
-            error_y=f"{y.name}_std" if op == "mean" else None,
+            error_y=f"{y.name}_std",
             facet_row=facet_row.name if facet_row is not None else None,
             facet_col=facet_column.name if facet_column is not None else None,
             color="metric"
