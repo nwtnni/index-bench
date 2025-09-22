@@ -1,6 +1,10 @@
 //! Vendored from src/ds_impl/ebr
 //! https://github.com/kaist-cp/smr-benchmark/tree/00b4e4d06d9b91f289b4644163f0cac0660d4af7
 
+#[expect(clippy::needless_return)]
+#[expect(clippy::too_many_arguments)]
+#[expect(clippy::type_complexity)]
+#[expect(dead_code)]
 mod bonsai;
 
 use std::sync::Arc;
