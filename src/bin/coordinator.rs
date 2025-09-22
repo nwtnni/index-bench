@@ -33,11 +33,15 @@ fn main() -> anyhow::Result<()> {
 
         eprintln!("{config:?}");
 
-        let mut child = Command::new("./target/release/worker")
-            .stdin(Stdio::piped())
-            .stdout(Stdio::piped())
-            .spawn()
-            .context("Spawn worker")?;
+        let mut child = Command::new(if cfg!(debug_assertions) {
+            "target/debug/worker"
+        } else {
+            "target/release/worker"
+        })
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .spawn()
+        .context("Spawn worker")?;
 
         serde_json::to_writer(child.stdin.as_mut().unwrap(), &config)
             .context("Write config to worker")?;
