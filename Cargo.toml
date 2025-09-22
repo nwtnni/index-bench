@@ -7,9 +7,7 @@ edition = "2024"
 stat = ["arctic/stat"]
 opt-node3-get = ["arctic/opt-node3-get"]
 opt-node15-get = ["arctic/opt-node15-get"]
-opt-empty-match = ["arctic/opt-empty-match"]
-opt-memcpy = ["arctic/opt-memcpy"]
-opt = ["opt-node3-get", "opt-node15-get", "opt-empty-match", "opt-memcpy"]
+opt = ["opt-node3-get", "opt-node15-get"]
 
 [dependencies]
 anyhow = "1.0.99"

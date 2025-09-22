@@ -95,7 +95,8 @@ where
         serde_json::to_value(arctic::stat::thread()).unwrap()
     }
 
-    fn scan(&mut self, key: &K, count: usize) -> impl Iterator<Item = u32> {
-        (*self.0).scan(key, count)
+    fn scan(&mut self, _key: &K, _count: usize) -> impl Iterator<Item = u32> {
+        // FIXME
+        core::iter::empty()
     }
 }
