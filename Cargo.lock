@@ -112,6 +112,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "congee"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "72819224a9c43e0a5d64bdad35a71fde68bf479992fb8989635c72bc547909be"
+dependencies = [
+ "crossbeam-epoch 0.9.18",
+]
+
+[[package]]
 name = "const_panic"
 version = "0.2.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -336,6 +345,7 @@ dependencies = [
  "bztree",
  "cartesian",
  "concurrent-map",
+ "congee",
  "crossbeam-epoch 0.9.13",
  "crossbeam-epoch 0.9.18",
  "crossbeam-skiplist",

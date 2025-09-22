@@ -5,6 +5,7 @@ use serde::Serialize;
 
 pub mod bz_tree;
 pub mod concurrent_map;
+pub mod congee;
 pub mod crossbeam_skiplist;
 pub mod kaist;
 pub mod papaya;
@@ -30,6 +31,7 @@ pub enum Name {
     Bonsai,
     BzTree,
     ConcurrentMap,
+    Congee,
     CrossbeamSkiplist,
     Papaya,
     Scc,
