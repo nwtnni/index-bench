@@ -1,4 +1,3 @@
-use core::hash::Hash;
 use std::sync::Arc;
 
 use serde::Deserialize;
@@ -10,8 +9,21 @@ pub mod papaya;
 pub mod scc;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(tag = "name", rename_all = "snake_case")]
-pub enum Config {
+#[serde(tag = "kind", rename_all = "snake_case")]
+pub struct Config {
+    pub hash: Hash,
+    pub name: Name,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Hash {
+    RapidHash,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Name {
     Arctic,
     ConcurrentMap,
     CrossbeamSkiplist,
@@ -19,9 +31,10 @@ pub enum Config {
     Scc,
 }
 
-pub trait Index<K>: Send
+pub trait Index<K, H>: Send
 where
     K: Key,
+    H: Hasher,
 {
     /// HACK: `crossbeam-skiplist` doesn't seem to have an API for returning the old value.
     ///
@@ -37,8 +50,19 @@ where
     }
 }
 
+pub trait Hasher: core::hash::BuildHasher + Default + Send + Sync {}
+impl<T> Hasher for T where T: core::hash::BuildHasher + Default + Send + Sync {}
+
 pub trait Key:
-    arctic::Key + Clone + Hash + Eq + Send + Sync + Sized + ::concurrent_map::Minimum + 'static
+    arctic::Key
+    + Clone
+    + core::hash::Hash
+    + Eq
+    + Send
+    + Sync
+    + Sized
+    + ::concurrent_map::Minimum
+    + 'static
 {
     fn checksum(&self) -> u32;
 }
@@ -72,9 +96,10 @@ where
 
 pub struct Arctic<K>(Arc<arctic::Map<K, u32>>);
 
-impl<K> Index<K> for Arctic<K>
+impl<K, H> Index<K, H> for Arctic<K>
 where
     K: Key,
+    H: Hasher,
 {
     type Handle = Self;
     fn new() -> Self {

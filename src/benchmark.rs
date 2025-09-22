@@ -13,12 +13,13 @@ use rand::SeedableRng as _;
 use rand::rngs::SmallRng;
 
 use crate::Index;
+use crate::index;
 use crate::index::Handle as _;
 use crate::index::Key as _;
 use crate::measure;
 use crate::workload::KeyDistribution;
 
-pub fn run<K: KeyDistribution, I: Index<K::Key>>(
+pub fn run<K: KeyDistribution, I: Index<K::Key, H>, H: index::Hasher>(
     config: crate::Config,
 ) -> anyhow::Result<measure::Global> {
     let date = SystemTime::now()

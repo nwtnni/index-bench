@@ -12,31 +12,41 @@ fn main() -> anyhow::Result<()> {
 
 fn specialize_key(config: index_bench::Config) -> anyhow::Result<index_bench::measure::Global> {
     match config.workload.key {
-        index_bench::workload::Key::U64 => specialize_index::<index_bench::workload::U64>(config),
+        index_bench::workload::Key::U64 => specialize_hash::<index_bench::workload::U64>(config),
         index_bench::workload::Key::Email => {
-            specialize_index::<index_bench::workload::Email>(config)
+            specialize_hash::<index_bench::workload::Email>(config)
         }
     }
 }
 
-fn specialize_index<K: index_bench::workload::KeyDistribution>(
+fn specialize_hash<K: index_bench::workload::KeyDistribution>(
     config: index_bench::Config,
 ) -> anyhow::Result<index_bench::measure::Global> {
-    match config.index {
-        index_bench::index::Config::Arctic => {
-            index_bench::run::<K, index_bench::index::Arctic<K::Key>>(config)
+    match config.index.hash {
+        index_bench::index::Hash::RapidHash => {
+            specialize_index::<K, rapidhash::fast::RandomState>(config)
         }
-        index_bench::index::Config::ConcurrentMap => {
-            index_bench::run::<K, index_bench::index::concurrent_map::Map<K::Key>>(config)
+    }
+}
+
+fn specialize_index<K: index_bench::workload::KeyDistribution, H: index_bench::index::Hasher>(
+    config: index_bench::Config,
+) -> anyhow::Result<index_bench::measure::Global> {
+    match config.index.name {
+        index_bench::index::Name::Arctic => {
+            index_bench::run::<K, index_bench::index::Arctic<K::Key>, H>(config)
         }
-        index_bench::index::Config::CrossbeamSkiplist => {
-            index_bench::run::<K, index_bench::index::crossbeam_skiplist::Map<K::Key>>(config)
+        index_bench::index::Name::ConcurrentMap => {
+            index_bench::run::<K, index_bench::index::concurrent_map::Map<K::Key>, H>(config)
         }
-        index_bench::index::Config::Papaya => {
-            index_bench::run::<K, index_bench::index::papaya::Map<K::Key>>(config)
+        index_bench::index::Name::CrossbeamSkiplist => {
+            index_bench::run::<K, index_bench::index::crossbeam_skiplist::Map<K::Key>, H>(config)
         }
-        index_bench::index::Config::Scc => {
-            index_bench::run::<K, index_bench::index::scc::Map<K::Key>>(config)
+        index_bench::index::Name::Papaya => {
+            index_bench::run::<K, index_bench::index::papaya::Map<K::Key, H>, H>(config)
+        }
+        index_bench::index::Name::Scc => {
+            index_bench::run::<K, index_bench::index::scc::Map<K::Key, H>, H>(config)
         }
     }
 }

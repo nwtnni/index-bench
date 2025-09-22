@@ -3,7 +3,7 @@ use crate::index;
 
 pub struct Map<K: index::Key>(concurrent_map::ConcurrentMap<K, u32>);
 
-impl<K: index::Key> Index<K> for Map<K> {
+impl<K: index::Key, H: index::Hasher> Index<K, H> for Map<K> {
     type Handle = Self;
 
     fn new() -> Self {
