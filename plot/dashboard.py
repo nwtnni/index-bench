@@ -417,6 +417,7 @@ def update(
             if facet_color is not None
             else None,
             markers=True,
+            color_discrete_sequence=px.colors.qualitative.Light24,
             # log_y=True,
         )
 
