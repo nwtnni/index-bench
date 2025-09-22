@@ -3,6 +3,7 @@ use std::sync::Arc;
 use serde::Deserialize;
 use serde::Serialize;
 
+pub mod b_plus_tree;
 pub mod bz_tree;
 pub mod concurrent_map;
 pub mod congee;
@@ -31,6 +32,7 @@ pub enum Hash {
 pub enum Name {
     Arctic,
     Bonsai,
+    BPlusTree,
     BzTree,
     ConcurrentMap,
     Congee,
