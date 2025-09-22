@@ -92,6 +92,12 @@ impl Key for String {
     }
 }
 
+impl Key for Vec<u8> {
+    fn checksum(&self) -> u32 {
+        self.len() as u32
+    }
+}
+
 pub trait Handle<K>: Send
 where
     K: Key,

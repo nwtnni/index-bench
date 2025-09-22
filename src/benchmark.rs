@@ -92,8 +92,12 @@ pub fn run<K: KeyDistribution, I: Index<K::Key, H>, H: index::Hasher>(
                         )
                         .context("Bind thread to CPU")?;
 
-                    let mut loader = workload.loader::<K>(config.global.thread_count, thread_id);
-                    let mut runner = workload.runner::<K>();
+                    let mut loader = workload.loader::<K>(
+                        config.workload.key,
+                        config.global.thread_count,
+                        thread_id,
+                    );
+                    let mut runner = workload.runner::<K>(config.workload.key);
                     let mut rng = SmallRng::seed_from_u64(thread_id as u64);
 
                     if !workload.load {

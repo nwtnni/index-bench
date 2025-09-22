@@ -20,11 +20,12 @@ pub struct Config {
     pub ycsb: ycsb::Workload,
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Copy, Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Key {
     U64,
     Email,
+    Prefix(usize),
 }
 
 static ACKNOWLEDGED: Acknowledged = Acknowledged::new();
@@ -39,19 +40,20 @@ impl Config {
 
     pub(crate) fn loader<K: KeyDistribution>(
         &self,
+        config: Key,
         thread_count: usize,
         thread_id: usize,
     ) -> Loader<K> {
         Loader {
             inner: self.ycsb.loader(thread_count, thread_id),
-            keys: K::default(),
+            keys: K::new(config),
         }
     }
 
-    pub(crate) fn runner<K: KeyDistribution>(&self) -> Runner<K> {
+    pub(crate) fn runner<K: KeyDistribution>(&self, config: Key) -> Runner<K> {
         Runner {
             inner: self.ycsb.runner(&ACKNOWLEDGED),
-            keys: K::default(),
+            keys: K::new(config),
         }
     }
 }
@@ -104,16 +106,21 @@ impl<'ycsb, K: KeyDistribution> Runner<'ycsb, K> {
     }
 }
 
-pub trait KeyDistribution: Default {
+pub trait KeyDistribution {
     type Key: index::Key;
+    fn new(config: Key) -> Self;
     fn get(&self, index: u64) -> Self::Key;
 }
 
-#[derive(Default)]
 pub struct U64;
 
 impl KeyDistribution for U64 {
     type Key = u64;
+
+    fn new(_: Key) -> Self {
+        Self
+    }
+
     fn get(&self, index: u64) -> Self::Key {
         index
     }
@@ -127,15 +134,36 @@ static EMAIL: LazyLock<Vec<&'static str>> = LazyLock::new(|| EMAIL_BUFFER.lines(
 
 pub struct Email(&'static [&'static str]);
 
-impl Default for Email {
-    fn default() -> Self {
-        Self(&EMAIL)
+impl KeyDistribution for Email {
+    type Key = String;
+
+    fn new(_: Key) -> Self {
+        Self(LazyLock::force(&EMAIL).as_slice())
+    }
+
+    fn get(&self, index: u64) -> Self::Key {
+        self.0[index as usize % self.0.len()].to_owned()
     }
 }
 
-impl KeyDistribution for Email {
-    type Key = String;
+pub struct Prefix(usize);
+
+impl KeyDistribution for Prefix {
+    type Key = Vec<u8>;
+
+    fn new(config: Key) -> Self {
+        let len = match config {
+            Key::Prefix(len) => len,
+            _ => unreachable!(),
+        };
+
+        Self(len)
+    }
+
     fn get(&self, index: u64) -> Self::Key {
-        self.0[index as usize % self.0.len()].to_owned()
+        let mut key = Vec::with_capacity(self.0 + 8);
+        key.extend((0..self.0).map(|_| 0));
+        key.extend(index.to_be_bytes());
+        key
     }
 }
