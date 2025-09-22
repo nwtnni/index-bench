@@ -6,6 +6,7 @@ use serde::Serialize;
 pub mod bz_tree;
 pub mod concurrent_map;
 pub mod crossbeam_skiplist;
+pub mod kaist;
 pub mod papaya;
 pub mod scc;
 
@@ -26,6 +27,7 @@ pub enum Hash {
 #[serde(rename_all = "snake_case")]
 pub enum Name {
     Arctic,
+    Bonsai,
     BzTree,
     ConcurrentMap,
     CrossbeamSkiplist,
@@ -33,15 +35,24 @@ pub enum Name {
     Scc,
 }
 
+pub enum Insert {
+    Old,
+    New,
+    OldExists,
+}
+
 pub trait Index<K, H>: Send
 where
     K: Key,
     H: Hasher,
 {
-    /// HACK: `crossbeam-skiplist` doesn't seem to have an API for returning the old value.
+    /// HACK
+    ///
+    /// - `crossbeam-skiplist` returns the new value instead of the old
+    /// - `kaist::bonsai` returns whether the insertion succeeded
     ///
     /// Whether the insert operation returns the old value or the new value.
-    const INSERT_OLD: bool = true;
+    const IGNORE_INSERT: bool = false;
 
     type Handle: Handle<K>;
     fn new() -> Self;

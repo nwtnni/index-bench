@@ -7,7 +7,7 @@ pub struct Map<K: index::Key>(Arc<crossbeam_skiplist::SkipMap<K, u32>>);
 
 impl<K: index::Key, H: index::Hasher> Index<K, H> for Map<K> {
     type Handle = Self;
-    const INSERT_OLD: bool = false;
+    const IGNORE_INSERT: bool = true;
 
     fn new() -> Self {
         Self(Arc::new(crossbeam_skiplist::SkipMap::new()))

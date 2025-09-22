@@ -147,10 +147,8 @@ pub fn run<K: KeyDistribution, I: Index<K::Key, H>, H: index::Hasher>(
                                 ycsb::Operation::Insert => {
                                     let (id, key) = runner.next_key_insert(&mut rng, 1);
                                     let checksum = key.checksum();
-                                    if I::INSERT_OLD {
+                                    if !I::IGNORE_INSERT {
                                         assert_eq!(map.insert(key, checksum), None);
-                                    } else {
-                                        assert_eq!(map.insert(key, checksum), Some(checksum));
                                     }
                                     runner.acknowledge(id);
                                 }

@@ -36,6 +36,9 @@ fn specialize_index<K: index_bench::workload::KeyDistribution, H: index_bench::i
         index_bench::index::Name::Arctic => {
             index_bench::run::<K, index_bench::index::Arctic<K::Key>, H>(config)
         }
+        index_bench::index::Name::Bonsai => {
+            index_bench::run::<K, index_bench::index::kaist::Bonsai<K::Key>, H>(config)
+        }
         index_bench::index::Name::BzTree => {
             index_bench::run::<K, index_bench::index::bz_tree::Map<K::Key>, H>(config)
         }

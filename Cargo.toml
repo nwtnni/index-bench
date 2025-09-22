@@ -29,6 +29,13 @@ rand = "0.9.2"
 papaya = "0.2.3"
 bztree = "0.2.0"
 crossbeam-epoch = "0.9.18"
+bitflags = "2.9.4"
+
+# https://github.com/kaist-cp/smr-benchmark/blob/00b4e4d06d9b91f289b4644163f0cac0660d4af7/Cargo.toml#L42-L45
+[dependencies.crossbeam-ebr]
+package = "crossbeam-epoch"
+git = "https://github.com/kaist-cp/crossbeam"
+branch = "smr-benchmark"
 
 # [features]
 # default = []
