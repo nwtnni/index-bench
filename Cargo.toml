@@ -12,6 +12,7 @@ opt = ["opt-node3-get", "opt-node15-get"]
 [dependencies]
 anyhow = "1.0.99"
 concurrent-map = "5.0.37"
+crossbeam-skiplist = "0.1.3"
 hwlocality = "1.0.0-alpha.10"
 libc = "0.2.175"
 log = "0.4.27"

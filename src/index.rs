@@ -5,6 +5,7 @@ use serde::Deserialize;
 use serde::Serialize;
 
 pub mod concurrent_map;
+pub mod crossbeam_skiplist;
 pub mod scc;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -12,6 +13,7 @@ pub mod scc;
 pub enum Config {
     Arctic,
     ConcurrentMap,
+    CrossbeamSkiplist,
     Scc,
 }
 
@@ -19,6 +21,11 @@ pub trait Index<K>: Send
 where
     K: Key,
 {
+    /// HACK: `crossbeam-skiplist` doesn't seem to have an API for returning the old value.
+    ///
+    /// Whether the insert operation returns the old value or the new value.
+    const INSERT_OLD: bool = true;
+
     type Handle: Handle<K>;
     fn new() -> Self;
     fn pin(&self) -> Self::Handle;

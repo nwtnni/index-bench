@@ -29,6 +29,9 @@ fn specialize_index<K: index_bench::workload::KeyDistribution>(
         index_bench::index::Config::ConcurrentMap => {
             index_bench::run::<K, index_bench::index::concurrent_map::Map<K::Key>>(config)
         }
+        index_bench::index::Config::CrossbeamSkiplist => {
+            index_bench::run::<K, index_bench::index::crossbeam_skiplist::Map<K::Key>>(config)
+        }
         index_bench::index::Config::Scc => {
             index_bench::run::<K, index_bench::index::scc::Map<K::Key>>(config)
         }
