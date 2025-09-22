@@ -8,6 +8,7 @@ pub mod concurrent_map;
 pub mod congee;
 pub mod contrie;
 pub mod crossbeam_skiplist;
+pub mod dash_map;
 pub mod kaist;
 pub mod papaya;
 pub mod scc;
@@ -35,6 +36,7 @@ pub enum Name {
     Congee,
     Contrie,
     CrossbeamSkiplist,
+    DashMap,
     Papaya,
     Scc,
 }
@@ -67,8 +69,8 @@ where
     }
 }
 
-pub trait Hasher: core::hash::BuildHasher + Default + Send + Sync {}
-impl<T> Hasher for T where T: core::hash::BuildHasher + Default + Send + Sync {}
+pub trait Hasher: core::hash::BuildHasher + Clone + Default + Send + Sync {}
+impl<T> Hasher for T where T: core::hash::BuildHasher + Clone + Default + Send + Sync {}
 
 pub trait Key:
     arctic::Key

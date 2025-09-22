@@ -57,6 +57,9 @@ fn specialize_index<K: index_bench::workload::KeyDistribution, H: index_bench::i
         index_bench::index::Name::CrossbeamSkiplist => {
             index_bench::run::<K, index_bench::index::crossbeam_skiplist::Map<K::Key>, H>(config)
         }
+        index_bench::index::Name::DashMap => {
+            index_bench::run::<K, index_bench::index::dash_map::Map<K::Key, H>, H>(config)
+        }
         index_bench::index::Name::Papaya => {
             index_bench::run::<K, index_bench::index::papaya::Map<K::Key, H>, H>(config)
         }
