@@ -26,6 +26,7 @@ pub enum Key {
     U64,
     Email,
     Prefix(usize),
+    Sparse(f64),
 }
 
 static ACKNOWLEDGED: Acknowledged = Acknowledged::new();
@@ -165,5 +166,24 @@ impl KeyDistribution for Prefix {
         key.extend((0..self.0).map(|_| 0));
         key.extend(index.to_be_bytes());
         key
+    }
+}
+
+pub struct Sparse(f64);
+
+impl KeyDistribution for Sparse {
+    type Key = u64;
+
+    fn new(config: Key) -> Self {
+        let sparse = match config {
+            Key::Sparse(sparse) => sparse,
+            _ => unreachable!(),
+        };
+
+        Self(sparse)
+    }
+
+    fn get(&self, index: u64) -> Self::Key {
+        (index as f64 * self.0) as u64
     }
 }
