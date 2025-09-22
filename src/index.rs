@@ -6,6 +6,7 @@ use serde::Serialize;
 
 pub mod concurrent_map;
 pub mod crossbeam_skiplist;
+pub mod papaya;
 pub mod scc;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -14,6 +15,7 @@ pub enum Config {
     Arctic,
     ConcurrentMap,
     CrossbeamSkiplist,
+    Papaya,
     Scc,
 }
 

@@ -32,6 +32,9 @@ fn specialize_index<K: index_bench::workload::KeyDistribution>(
         index_bench::index::Config::CrossbeamSkiplist => {
             index_bench::run::<K, index_bench::index::crossbeam_skiplist::Map<K::Key>>(config)
         }
+        index_bench::index::Config::Papaya => {
+            index_bench::run::<K, index_bench::index::papaya::Map<K::Key>>(config)
+        }
         index_bench::index::Config::Scc => {
             index_bench::run::<K, index_bench::index::scc::Map<K::Key>>(config)
         }
