@@ -3,6 +3,7 @@ use std::sync::Arc;
 use serde::Deserialize;
 use serde::Serialize;
 
+pub mod bz_tree;
 pub mod concurrent_map;
 pub mod crossbeam_skiplist;
 pub mod papaya;
@@ -25,6 +26,7 @@ pub enum Hash {
 #[serde(rename_all = "snake_case")]
 pub enum Name {
     Arctic,
+    BzTree,
     ConcurrentMap,
     CrossbeamSkiplist,
     Papaya,

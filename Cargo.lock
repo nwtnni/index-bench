@@ -61,6 +61,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1fd0f2584146f6f2ef48085050886acf353beff7305ebd1ae69500e27c67f64b"
 
 [[package]]
+name = "bztree"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "129974fd4c1e566182e7e89314d6d04c46a2bc4c31cae57150c63a9d9396f019"
+dependencies = [
+ "crossbeam-epoch",
+ "mwcas",
+]
+
+[[package]]
 name = "c-enum"
 version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -302,8 +312,10 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "arctic",
+ "bztree",
  "cartesian",
  "concurrent-map",
+ "crossbeam-epoch",
  "crossbeam-skiplist",
  "hwlocality",
  "libc",
@@ -379,6 +391,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "488016bfae457b036d996092f6cb448677611ce4449e970ceaf42695203f218a"
 dependencies = [
  "autocfg",
+]
+
+[[package]]
+name = "mwcas"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b69990f0f27d01f0cacd544745c13877aa9709e85d225b136d3c44fd4c945b92"
+dependencies = [
+ "crossbeam-epoch",
 ]
 
 [[package]]

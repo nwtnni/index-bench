@@ -27,6 +27,8 @@ scc = "3.0.2"
 rapidhash = "4.0.0"
 rand = "0.9.2"
 papaya = "0.2.3"
+bztree = "0.2.0"
+crossbeam-epoch = "0.9.18"
 
 # [features]
 # default = []
