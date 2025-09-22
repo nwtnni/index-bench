@@ -74,6 +74,7 @@ pub fn run<K: KeyDistribution, I: Index<K::Key>>(
         let threads = (0..config.global.thread_count)
             .zip(cores)
             .map(|(thread_id, core)| {
+                let mut map = map.pin();
                 scope.spawn(move || -> anyhow::Result<_> {
                     crate::THREAD_ID.set(thread_id);
 
@@ -90,7 +91,6 @@ pub fn run<K: KeyDistribution, I: Index<K::Key>>(
                         )
                         .context("Bind thread to CPU")?;
 
-                    let mut map = map.pin();
                     let mut loader = workload.loader::<K>(config.global.thread_count, thread_id);
                     let mut runner = workload.runner::<K>();
                     let mut rng = SmallRng::seed_from_u64(thread_id as u64);

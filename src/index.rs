@@ -4,16 +4,18 @@ use std::sync::Arc;
 use serde::Deserialize;
 use serde::Serialize;
 
+pub mod concurrent_map;
 pub mod scc;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(tag = "name", rename_all = "snake_case")]
 pub enum Config {
     Arctic,
+    ConcurrentMap,
     Scc,
 }
 
-pub trait Index<K>: Send + Sync
+pub trait Index<K>: Send
 where
     K: Key,
 {
@@ -26,7 +28,9 @@ where
     }
 }
 
-pub trait Key: arctic::Key + Hash + Eq + Send + Sync + Sized {
+pub trait Key:
+    arctic::Key + Clone + Hash + Eq + Send + Sync + Sized + ::concurrent_map::Minimum + 'static
+{
     fn checksum(&self) -> u32;
 }
 
@@ -42,7 +46,7 @@ impl Key for String {
     }
 }
 
-pub trait Handle<K>
+pub trait Handle<K>: Send
 where
     K: Key,
 {
