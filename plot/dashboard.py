@@ -204,18 +204,18 @@ def flatten(df: pl.LazyFrame):
 
         match dtype:
             case pl.Struct(fields=fields):
-                for field in fields:
-                    # FIXME: more robust distribution detection
-                    if any([field.name == "p50" for field in fields]):
-                        assert not aggregate
-                        assert output
-                        yield Col(
-                            "/".join(namespace),
-                            selector(name),
-                            distribution=True,
-                            output=output,
-                        )
-                    else:
+                # FIXME: more robust distribution detection
+                if any([field.name == "p50" for field in fields]):
+                    assert not aggregate
+                    assert output
+                    yield Col(
+                        "/".join(namespace),
+                        selector(name),
+                        distribution=True,
+                        output=output,
+                    )
+                else:
+                    for field in fields:
                         yield from recurse(
                             field.name,
                             field.dtype,
