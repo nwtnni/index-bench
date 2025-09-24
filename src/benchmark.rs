@@ -112,6 +112,10 @@ pub fn run<K: KeyDistribution, I: Index<K::Key, H>, H: index::Hasher>(
                         .transpose()
                         .context("Initialize perf-event")?;
 
+                    if cfg!(feature = "stat") {
+                        arctic::stat::start();
+                    }
+
                     // Setup complete
                     let _ = barrier.wait();
 
