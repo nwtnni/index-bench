@@ -17,11 +17,12 @@ checksum = "c858caffa49edfc4ecc45a4bec37abd3e88041a2903816f10f990b7b41abc281"
 [[package]]
 name = "arctic"
 version = "0.1.0"
-source = "git+ssh://github.com/nwtnni/arctic#65157b14b1b8a3f880274fa6203eac8f71f8ba54"
+source = "git+ssh://github.com/nwtnni/arctic#b225b17e85398e7a35acf0c46c11b9c27d31e709"
 dependencies = [
  "hdrhistogram",
  "ribbit",
  "serde",
+ "thread_local",
 ]
 
 [[package]]
@@ -1054,6 +1055,14 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.106",
+]
+
+[[package]]
+name = "thread_local"
+version = "1.1.9"
+source = "git+https://github.com/nwtnni/thread_local-rs.git#33f151b641a1b099b440c062bacb1237a194a454"
+dependencies = [
+ "cfg-if 1.0.3",
 ]
 
 [[package]]

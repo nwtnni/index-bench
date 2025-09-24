@@ -1,32 +1,24 @@
-use std::sync::Arc;
-
 use crate::Index;
 use crate::index;
 
-pub struct Map<K, H: core::hash::BuildHasher>(Arc<scc::HashMap<K, u32, H>>);
-
-impl<K: index::Key, H: index::Hasher> Index<K, H> for Map<K, H> {
-    type Handle = Self;
+impl<K: index::Key, H: index::Hasher> Index<K, H> for scc::HashMap<K, u32, H> {
+    type Handle<'a> = &'a scc::HashMap<K, u32, H>;
 
     fn new() -> Self {
-        Self(Arc::new(scc::HashMap::with_hasher(H::default())))
+        scc::HashMap::with_hasher(H::default())
     }
 
-    fn pin(&self) -> Self::Handle {
-        Self(Arc::clone(&self.0))
+    fn pin<'a>(&'a self) -> Self::Handle<'a> {
+        self
     }
 }
 
-impl<K: index::Key, H: index::Hasher> index::Handle<K> for Map<K, H> {
+impl<K: index::Key, H: index::Hasher> index::Handle<K> for &'_ scc::HashMap<K, u32, H> {
     fn get(&mut self, key: &K) -> Option<u32> {
-        self.0.read_sync(key, |_, value| *value)
+        self.read_sync(key, |_, value| *value)
     }
 
     fn insert(&mut self, key: K, value: u32) -> Option<u32> {
-        self.0.insert_sync(key, value).err().map(|(_, value)| value)
-    }
-
-    fn scan(&mut self, _key: &K, _count: usize) -> impl Iterator<Item = u32> {
-        core::iter::empty()
+        self.insert_sync(key, value).err().map(|(_, value)| value)
     }
 }

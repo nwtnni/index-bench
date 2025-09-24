@@ -1,33 +1,25 @@
-use std::sync::Arc;
-
 use crate::Index;
 use crate::index;
 
-pub struct Map<K: index::Key>(Arc<crossbeam_skiplist::SkipMap<K, u32>>);
-
-impl<K: index::Key, H: index::Hasher> Index<K, H> for Map<K> {
-    type Handle = Self;
+impl<K: index::Key, H: index::Hasher> Index<K, H> for crossbeam_skiplist::SkipMap<K, u32> {
+    type Handle<'a> = &'a Self;
     const IGNORE_INSERT: bool = true;
 
     fn new() -> Self {
-        Self(Arc::new(crossbeam_skiplist::SkipMap::new()))
+        crossbeam_skiplist::SkipMap::new()
     }
 
-    fn pin(&self) -> Self::Handle {
-        Self(self.0.clone())
+    fn pin<'a>(&'a self) -> Self::Handle<'a> {
+        self
     }
 }
 
-impl<K: index::Key> index::Handle<K> for Map<K> {
+impl<K: index::Key> index::Handle<K> for &'_ crossbeam_skiplist::SkipMap<K, u32> {
     fn get(&mut self, key: &K) -> Option<u32> {
-        Some(*self.0.get(key)?.value())
+        Some(*crossbeam_skiplist::SkipMap::get(self, key)?.value())
     }
 
     fn insert(&mut self, key: K, value: u32) -> Option<u32> {
-        Some(*self.0.insert(key, value).value())
-    }
-
-    fn scan(&mut self, _key: &K, _count: usize) -> impl Iterator<Item = u32> {
-        core::iter::empty()
+        Some(*crossbeam_skiplist::SkipMap::insert(self, key, value).value())
     }
 }

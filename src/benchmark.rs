@@ -75,7 +75,6 @@ pub fn run<K: KeyDistribution, I: Index<K::Key, H>, H: index::Hasher>(
         let threads = (0..config.global.thread_count)
             .zip(cores)
             .map(|(thread_id, core)| {
-                let mut map = map.pin();
                 scope.spawn(move || -> anyhow::Result<_> {
                     crate::THREAD_ID.set(thread_id);
 
@@ -99,6 +98,7 @@ pub fn run<K: KeyDistribution, I: Index<K::Key, H>, H: index::Hasher>(
                     );
                     let mut runner = workload.runner::<K>(config.workload.key);
                     let mut rng = SmallRng::seed_from_u64(thread_id as u64);
+                    let mut map = map.pin();
 
                     if !workload.load {
                         while let Some(key) = loader.next_key() {

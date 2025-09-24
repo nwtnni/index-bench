@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -49,7 +47,7 @@ pub enum Insert {
     OldExists,
 }
 
-pub trait Index<K, H>: Send
+pub trait Index<K, H>: Send + Sync
 where
     K: Key,
     H: Hasher,
@@ -62,17 +60,19 @@ where
     /// Whether the insert operation returns the old value or the new value.
     const IGNORE_INSERT: bool = false;
 
-    type Handle: Handle<K>;
+    type Handle<'a>: Handle<K>
+    where
+        Self: 'a;
     fn new() -> Self;
-    fn pin(&self) -> Self::Handle;
+    fn pin<'a>(&'a self) -> Self::Handle<'a>;
 
     fn report(&mut self) -> serde_json::Value {
         serde_json::Value::Null
     }
 }
 
-pub trait Hasher: core::hash::BuildHasher + Clone + Default + Send + Sync {}
-impl<T> Hasher for T where T: core::hash::BuildHasher + Clone + Default + Send + Sync {}
+pub trait Hasher: core::hash::BuildHasher + Clone + Default + Send + Sync + 'static {}
+impl<T> Hasher for T where T: core::hash::BuildHasher + Clone + Default + Send + Sync + 'static {}
 
 pub trait Key:
     arctic::Key
@@ -106,7 +106,7 @@ impl Key for Vec<u8> {
     }
 }
 
-pub trait Handle<K>: Send
+pub trait Handle<K>
 where
     K: Key,
 {
@@ -114,45 +114,49 @@ where
 
     fn insert(&mut self, key: K, value: u32) -> Option<u32>;
 
-    fn scan(&mut self, key: &K, count: usize) -> impl Iterator<Item = u32>;
+    fn scan(&mut self, _key: &K, _count: usize) -> impl Iterator<Item = u32> {
+        core::iter::empty()
+    }
 
     fn report(&mut self) -> serde_json::Value {
         serde_json::Value::Null
     }
 }
 
-pub struct Arctic<K>(Arc<arctic::Map<K, u32>>);
+pub struct Arctic<K>(arctic::Map<K, u32>);
 
 impl<K, H> Index<K, H> for Arctic<K>
 where
     K: Key,
     H: Hasher,
 {
-    type Handle = Self;
+    type Handle<'a> = arctic::MapRef<'a, K, u32>;
+
     fn new() -> Self {
-        Self(Arc::new(arctic::Map::default()))
+        // Self(Arc::new(arctic::Map::default()))
+        Self(arctic::Map::default())
     }
 
-    fn pin(&self) -> Self::Handle {
-        Self(Arc::clone(&self.0))
+    fn pin<'a>(&'a self) -> Self::Handle<'a> {
+        self.0.pin()
     }
 
     #[cfg(feature = "stat")]
     fn report(&mut self) -> serde_json::Value {
-        serde_json::to_value(arctic::stat::process(Arc::get_mut(&mut self.0).unwrap())).unwrap()
+        serde_json::to_value(arctic::stat::process(&mut self.0)).unwrap()
     }
 }
 
-impl<K> Handle<K> for Arctic<K>
+impl<'a, K> Handle<K> for arctic::MapRef<'a, K, u32>
 where
     K: Key,
 {
     fn get(&mut self, key: &K) -> Option<u32> {
-        (*self.0).get(key)
+        arctic::MapRef::get(self, key)
     }
 
     fn insert(&mut self, key: K, value: u32) -> Option<u32> {
-        (*self.0).insert(&key, value)
+        arctic::MapRef::insert(self, &key, value)
     }
 
     #[cfg(feature = "stat")]
