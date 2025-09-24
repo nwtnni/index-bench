@@ -40,7 +40,7 @@ fn specialize_index<K: index_bench::workload::KeyDistribution, H: index_bench::i
 ) -> anyhow::Result<index_bench::measure::Global> {
     match config.index.name {
         index_bench::index::Name::Arctic => {
-            index_bench::run::<K, index_bench::index::Arctic<K::Key>, H>(config)
+            index_bench::run::<K, arctic::Map<K::Key, u32>, H>(config)
         }
         index_bench::index::Name::Bonsai => {
             index_bench::run::<K, index_bench::index::kaist::BonsaiTreeMap<K::Key, u32>, H>(config)

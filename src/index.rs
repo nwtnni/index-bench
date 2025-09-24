@@ -1,16 +1,17 @@
 use serde::Deserialize;
 use serde::Serialize;
 
-pub mod b_plus_tree;
-pub mod bz_tree;
+mod arctic;
+mod b_plus_tree;
+mod bz_tree;
 pub mod concurrent_map;
 pub mod congee;
-pub mod contrie;
-pub mod crossbeam_skiplist;
-pub mod dash_map;
+mod contrie;
+mod crossbeam_skiplist;
+mod dash_map;
 pub mod kaist;
-pub mod papaya;
-pub mod scc;
+mod papaya;
+mod scc;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case")]
@@ -75,7 +76,7 @@ pub trait Hasher: core::hash::BuildHasher + Clone + Default + Send + Sync + 'sta
 impl<T> Hasher for T where T: core::hash::BuildHasher + Clone + Default + Send + Sync + 'static {}
 
 pub trait Key:
-    arctic::Key
+    ::arctic::Key
     + Clone
     + core::hash::Hash
     + Eq
@@ -120,52 +121,5 @@ where
 
     fn report(&mut self) -> serde_json::Value {
         serde_json::Value::Null
-    }
-}
-
-pub struct Arctic<K>(arctic::Map<K, u32>);
-
-impl<K, H> Index<K, H> for Arctic<K>
-where
-    K: Key,
-    H: Hasher,
-{
-    type Handle<'a> = arctic::MapRef<'a, K, u32>;
-
-    fn new() -> Self {
-        // Self(Arc::new(arctic::Map::default()))
-        Self(arctic::Map::default())
-    }
-
-    fn pin<'a>(&'a self) -> Self::Handle<'a> {
-        self.0.pin()
-    }
-
-    #[cfg(feature = "stat")]
-    fn report(&mut self) -> serde_json::Value {
-        serde_json::to_value(arctic::stat::process(&mut self.0)).unwrap()
-    }
-}
-
-impl<'a, K> Handle<K> for arctic::MapRef<'a, K, u32>
-where
-    K: Key,
-{
-    fn get(&mut self, key: &K) -> Option<u32> {
-        arctic::MapRef::get(self, key)
-    }
-
-    fn insert(&mut self, key: K, value: u32) -> Option<u32> {
-        arctic::MapRef::insert(self, &key, value)
-    }
-
-    #[cfg(feature = "stat")]
-    fn report(&mut self) -> serde_json::Value {
-        serde_json::to_value(arctic::stat::thread()).unwrap()
-    }
-
-    fn scan(&mut self, _key: &K, _count: usize) -> impl Iterator<Item = u32> {
-        // FIXME
-        core::iter::empty()
     }
 }
