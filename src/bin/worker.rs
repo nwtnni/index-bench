@@ -69,8 +69,11 @@ fn specialize_index<K: index_bench::workload::KeyDistribution, H: index_bench::i
         index_bench::index::Name::Papaya => {
             index_bench::run::<K, papaya::HashMap<K::Key, u32, H>, H>(config)
         }
-        index_bench::index::Name::Scc => {
+        index_bench::index::Name::SccHashMap => {
             index_bench::run::<K, scc::HashMap<K::Key, u32, H>, H>(config)
+        }
+        index_bench::index::Name::SccTreeIndex => {
+            index_bench::run::<K, scc::TreeIndex<K::Key, u32>, H>(config)
         }
     }
 }

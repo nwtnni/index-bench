@@ -19,6 +19,30 @@ impl<K: index::Key, H: index::Hasher> index::Handle<K> for &'_ scc::HashMap<K, u
     }
 
     fn insert(&mut self, key: K, value: u32) -> Option<u32> {
+        self.upsert_sync(key, value)
+    }
+}
+
+impl<K: index::Key, H: index::Hasher> Index<K, H> for scc::TreeIndex<K, u32> {
+    type Handle<'a> = &'a Self;
+
+    fn new() -> Self {
+        scc::TreeIndex::new()
+    }
+
+    fn pin<'a>(&'a self) -> Self::Handle<'a> {
+        self
+    }
+}
+
+impl<K: index::Key> index::Handle<K> for &'_ scc::TreeIndex<K, u32> {
+    fn get(&mut self, key: &K) -> Option<u32> {
+        let guard = scc::Guard::new();
+        self.peek(key, &guard).copied()
+    }
+
+    fn insert(&mut self, key: K, value: u32) -> Option<u32> {
+        // NOTE: does not insert if exists
         self.insert_sync(key, value).err().map(|(_, value)| value)
     }
 }

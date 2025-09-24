@@ -39,7 +39,8 @@ pub enum Name {
     CrossbeamSkiplist,
     DashMap,
     Papaya,
-    Scc,
+    SccHashMap,
+    SccTreeIndex,
 }
 
 pub enum Insert {
