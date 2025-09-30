@@ -1,15 +1,15 @@
 use crate::Index;
 use crate::index;
 
-impl<K, H> Index<K, H> for arctic::Map<K, u32>
+impl<K, H> Index<K, H> for arctic::concurrent::Map<K, u32>
 where
     K: index::Key,
     H: index::Hasher,
 {
-    type Handle<'a> = arctic::MapRef<'a, K, u32>;
+    type Handle<'a> = arctic::concurrent::MapRef<'a, K, u32>;
 
     fn new() -> Self {
-        arctic::Map::default()
+        arctic::concurrent::Map::default()
     }
 
     fn pin<'a>(&'a self) -> Self::Handle<'a> {
@@ -22,16 +22,16 @@ where
     }
 }
 
-impl<'a, K> index::Handle<K> for arctic::MapRef<'a, K, u32>
+impl<'a, K> index::Handle<K> for arctic::concurrent::MapRef<'a, K, u32>
 where
     K: index::Key,
 {
     fn get(&mut self, key: &K) -> Option<u32> {
-        arctic::MapRef::get(self, key)
+        arctic::concurrent::MapRef::get(self, key)
     }
 
     fn insert(&mut self, key: K, value: u32) -> Option<u32> {
-        arctic::MapRef::insert(self, &key, value)
+        arctic::concurrent::MapRef::insert(self, &key, value)
     }
 
     #[cfg(feature = "stat")]
