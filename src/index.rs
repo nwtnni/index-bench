@@ -59,8 +59,9 @@ where
     /// - `crossbeam-skiplist` returns the new value instead of the old
     /// - `kaist::bonsai` returns whether the insertion succeeded
     ///
-    /// Whether the insert operation returns the old value or the new value.
+    /// Whether to skip validation of `insert`.
     const IGNORE_INSERT: bool = false;
+    const IGNORE_UPDATE: bool = Self::IGNORE_INSERT;
 
     type Handle<'a>: Handle<K>
     where
@@ -115,6 +116,10 @@ where
     fn get(&mut self, key: &K) -> Option<u32>;
 
     fn insert(&mut self, key: K, value: u32) -> Option<u32>;
+
+    fn update(&mut self, key: K, value: u32) -> Option<u32> {
+        self.insert(key, value)
+    }
 
     fn remove(&mut self, _key: K) -> Option<u32> {
         unimplemented!(

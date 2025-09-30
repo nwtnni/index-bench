@@ -145,8 +145,8 @@ pub fn run<K: KeyDistribution, I: Index<K::Key, H>, H: index::Hasher>(
                                 ycsb::Operation::Update => {
                                     let (_, key) = runner.next_key_read(&mut rng);
                                     let checksum = key.checksum();
-                                    let old = map.insert(key, checksum);
-                                    if !I::IGNORE_INSERT {
+                                    let old = map.update(key, checksum);
+                                    if !I::IGNORE_UPDATE {
                                         assert_eq!(old, Some(checksum));
                                     }
                                 }

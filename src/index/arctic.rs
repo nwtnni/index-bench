@@ -34,6 +34,10 @@ where
         arctic::concurrent::MapRef::insert(self, &key, value)
     }
 
+    fn update(&mut self, key: K, value: u32) -> Option<u32> {
+        arctic::concurrent::MapRef::update(self, &key, value)
+    }
+
     fn remove(&mut self, key: K) -> Option<u32> {
         arctic::concurrent::MapRef::remove(self, &key)
     }

@@ -48,6 +48,17 @@ impl<K: index::Key> index::Handle<K> for &'_ Map<K> {
             .map(|value| value as u32)
     }
 
+    fn update(&mut self, key: K, value: u32) -> Option<u32> {
+        let guard = &self.inner.pin();
+        self.inner
+            .compute_if_present(
+                &unsafe { core::mem::transmute_copy::<K, usize>(&key) },
+                |_| Some(value as usize),
+                guard,
+            )
+            .map(|(old, _)| old as u32)
+    }
+
     fn remove(&mut self, key: K) -> Option<u32> {
         let guard = &self.inner.pin();
         self.inner
