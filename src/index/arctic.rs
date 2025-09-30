@@ -34,6 +34,10 @@ where
         arctic::concurrent::MapRef::insert(self, &key, value)
     }
 
+    fn remove(&mut self, key: K) -> Option<u32> {
+        arctic::concurrent::MapRef::remove(self, &key)
+    }
+
     #[cfg(feature = "stat")]
     fn report(&mut self) -> serde_json::Value {
         serde_json::to_value(arctic::stat::thread()).unwrap()

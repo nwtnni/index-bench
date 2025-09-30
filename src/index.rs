@@ -116,6 +116,13 @@ where
 
     fn insert(&mut self, key: K, value: u32) -> Option<u32>;
 
+    fn remove(&mut self, _key: K) -> Option<u32> {
+        unimplemented!(
+            "TODO: implement remove for {}",
+            std::any::type_name::<Self>()
+        )
+    }
+
     fn scan(&mut self, _key: &K, _count: usize) -> impl Iterator<Item = u32> {
         core::iter::empty()
     }

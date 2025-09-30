@@ -21,6 +21,10 @@ impl<K: index::Key, H: index::Hasher> index::Handle<K> for &'_ scc::HashMap<K, u
     fn insert(&mut self, key: K, value: u32) -> Option<u32> {
         self.upsert_sync(key, value)
     }
+
+    fn remove(&mut self, key: K) -> Option<u32> {
+        self.remove_sync(&key).map(|(_, value)| value)
+    }
 }
 
 impl<K: index::Key, H: index::Hasher> Index<K, H> for scc::TreeIndex<K, u32> {
@@ -44,5 +48,9 @@ impl<K: index::Key> index::Handle<K> for &'_ scc::TreeIndex<K, u32> {
     fn insert(&mut self, key: K, value: u32) -> Option<u32> {
         // NOTE: does not insert if exists
         self.insert_sync(key, value).err().map(|(_, value)| value)
+    }
+
+    fn remove(&mut self, key: K) -> Option<u32> {
+        self.remove_sync(&key).then_some(0)
     }
 }

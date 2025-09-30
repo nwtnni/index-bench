@@ -21,4 +21,8 @@ impl<K: index::Key, H: index::Hasher> index::Handle<K> for &'_ dashmap::DashMap<
     fn insert(&mut self, key: K, value: u32) -> Option<u32> {
         dashmap::DashMap::insert(self, key, value)
     }
+
+    fn remove(&mut self, key: K) -> Option<u32> {
+        dashmap::DashMap::remove(self, &key).map(|(_, value)| value)
+    }
 }

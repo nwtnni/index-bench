@@ -23,4 +23,9 @@ impl<K: index::Key, H: index::Hasher> index::Handle<K> for &'_ papaya::HashMap<K
         let map = self.pin();
         map.insert(key, value).copied()
     }
+
+    fn remove(&mut self, key: K) -> Option<u32> {
+        let map = self.pin();
+        map.remove(&key).copied()
+    }
 }
