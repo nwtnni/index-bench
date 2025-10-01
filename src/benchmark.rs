@@ -53,6 +53,9 @@ pub fn run<K: KeyDistribution, I: Index<K::Key, H>, H: index::Hasher>(
         let perf_internal = perf_external.is_none();
 
         let coordinator = scope.spawn(move || -> anyhow::Result<_> {
+            // Index pinning complete
+            let _ = barrier.wait();
+
             // Thread setup complete
             let _ = barrier.wait();
 
@@ -99,6 +102,9 @@ pub fn run<K: KeyDistribution, I: Index<K::Key, H>, H: index::Hasher>(
                     let mut runner = workload.runner::<K>(config.workload.key);
                     let mut rng = SmallRng::seed_from_u64(thread_id as u64);
                     let mut map = map.pin();
+
+                    // Pinning complete
+                    let _ = barrier.wait();
 
                     if !workload.load {
                         while let Some(key) = loader.next_key() {
