@@ -156,7 +156,7 @@ pub fn run<K: KeyDistribution, I: Index<K::Key, H>, H: index::Hasher>(
                                     map.range(&a..&b).count();
                                 }
                                 ycsb::Operation::Insert => {
-                                    let (id, key) = runner.next_key_insert(&mut rng, 1);
+                                    let (id, key) = runner.next_key_insert();
                                     let checksum = key.checksum();
                                     let old = map.insert(key, checksum);
                                     if !I::IGNORE_INSERT {

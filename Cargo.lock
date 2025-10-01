@@ -1344,7 +1344,7 @@ checksum = "052283831dbae3d879dc7f51f3d92703a316ca49f91540417d38591826127814"
 [[package]]
 name = "ycsb"
 version = "0.1.0"
-source = "git+https://github.com/nwtnni/ycsb.git#c23ecf31b1b7c9b95c2d520c541c8cbf49397da5"
+source = "git+https://github.com/nwtnni/ycsb.git#cdebc21f29c0fc91e7d1fe264563c0c5b10f5143"
 dependencies = [
  "cartesian",
  "rand",

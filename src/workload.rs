@@ -95,12 +95,8 @@ impl<'ycsb, K: KeyDistribution> Runner<'ycsb, K> {
         (key, self.keys.get(key.id()))
     }
 
-    pub(crate) fn next_key_insert<R: rand::Rng>(
-        &mut self,
-        rng: &mut R,
-        window: u64,
-    ) -> (ycsb::Key, K::Key) {
-        let key = self.inner.next_key_insert(rng, window);
+    pub(crate) fn next_key_insert(&mut self) -> (ycsb::Key, K::Key) {
+        let key = self.inner.next_key_insert();
         (key, self.keys.get(key.id()))
     }
 
