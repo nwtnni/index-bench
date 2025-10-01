@@ -1,3 +1,5 @@
+use core::ops::RangeBounds;
+
 use crate::Index;
 use crate::index;
 
@@ -27,19 +29,37 @@ where
     K: index::Key,
 {
     fn get(&mut self, key: &K) -> Option<u32> {
-        arctic::concurrent::MapRef::get(self, key)
+        arctic::concurrent::MapRef::get(self, key.borrow())
     }
 
     fn insert(&mut self, key: K, value: u32) -> Option<u32> {
-        arctic::concurrent::MapRef::insert(self, &key, value)
+        arctic::concurrent::MapRef::insert(self, key.borrow(), value)
     }
 
     fn update(&mut self, key: K, value: u32) -> Option<u32> {
-        arctic::concurrent::MapRef::update(self, &key, value)
+        arctic::concurrent::MapRef::update(self, key.borrow(), value)
     }
 
     fn remove(&mut self, key: K) -> Option<u32> {
-        arctic::concurrent::MapRef::remove(self, &key)
+        arctic::concurrent::MapRef::remove(self, key.borrow())
+    }
+
+    fn range<'b, R: RangeBounds<&'b K>>(
+        &'b mut self,
+        range: R,
+    ) -> impl Iterator<Item = (K, u32)> + 'b {
+        let start = range.start_bound().map(|start| start.borrow());
+        let end = range.end_bound().map(|end| end.borrow());
+
+        #[cfg(feature = "range-linear-optimistic")]
+        {
+            arctic::concurrent::MapRef::range(self, (start, end))
+        }
+
+        #[cfg(not(feature = "range-linear-optimistic"))]
+        {
+            arctic::concurrent::MapRef::range_non_linearizable(self, (start, end))
+        }
     }
 
     #[cfg(feature = "stat")]

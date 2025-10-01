@@ -1,3 +1,5 @@
+use core::ops::RangeBounds;
+
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -128,7 +130,23 @@ where
         )
     }
 
+    fn range<'a, R: RangeBounds<&'a K>>(
+        &'a mut self,
+        _range: R,
+    ) -> impl Iterator<Item = (K, u32)> + 'a {
+        unimplemented!(
+            "TODO: implement range for {}",
+            std::any::type_name::<Self>()
+        );
+
+        #[expect(unreachable_code)]
+        core::iter::empty()
+    }
+
     fn scan(&mut self, _key: &K, _count: usize) -> impl Iterator<Item = u32> {
+        unimplemented!("TODO: implement scan for {}", std::any::type_name::<Self>());
+
+        #[expect(unreachable_code)]
         core::iter::empty()
     }
 
