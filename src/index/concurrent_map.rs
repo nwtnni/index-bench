@@ -1,3 +1,5 @@
+use core::ops::RangeBounds;
+
 use crate::Index;
 use crate::index;
 
@@ -27,5 +29,14 @@ impl<K: index::Key> index::Handle<K> for concurrent_map::ConcurrentMap<K, u32> {
 
     fn insert(&mut self, key: K, value: u32) -> Option<u32> {
         concurrent_map::ConcurrentMap::insert(self, key, value)
+    }
+
+    fn range<'a, R: RangeBounds<&'a K>>(
+        &'a mut self,
+        range: R,
+    ) -> impl Iterator<Item = (K, u32)> + 'a {
+        let start = range.start_bound().map(|start| (**start).clone());
+        let end = range.end_bound().map(|end| (**end).clone());
+        concurrent_map::ConcurrentMap::range(self, (start, end))
     }
 }
