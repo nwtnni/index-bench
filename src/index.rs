@@ -6,8 +6,8 @@ use serde::Serialize;
 mod arctic;
 mod b_plus_tree;
 mod bz_tree;
-pub mod concurrent_map;
-pub mod congee;
+mod concurrent_map;
+mod congee;
 mod contrie;
 mod crossbeam_skiplist;
 mod dash_map;
@@ -51,7 +51,7 @@ pub enum Insert {
     OldExists,
 }
 
-pub trait Index<K, H>: Send + Sync
+pub trait Index<K, H>
 where
     K: Key,
     H: Hasher,
@@ -65,15 +65,28 @@ where
     const IGNORE_INSERT: bool = false;
     const IGNORE_UPDATE: bool = Self::IGNORE_INSERT;
 
-    type Handle<'a>: Handle<K>
+    type Send<'a>: IndexSend<K, H> + Send
     where
         Self: 'a;
+
     fn new() -> Self;
-    fn pin<'a>(&'a self) -> Self::Handle<'a>;
+
+    fn send<'a>(&'a self) -> Self::Send<'a>;
 
     fn report(&mut self) -> serde_json::Value {
         serde_json::Value::Null
     }
+}
+
+pub trait IndexSend<K, H>
+where
+    K: Key,
+    H: Hasher,
+{
+    type Handle<'a>: IndexPin<K>
+    where
+        Self: 'a;
+    fn pin<'a>(&'a self) -> Self::Handle<'a>;
 }
 
 pub trait Hasher: core::hash::BuildHasher + Clone + Default + Send + Sync + 'static {}
@@ -111,7 +124,7 @@ impl Key for Vec<u8> {
     }
 }
 
-pub trait Handle<K>
+pub trait IndexPin<K>
 where
     K: Key,
 {

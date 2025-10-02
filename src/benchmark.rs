@@ -14,7 +14,8 @@ use rand::rngs::SmallRng;
 
 use crate::Index;
 use crate::index;
-use crate::index::Handle as _;
+use crate::index::IndexPin as _;
+use crate::index::IndexSend as _;
 use crate::index::Key as _;
 use crate::measure;
 use crate::workload::KeyDistribution;
@@ -44,7 +45,6 @@ pub fn run<K: KeyDistribution, I: Index<K::Key, H>, H: index::Hasher>(
 
     let threads = thread::scope(|scope| -> anyhow::Result<_> {
         let workload = &config.workload;
-        let map = &map;
 
         let mut perf_external = match (env::var("PERF_CTL_FIFO"), env::var("PERF_ACK_FIFO")) {
             (Ok(ctl), Ok(ack)) => Some(measure::perf::Sync::new(ctl, ack)?),
@@ -53,9 +53,6 @@ pub fn run<K: KeyDistribution, I: Index<K::Key, H>, H: index::Hasher>(
         let perf_internal = perf_external.is_none();
 
         let coordinator = scope.spawn(move || -> anyhow::Result<_> {
-            // Index pinning complete
-            let _ = barrier.wait();
-
             // Thread setup complete
             let _ = barrier.wait();
 
@@ -78,6 +75,8 @@ pub fn run<K: KeyDistribution, I: Index<K::Key, H>, H: index::Hasher>(
         let threads = (0..config.global.thread_count)
             .zip(cores)
             .map(|(thread_id, core)| {
+                let map = map.send();
+
                 scope.spawn(move || -> anyhow::Result<_> {
                     crate::THREAD_ID.set(thread_id);
 
@@ -102,9 +101,6 @@ pub fn run<K: KeyDistribution, I: Index<K::Key, H>, H: index::Hasher>(
                     let mut runner = workload.runner::<K>(config.workload.key);
                     let mut rng = SmallRng::seed_from_u64(thread_id as u64);
                     let mut map = map.pin();
-
-                    // Pinning complete
-                    let _ = barrier.wait();
 
                     if !workload.load {
                         while let Some(key) = loader.next_key() {

@@ -8,14 +8,14 @@ where
     K: index::Key,
     H: index::Hasher,
 {
-    type Handle<'a> = arctic::concurrent::MapRef<'a, K, u32>;
+    type Send<'a> = &'a arctic::concurrent::Map<K, u32>;
 
     fn new() -> Self {
         arctic::concurrent::Map::default()
     }
 
-    fn pin<'a>(&'a self) -> Self::Handle<'a> {
-        self.pin()
+    fn send<'a>(&'a self) -> Self::Send<'a> {
+        self
     }
 
     #[cfg(feature = "stat")]
@@ -24,7 +24,22 @@ where
     }
 }
 
-impl<'a, K> index::Handle<K> for arctic::concurrent::MapRef<'a, K, u32>
+impl<K, H> index::IndexSend<K, H> for &'_ arctic::concurrent::Map<K, u32>
+where
+    K: index::Key,
+    H: index::Hasher,
+{
+    type Handle<'a>
+        = arctic::concurrent::MapRef<'a, K, u32>
+    where
+        Self: 'a;
+
+    fn pin<'a>(&'a self) -> Self::Handle<'a> {
+        arctic::concurrent::Map::pin(self)
+    }
+}
+
+impl<'a, K> index::IndexPin<K> for arctic::concurrent::MapRef<'a, K, u32>
 where
     K: index::Key,
 {

@@ -4,18 +4,29 @@ use crate::Index;
 use crate::index;
 
 impl<K: index::Key, H: index::Hasher> Index<K, H> for scc::HashMap<K, u32, H> {
-    type Handle<'a> = &'a scc::HashMap<K, u32, H>;
+    type Send<'a> = &'a Self;
 
     fn new() -> Self {
         scc::HashMap::with_hasher(H::default())
     }
+
+    fn send<'a>(&'a self) -> Self::Send<'a> {
+        self
+    }
+}
+
+impl<K: index::Key, H: index::Hasher> index::IndexSend<K, H> for &'_ scc::HashMap<K, u32, H> {
+    type Handle<'a>
+        = Self
+    where
+        Self: 'a;
 
     fn pin<'a>(&'a self) -> Self::Handle<'a> {
         self
     }
 }
 
-impl<K: index::Key, H: index::Hasher> index::Handle<K> for &'_ scc::HashMap<K, u32, H> {
+impl<K: index::Key, H: index::Hasher> index::IndexPin<K> for &'_ scc::HashMap<K, u32, H> {
     fn get(&mut self, key: &K) -> Option<u32> {
         self.read_sync(key, |_, value| *value)
     }
@@ -38,7 +49,7 @@ impl<K: index::Key, H: index::Hasher> index::Handle<K> for &'_ scc::HashMap<K, u
 }
 
 impl<K: index::Key, H: index::Hasher> Index<K, H> for scc::TreeIndex<K, u32> {
-    type Handle<'a> = &'a Self;
+    type Send<'a> = &'a Self;
 
     const IGNORE_INSERT: bool = true;
 
@@ -46,12 +57,23 @@ impl<K: index::Key, H: index::Hasher> Index<K, H> for scc::TreeIndex<K, u32> {
         scc::TreeIndex::new()
     }
 
-    fn pin<'a>(&'a self) -> Self::Handle<'a> {
+    fn send<'a>(&'a self) -> Self::Send<'a> {
         self
     }
 }
 
-impl<K: index::Key> index::Handle<K> for &'_ scc::TreeIndex<K, u32> {
+impl<K: index::Key, H: index::Hasher> index::IndexSend<K, H> for &'_ scc::TreeIndex<K, u32> {
+    type Handle<'a>
+        = Self
+    where
+        Self: 'a;
+
+    fn pin<'a>(&'a self) -> Self::Handle<'a> {
+        *self
+    }
+}
+
+impl<K: index::Key> index::IndexPin<K> for &'_ scc::TreeIndex<K, u32> {
     fn get(&mut self, key: &K) -> Option<u32> {
         let guard = scc::Guard::new();
         self.peek(key, &guard).copied()

@@ -52,10 +52,10 @@ fn specialize_index<K: index_bench::workload::KeyDistribution, H: index_bench::i
             index_bench::run::<K, bztree::BzTree<K::Key, u32>, H>(config)
         }
         index_bench::index::Name::ConcurrentMap => {
-            index_bench::run::<K, index_bench::index::concurrent_map::Map<K::Key>, H>(config)
+            index_bench::run::<K, concurrent_map::ConcurrentMap<K::Key, u32>, H>(config)
         }
         index_bench::index::Name::Congee => {
-            index_bench::run::<K, index_bench::index::congee::Map<K::Key>, H>(config)
+            index_bench::run::<K, congee::Congee<usize, usize>, H>(config)
         }
         index_bench::index::Name::Contrie => {
             index_bench::run::<K, contrie::CloneConMap<K::Key, u32>, H>(config)
