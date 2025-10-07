@@ -1,5 +1,3 @@
-use core::ops::RangeBounds;
-
 use crate::Index;
 use crate::index;
 
@@ -59,21 +57,15 @@ where
         arctic::concurrent::MapRef::remove(self, key.borrow())
     }
 
-    fn range<'b, R: RangeBounds<&'b K>>(
-        &'b mut self,
-        range: R,
-    ) -> impl Iterator<Item = (K, u32)> + 'b {
-        let start = range.start_bound().map(|start| start.borrow());
-        let end = range.end_bound().map(|end| end.borrow());
-
+    fn range<'b>(&'b mut self, min: &'b K, max: &'b K) -> impl Iterator<Item = (K, u32)> + 'b {
         #[cfg(feature = "range-linear-optimistic")]
         {
-            arctic::concurrent::MapRef::range(self, (start, end))
+            arctic::concurrent::MapRef::range(self, min.borrow(), max.borrow())
         }
 
         #[cfg(not(feature = "range-linear-optimistic"))]
         {
-            arctic::concurrent::MapRef::range_non_linearizable(self, (start, end))
+            arctic::concurrent::MapRef::range_non_linearizable(self, min.borrow(), max.borrow())
         }
     }
 

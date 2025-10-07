@@ -1,4 +1,4 @@
-use core::ops::RangeBounds;
+use core::ops::RangeInclusive;
 
 use crate::Index;
 use crate::index;
@@ -88,14 +88,9 @@ impl<K: index::Key> index::IndexPin<K> for &'_ scc::TreeIndex<K, u32> {
         self.remove_sync(&key).then_some(0)
     }
 
-    fn range<'a, R: RangeBounds<&'a K>>(
-        &'a mut self,
-        range: R,
-    ) -> impl Iterator<Item = (K, u32)> + 'a {
+    fn range<'a>(&'a mut self, min: &'a K, max: &'a K) -> impl Iterator<Item = (K, u32)> + 'a {
         let guard = scc::Guard::new();
-        let start = range.start_bound().map(|start| (**start).clone());
-        let end = range.end_bound().map(|end| (**end).clone());
-        scc::TreeIndex::range(self, (start, end), &guard)
+        scc::TreeIndex::range::<K, RangeInclusive<&'_ K>>(self, min..=max, &guard)
             .map(|(key, value)| (key.clone(), *value))
             .collect::<Vec<_>>()
             .into_iter()

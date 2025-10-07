@@ -1,5 +1,3 @@
-use core::ops::RangeBounds;
-
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -143,10 +141,7 @@ where
         )
     }
 
-    fn range<'a, R: RangeBounds<&'a K>>(
-        &'a mut self,
-        _range: R,
-    ) -> impl Iterator<Item = (K, u32)> + 'a {
+    fn range<'a>(&'a mut self, _min: &'a K, _max: &'a K) -> impl Iterator<Item = (K, u32)> + 'a {
         unimplemented!(
             "TODO: implement range for {}",
             std::any::type_name::<Self>()
