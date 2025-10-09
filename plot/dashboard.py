@@ -60,7 +60,17 @@ class Col:
         return {"type": TYPE_COL, "index": self.name}
 
     def choices(self):
-        if self.aggregate and not self.distribution:
+        if self.distribution:
+            return [
+                {"label": label, "value": value}
+                for label, value in [
+                    ("Abs", "absolute"),
+                    ("Rel", "relative"),
+                    ("Hide", "ignore"),
+                ]
+            ]
+
+        elif self.aggregate:
             return [
                 {"label": label, "value": value}
                 for label, value in [
@@ -414,7 +424,7 @@ def update(
             .collect()
         )
 
-        fig = None
+        fig = px.scatter()
 
         if not y.distribution:
             fig = px.line(
@@ -436,31 +446,42 @@ def update(
             histograms = df.select(y.name).to_series()
             high = max([histogram.max_value for histogram in histograms])
             bins = high
-            width = math.ceil(high / bins)
+            normalize = True if op == "relative" else False
 
-            df = (
-                df.with_columns(
-                    pl.col(x.name).cast(pl.String),
-                    pl.col(y.name).map_elements(
-                        lambda histogram: expand_histogram(width, histogram),
-                        return_dtype=pl.List(pl.Struct(dict(x=pl.UInt64, y=pl.UInt64))),
-                        returns_scalar=True,
-                    ),
+            if bins > 0:
+                width = math.ceil(high / bins)
+
+                df = (
+                    df.with_columns(
+                        pl.col(x.name).cast(pl.String),
+                        pl.col(y.name).map_elements(
+                            lambda histogram: expand_histogram(
+                                normalize, width, histogram
+                            ),
+                            return_dtype=pl.List(
+                                pl.Struct(dict(x=pl.UInt64, y=pl.Float64))
+                            ),
+                            returns_scalar=True,
+                        ),
+                    )
+                    .explode(y.name)
+                    .unnest(y.name)
                 )
-                .explode(y.name)
-                .unnest(y.name)
-            )
 
-            fig = px.bar(
-                df,
-                x="x",
-                y="y",
-                color=x.name,
-                barmode="group",
-            )
+                fig = px.bar(
+                    df,
+                    x="x",
+                    y="y",
+                    color=x.name,
+                    barmode="group",
+                    log_y=True,
+                )
 
             fig.update_xaxes(title_text=y.name)
-            fig.update_yaxes(title_text="Count", autorangeoptions_include=0.0)
+            fig.update_yaxes(
+                title_text="Percentage" if normalize else "Count",
+                autorangeoptions_include=0.0,
+            )
 
         children.append(dcc.Graph(figure=fig))
 
@@ -474,16 +495,24 @@ def decode_histograms(series: pl.Series) -> HdrHistogram:
     return decoded
 
 
-def expand_histogram(width, histogram: HdrHistogram) -> pl.Series:
+def expand_histogram(normalize, width, histogram: HdrHistogram) -> pl.Series:
     if histogram.get_total_count() == 0:
-        return pl.Series([], dtype=pl.Struct(dict(x=pl.UInt64, y=pl.UInt64)))
+        return pl.Series([], dtype=pl.Struct(dict(x=pl.UInt64, y=pl.Float64)))
 
     items = []
-    for index, item in enumerate(histogram.get_linear_iterator(width)):
+    iterator = histogram.get_linear_iterator(width)
+    last = 0.0
+    for index, item in enumerate(iterator):
         x = index * width
-        y = item.count_added_in_this_iter_step
+        y = None
+        if normalize:
+            y = iterator.get_percentile_iterated_to() - last
+            last += y
+        else:
+            y = item.count_added_in_this_iter_step
+
         items.append(dict(x=x, y=y))
-    return pl.Series(items, dtype=pl.Struct(dict(x=pl.UInt64, y=pl.UInt64)))
+    return pl.Series(items, dtype=pl.Struct(dict(x=pl.UInt64, y=pl.Float64)))
 
 
 if __name__ == "__main__":
