@@ -6,6 +6,12 @@ import click
 import dash
 from dash import Dash, html, dcc, Input, State, Output, callback
 import dash_bootstrap_components as dbc
+
+# HACK: https://stackoverflow.com/questions/9059699/use-a-library-locally-instead-of-installing-it
+# HdrHistogram_py is not packaged for nix, possibly because it builds a C extension.
+# Just vendor and build locally for now.
+sys.path.insert(0, "HdrHistogram_py")
+from HdrHistogram_py.hdrh.histogram import HdrHistogram
 import plotly.express as px
 import polars as pl
 from polars import selectors as cs
@@ -53,7 +59,7 @@ class Col:
         return {"type": TYPE_COL, "index": self.name}
 
     def choices(self):
-        if self.aggregate:
+        if self.aggregate and not self.distribution:
             return [
                 {"label": label, "value": value}
                 for label, value in [
@@ -203,26 +209,24 @@ def flatten(df: pl.LazyFrame):
         output = namespace[0] == "output"
 
         match dtype:
+            # FIXME: more robust distribution detection
+            case pl.String if output:
+                yield Col(
+                    "/".join(namespace),
+                    selector(name),
+                    distribution=True,
+                    aggregate=aggregate,
+                    output=output,
+                )
             case pl.Struct(fields=fields):
-                # FIXME: more robust distribution detection
-                if any([field.name == "p50" for field in fields]):
-                    assert not aggregate
-                    assert output
-                    yield Col(
-                        "/".join(namespace),
-                        selector(name),
-                        distribution=True,
-                        output=output,
+                for field in fields:
+                    yield from recurse(
+                        field.name,
+                        field.dtype,
+                        namespace,
+                        lambda inner: selector(name).struct.field(inner),
+                        aggregate,
                     )
-                else:
-                    for field in fields:
-                        yield from recurse(
-                            field.name,
-                            field.dtype,
-                            namespace,
-                            lambda inner: selector(name).struct.field(inner),
-                            aggregate,
-                        )
 
             # FIXME: only supports lists of structs, which
             # is true in our case (`output/thread`)
@@ -355,77 +359,91 @@ def update(
     children = []
 
     for y, op in ys:
-        filtered = DF.filter(*filters) if len(filters) > 0 else DF
+        df = DF.filter(*filters) if len(filters) > 0 else DF
 
-        sorts = [x.name]
-        cols = [
+        sort = [x.name]
+        aggregate_local = [
             x.selector.first().alias(x.name),
         ]
+        aggregate_global = [
+            cs.exclude(y.name).first(),
+        ]
 
-        # Keep all y statistics consistent (list of values to be averaged across experiments)
+        aggregate_local_y = y.selector.alias(f"{y.name}")
+        aggregate_global_y = [
+            pl.col(y.name).mean(),
+            pl.col(y.name).std().alias(f"{y.name}_std"),
+        ]
+
         if op == "mean":
-            cols.append(y.selector.alias(f"{y.name}"))
+            explode = pl.col(y.name).explode()
+            aggregate_global_y = [
+                explode.mean(),
+                explode.std().alias(f"{y.name}_std"),
+            ]
         elif op == "sum":
-            cols.append(y.selector.sum().alias(f"{y.name}").implode())
-        elif op == "show":
-            cols.append(y.selector.alias(f"{y.name}").implode())
+            aggregate_local_y = aggregate_local_y.sum()
+        elif y.distribution:
+            aggregate_global_y = [
+                pl.col(y.name)
+                .explode()
+                .map_batches(
+                    decode_histograms, return_dtype=pl.Object, returns_scalar=True
+                )
+            ]
         else:
-            assert False
+            assert op == "show"
+            pass
+
+        aggregate_local.append(aggregate_local_y)
+        aggregate_global.extend(aggregate_global_y)
 
         for col in [v for v in [facet_row, facet_column, facet_color] if v is not None]:
-            cols.append(col.selector.first().alias(col.name))
-            sorts.append(col.name)
+            aggregate_local.append(col.selector.first().alias(col.name))
+            sort.append(col.name)
 
-        filtered = (
-            # Aggregate y values within a single experiment (date)
-            filtered.group_by("config", "date")
-            .agg(cols)
-            .explode(y.name)
-            # Aggregate y values across experiments with the same configuration
+        df = (
+            # Aggregate locally within a single experiment (date)
+            df.group_by("config", "date")
+            .agg(aggregate_local)
+            # Aggregate globally across experiments with the same configuration
             .group_by("config")
-            .agg(
-                cs.exclude(y.name).first(),
-                pl.col(y.name).mean(),
-                pl.col(y.name).std().alias(f"{y.name}_std"),
-            )
-            .sort(sorts)
+            .agg(aggregate_global)
+            .sort(sort)
+            .collect()
         )
 
-        if y.distribution:
-            filtered = filtered.select(
-                # Why is this a list[struct] and not just a struct?
-                cs.exclude(y.name),
-                pl.col(y.name).explode().struct.unnest(),
-            ).unpivot(
-                index=cs.exclude(["min", "max", "mean", "p50", "p75", "p90", "p99"]),
-                variable_name="metric",
-                value_name="value",
+        fig = px.scatter()
+
+        if not y.distribution:
+            fig = px.line(
+                df,
+                x=x.name,
+                y=y.name,
+                error_y=f"{y.name}_std",
+                facet_row=facet_row.name if facet_row is not None else None,
+                facet_col=facet_column.name if facet_column is not None else None,
+                color=facet_color.name if facet_color is not None else None,
+                markers=True,
+                color_discrete_sequence=px.colors.qualitative.Light24,
+                # log_y=True,
             )
+        else:
+            # TODO
+            print(df.select(pl.col(y.name)))
 
-        filtered = filtered.collect()
-
-        fig = px.line(
-            filtered,
-            x=x.name,
-            y="value" if y.distribution else y.name,
-            error_y=f"{y.name}_std",
-            facet_row=facet_row.name if facet_row is not None else None,
-            facet_col=facet_column.name if facet_column is not None else None,
-            color="metric"
-            if y.distribution
-            else facet_color.name
-            if facet_color is not None
-            else None,
-            markers=True,
-            color_discrete_sequence=px.colors.qualitative.Light24,
-            # log_y=True,
-        )
-
-        fig.update_xaxes(title_text=x.name, tickvals=filtered[x.name].unique())
+        fig.update_xaxes(title_text=x.name, tickvals=df[x.name].unique())
         fig.update_yaxes(title_text=y.name, autorangeoptions_include=0.0)
         children.append(dcc.Graph(figure=fig))
 
     return children
+
+
+def decode_histograms(series: pl.Series) -> HdrHistogram:
+    decoded = HdrHistogram.decode(series.first())
+    for encoded in series.slice(1):
+        decoded.decode_and_add(encoded)
+    return decoded
 
 
 if __name__ == "__main__":

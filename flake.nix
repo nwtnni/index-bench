@@ -39,6 +39,8 @@
               dash
               dash-bootstrap-components
               pandas
+              # Build hdrhistogram locally (python3 setup.py build)
+              pbr
               plotly
               polars
               pyarrow

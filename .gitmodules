@@ -1,3 +1,6 @@
 [submodule "extern/ARTSynchronized"]
 	path = extern/ARTSynchronized
 	url = git@github.com:nwtnni/ARTSynchronized.git
+[submodule "extern/HdrHistogram_py"]
+	path = extern/HdrHistogram_py
+	url = https://github.com/HdrHistogram/HdrHistogram_py.git
