@@ -1,4 +1,5 @@
 import sys
+import math
 from pathlib import PurePath
 from typing import Optional
 
@@ -402,7 +403,7 @@ def update(
             aggregate_local.append(col.selector.first().alias(col.name))
             sort.append(col.name)
 
-        df = (
+        df: pl.DataFrame = (
             # Aggregate locally within a single experiment (date)
             df.group_by("config", "date")
             .agg(aggregate_local)
@@ -413,7 +414,7 @@ def update(
             .collect()
         )
 
-        fig = px.scatter()
+        fig = None
 
         if not y.distribution:
             fig = px.line(
@@ -428,12 +429,39 @@ def update(
                 color_discrete_sequence=px.colors.qualitative.Light24,
                 # log_y=True,
             )
-        else:
-            # TODO
-            print(df.select(pl.col(y.name)))
 
-        fig.update_xaxes(title_text=x.name, tickvals=df[x.name].unique())
-        fig.update_yaxes(title_text=y.name, autorangeoptions_include=0.0)
+            fig.update_xaxes(title_text=x.name, tickvals=df[x.name].unique())
+            fig.update_yaxes(title_text=y.name, autorangeoptions_include=0.0)
+        else:
+            histograms = df.select(y.name).to_series()
+            high = max([histogram.max_value for histogram in histograms])
+            bins = high
+            width = math.ceil(high / bins)
+
+            df = (
+                df.with_columns(
+                    pl.col(x.name).cast(pl.String),
+                    pl.col(y.name).map_elements(
+                        lambda histogram: expand_histogram(width, histogram),
+                        return_dtype=pl.List(pl.Struct(dict(x=pl.UInt64, y=pl.UInt64))),
+                        returns_scalar=True,
+                    ),
+                )
+                .explode(y.name)
+                .unnest(y.name)
+            )
+
+            fig = px.bar(
+                df,
+                x="x",
+                y="y",
+                color=x.name,
+                barmode="group",
+            )
+
+            fig.update_xaxes(title_text=y.name)
+            fig.update_yaxes(title_text="Count", autorangeoptions_include=0.0)
+
         children.append(dcc.Graph(figure=fig))
 
     return children
@@ -444,6 +472,18 @@ def decode_histograms(series: pl.Series) -> HdrHistogram:
     for encoded in series.slice(1):
         decoded.decode_and_add(encoded)
     return decoded
+
+
+def expand_histogram(width, histogram: HdrHistogram) -> pl.Series:
+    if histogram.get_total_count() == 0:
+        return pl.Series([], dtype=pl.Struct(dict(x=pl.UInt64, y=pl.UInt64)))
+
+    items = []
+    for index, item in enumerate(histogram.get_linear_iterator(width)):
+        x = index * width
+        y = item.count_added_in_this_iter_step
+        items.append(dict(x=x, y=y))
+    return pl.Series(items, dtype=pl.Struct(dict(x=pl.UInt64, y=pl.UInt64)))
 
 
 if __name__ == "__main__":
