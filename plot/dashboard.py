@@ -443,39 +443,31 @@ def update(
             fig.update_xaxes(title_text=x.name, tickvals=df[x.name].unique())
             fig.update_yaxes(title_text=y.name, autorangeoptions_include=0.0)
         else:
-            histograms = df.select(y.name).to_series()
-            high = max([histogram.max_value for histogram in histograms])
-            bins = high
             normalize = True if op == "relative" else False
 
-            if bins > 0:
-                width = math.ceil(high / bins)
-
-                df = (
-                    df.with_columns(
-                        pl.col(x.name).cast(pl.String),
-                        pl.col(y.name).map_elements(
-                            lambda histogram: expand_histogram(
-                                normalize, width, histogram
-                            ),
-                            return_dtype=pl.List(
-                                pl.Struct(dict(x=pl.UInt64, y=pl.Float64))
-                            ),
-                            returns_scalar=True,
+            df = (
+                df.with_columns(
+                    pl.col(x.name).cast(pl.String),
+                    pl.col(y.name).map_elements(
+                        lambda histogram: expand_histogram(normalize, 1, histogram),
+                        return_dtype=pl.List(
+                            pl.Struct(dict(x=pl.UInt64, y=pl.Float64))
                         ),
-                    )
-                    .explode(y.name)
-                    .unnest(y.name)
+                        returns_scalar=True,
+                    ),
                 )
+                .explode(y.name)
+                .unnest(y.name)
+            )
 
-                fig = px.bar(
-                    df,
-                    x="x",
-                    y="y",
-                    color=x.name,
-                    barmode="group",
-                    log_y=True,
-                )
+            fig = px.bar(
+                df,
+                x="x",
+                y="y",
+                color=x.name,
+                barmode="group",
+                log_y=True,
+            )
 
             fig.update_xaxes(title_text=y.name)
             fig.update_yaxes(
