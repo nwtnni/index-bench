@@ -481,6 +481,9 @@ def update(
 
 
 def decode_histograms(series: pl.Series) -> HdrHistogram:
+    if series.first() is None:
+        return HdrHistogram(1, 1, 1)
+
     decoded = HdrHistogram.decode(series.first())
     for encoded in series.slice(1):
         decoded.decode_and_add(encoded)
