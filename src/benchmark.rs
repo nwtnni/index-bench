@@ -129,6 +129,8 @@ pub fn run<K: KeyDistribution, I: Index<K::Key, H>, H: index::Hasher>(
                         perf.start().context("Start perf-event")?;
                     }
 
+                    let mut range = Vec::with_capacity(workload.ycsb.max_scan_length);
+
                     let start = Instant::now();
 
                     if workload.load {
@@ -155,7 +157,8 @@ pub fn run<K: KeyDistribution, I: Index<K::Key, H>, H: index::Hasher>(
                                 ycsb::Operation::Scan => {
                                     let (start, a) = runner.next_key_read(&mut rng);
                                     let b = runner.next_key_range(&mut rng, start);
-                                    map.range(&a, &b).count();
+                                    range.clear();
+                                    map.range(&a, &b, &mut range);
                                 }
                                 ycsb::Operation::Insert => {
                                     let (id, key) = runner.next_key_insert();

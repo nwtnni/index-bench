@@ -32,7 +32,7 @@ impl<K: index::Key> index::IndexPin<K> for &'_ concurrent_map::ConcurrentMap<K, 
         concurrent_map::ConcurrentMap::insert(self, key, value)
     }
 
-    fn range<'b>(&'b mut self, min: &'b K, max: &'b K) -> impl Iterator<Item = (K, u32)> + 'b {
-        concurrent_map::ConcurrentMap::range(self, min..=max)
+    fn range<'b>(&'b mut self, min: &'b K, max: &'b K, output: &mut Vec<(K, u32)>) {
+        output.extend(concurrent_map::ConcurrentMap::range(self, min..=max));
     }
 }

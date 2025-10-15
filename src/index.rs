@@ -141,14 +141,11 @@ where
         )
     }
 
-    fn range<'a>(&'a mut self, _min: &'a K, _max: &'a K) -> impl Iterator<Item = (K, u32)> + 'a {
+    fn range<'a>(&'a mut self, _min: &'a K, _max: &'a K, _output: &mut Vec<(K, u32)>) {
         unimplemented!(
             "TODO: implement range for {}",
             std::any::type_name::<Self>()
         );
-
-        #[expect(unreachable_code)]
-        core::iter::empty()
     }
 
     fn scan(&mut self, _key: &K, _count: usize) -> impl Iterator<Item = u32> {

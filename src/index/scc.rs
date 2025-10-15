@@ -88,11 +88,11 @@ impl<K: index::Key> index::IndexPin<K> for &'_ scc::TreeIndex<K, u32> {
         self.remove_sync(&key).then_some(0)
     }
 
-    fn range<'a>(&'a mut self, min: &'a K, max: &'a K) -> impl Iterator<Item = (K, u32)> + 'a {
+    fn range<'a>(&'a mut self, min: &'a K, max: &'a K, output: &mut Vec<(K, u32)>) {
         let guard = scc::Guard::new();
-        scc::TreeIndex::range::<K, RangeInclusive<&'_ K>>(self, min..=max, &guard)
-            .map(|(key, value)| (key.clone(), *value))
-            .collect::<Vec<_>>()
-            .into_iter()
+        output.extend(
+            scc::TreeIndex::range::<K, RangeInclusive<&'_ K>>(self, min..=max, &guard)
+                .map(|(key, value)| (key.clone(), *value)),
+        );
     }
 }

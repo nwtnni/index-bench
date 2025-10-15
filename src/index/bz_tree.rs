@@ -35,11 +35,10 @@ impl<K: index::Key> index::IndexPin<K> for &'_ bztree::BzTree<K, u32> {
         bztree::BzTree::upsert(self, key, value, guard).copied()
     }
 
-    fn range<'a>(&'a mut self, min: &'a K, max: &'a K) -> impl Iterator<Item = (K, u32)> + 'a {
+    fn range<'a>(&'a mut self, min: &'a K, max: &'a K, output: &mut Vec<(K, u32)>) {
         let guard = &crossbeam_epoch::pin();
-        bztree::BzTree::range(self, min..=max, guard)
-            .map(|(key, value)| (key.clone(), *value))
-            .collect::<Vec<_>>()
-            .into_iter()
+        output.extend(
+            bztree::BzTree::range(self, min..=max, guard).map(|(key, value)| (key.clone(), *value)),
+        );
     }
 }

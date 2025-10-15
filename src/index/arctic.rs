@@ -57,15 +57,16 @@ where
         arctic::concurrent::MapRef::remove(self, key.borrow())
     }
 
-    fn range<'b>(&'b mut self, min: &'b K, max: &'b K) -> impl Iterator<Item = (K, u32)> + 'b {
+    fn range<'b>(&'b mut self, min: &'b K, max: &'b K, output: &mut Vec<(K, u32)>) {
         #[cfg(feature = "range-linear-optimistic")]
         {
-            arctic::concurrent::MapRef::range(self, min.borrow(), max.borrow())
+            arctic::concurrent::MapRef::range_optimistic(self, min.borrow(), max.borrow(), output)
         }
 
         #[cfg(not(feature = "range-linear-optimistic"))]
         {
             arctic::concurrent::MapRef::range_non_linearizable(self, min.borrow(), max.borrow())
+                .for_each(|key, value| output.push((K::from(key), value)));
         }
     }
 
