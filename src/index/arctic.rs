@@ -58,13 +58,12 @@ where
     }
 
     fn range<'b>(&'b mut self, min: &'b K, max: &'b K, output: &mut Vec<(K, u32)>) {
-        #[cfg(feature = "range-linear-optimistic")]
-        {
+        if cfg!(feature = "range-optimistic") {
             arctic::concurrent::MapRef::range_optimistic(self, min.borrow(), max.borrow(), output)
-        }
-
-        #[cfg(not(feature = "range-linear-optimistic"))]
-        {
+        } else if cfg!(feature = "range-pessimistic") {
+            arctic::concurrent::MapRef::range_pessimistic(self, min.borrow(), max.borrow())
+                .for_each(|key, value| output.push((K::from(key), value)));
+        } else {
             arctic::concurrent::MapRef::range_non_linearizable(self, min.borrow(), max.borrow())
                 .for_each(|key, value| output.push((K::from(key), value)));
         }
