@@ -57,9 +57,21 @@ where
         arctic::concurrent::MapRef::remove(self, key.borrow())
     }
 
-    fn range<'b>(&'b mut self, min: &'b K, max: &'b K, output: &mut Vec<(K, u32)>) {
+    fn range<'b>(
+        &'b mut self,
+        retry_scan: usize,
+        min: &'b K,
+        max: &'b K,
+        output: &mut Vec<(K, u32)>,
+    ) {
         if cfg!(feature = "range-optimistic") {
-            arctic::concurrent::MapRef::range_optimistic(self, min.borrow(), max.borrow(), output)
+            arctic::concurrent::MapRef::range_optimistic(
+                self,
+                min.borrow(),
+                max.borrow(),
+                retry_scan,
+                output,
+            )
         } else if cfg!(feature = "range-pessimistic") {
             arctic::concurrent::MapRef::range_pessimistic(self, min.borrow(), max.borrow(), output)
         } else {

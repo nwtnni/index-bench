@@ -18,6 +18,8 @@ mod scc;
 pub struct Config {
     pub hash: Hash,
     pub name: Name,
+    #[serde(default)]
+    pub retry_scan: usize,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -141,7 +143,13 @@ where
         )
     }
 
-    fn range<'a>(&'a mut self, _min: &'a K, _max: &'a K, _output: &mut Vec<(K, u32)>) {
+    fn range<'a>(
+        &'a mut self,
+        _retry_scan: usize,
+        _min: &'a K,
+        _max: &'a K,
+        _output: &mut Vec<(K, u32)>,
+    ) {
         unimplemented!(
             "TODO: implement range for {}",
             std::any::type_name::<Self>()

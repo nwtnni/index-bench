@@ -158,7 +158,7 @@ pub fn run<K: KeyDistribution, I: Index<K::Key, H>, H: index::Hasher>(
                                     let (start, a) = runner.next_key_read(&mut rng);
                                     let b = runner.next_key_range(&mut rng, start);
                                     range.clear();
-                                    map.range(&a, &b, &mut range);
+                                    map.range(config.index.retry_scan, &a, &b, &mut range);
                                 }
                                 ycsb::Operation::Insert => {
                                     let (id, key) = runner.next_key_insert();

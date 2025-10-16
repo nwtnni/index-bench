@@ -88,7 +88,13 @@ impl<K: index::Key> index::IndexPin<K> for &'_ scc::TreeIndex<K, u32> {
         self.remove_sync(&key).then_some(0)
     }
 
-    fn range<'a>(&'a mut self, min: &'a K, max: &'a K, output: &mut Vec<(K, u32)>) {
+    fn range<'a>(
+        &'a mut self,
+        _retry_scan: usize,
+        min: &'a K,
+        max: &'a K,
+        output: &mut Vec<(K, u32)>,
+    ) {
         let guard = scc::Guard::new();
         output.extend(
             scc::TreeIndex::range::<K, RangeInclusive<&'_ K>>(self, min..=max, &guard)
