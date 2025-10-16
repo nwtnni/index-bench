@@ -61,8 +61,7 @@ where
         if cfg!(feature = "range-optimistic") {
             arctic::concurrent::MapRef::range_optimistic(self, min.borrow(), max.borrow(), output)
         } else if cfg!(feature = "range-pessimistic") {
-            arctic::concurrent::MapRef::range_pessimistic(self, min.borrow(), max.borrow())
-                .for_each(|key, value| output.push((K::from(key), value)));
+            arctic::concurrent::MapRef::range_pessimistic(self, min.borrow(), max.borrow(), output)
         } else {
             arctic::concurrent::MapRef::range_non_linearizable(self, min.borrow(), max.borrow())
                 .for_each(|key, value| output.push((K::from(key), value)));
