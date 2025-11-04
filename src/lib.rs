@@ -1,3 +1,7 @@
+#[cfg(feature = "mimalloc")]
+#[global_allocator]
+static MIMALLOC: mimalloc::MiMalloc = mimalloc::MiMalloc;
+
 use core::cell::Cell;
 
 pub(crate) mod benchmark;

@@ -11,6 +11,7 @@ opt-node15-get = ["arctic/opt-node15-get"]
 opt = ["opt-node3-get", "opt-node15-get"]
 range-optimistic = []
 range-pessimistic = []
+mimalloc = ["dep:mimalloc"]
 
 [dependencies]
 anyhow = "1.0.99"
@@ -37,6 +38,7 @@ congee = "0.4.1"
 contrie = "0.1.4"
 dashmap = "6.1.0"
 bplustree = "0.1.0"
+mimalloc = { version = "0.1.48", optional = true }
 
 # https://github.com/kaist-cp/smr-benchmark/blob/00b4e4d06d9b91f289b4644163f0cac0660d4af7/Cargo.toml#L42-L45
 [dependencies.crossbeam-ebr]
