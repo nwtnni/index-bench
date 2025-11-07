@@ -9,8 +9,6 @@ stat = ["arctic/stat"]
 opt-node3-get = ["arctic/opt-node3-get"]
 opt-node15-get = ["arctic/opt-node15-get"]
 opt = ["opt-node3-get", "opt-node15-get"]
-range-optimistic = []
-range-pessimistic = []
 mimalloc = ["dep:mimalloc"]
 
 [dependencies]

@@ -59,25 +59,21 @@ where
 
     fn range<'b>(
         &'b mut self,
-        retry_scan: usize,
+        _retry_scan: usize,
         min: &'b K,
         max: &'b K,
         output: &mut Vec<(K, u32)>,
     ) {
-        if cfg!(feature = "range-optimistic") {
-            arctic::concurrent::MapRef::range_optimistic(
-                self,
-                min.borrow(),
-                max.borrow(),
-                retry_scan,
-                output,
-            )
-        } else if cfg!(feature = "range-pessimistic") {
-            arctic::concurrent::MapRef::range_pessimistic(self, min.borrow(), max.borrow(), output)
-        } else {
-            arctic::concurrent::MapRef::range_non_linearizable(self, min.borrow(), max.borrow())
-                .for_each(|key, value| output.push((K::from(key), value)));
-        }
+        let Some(guard) = arctic::concurrent::MapRef::range(self, min.borrow(), max.borrow())
+        else {
+            return;
+        };
+
+        guard
+            .entries::<arctic::iter::Sorted>()
+            .for_each(|key, value| {
+                output.push((<K as arctic::Key>::clone_from_borrow(key), value))
+            });
     }
 
     #[cfg(feature = "stat")]

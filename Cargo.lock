@@ -23,11 +23,12 @@ checksum = "c858caffa49edfc4ecc45a4bec37abd3e88041a2903816f10f990b7b41abc281"
 [[package]]
 name = "arctic"
 version = "0.1.0"
-source = "git+ssh://github.com/nwtnni/arctic#e1e872d909e79504e78f1914725896f17381653f"
+source = "git+ssh://github.com/nwtnni/arctic#569bae9541e15cbab9fcf7dc51cece3d7bb8ecf7"
 dependencies = [
  "base64 0.22.1",
  "hdrhistogram",
  "libc",
+ "polonius-the-crab",
  "ribbit",
  "serde",
  "thread_local",
@@ -424,6 +425,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
 
 [[package]]
+name = "higher-kinded-types"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "561985554c8b8d4808605c90a5f1979cc6c31a5d20b78465cd59501233c6678e"
+dependencies = [
+ "never-say-never",
+]
+
+[[package]]
 name = "hwlocality"
 version = "1.0.0-alpha.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -634,6 +644,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "never-say-never"
+version = "6.6.666"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cf5a574dadd7941adeaa71823ecba5e28331b8313fb2e1c6a5c7e5981ea53ad6"
+
+[[package]]
 name = "nodrop"
 version = "0.1.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -764,6 +780,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7edddbd0b52d732b21ad9a5fab5c704c14cd949e5e9a1ec5929a24fded1b904c"
 
 [[package]]
+name = "polonius-the-crab"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e97ca2c89572ae41bbec1c99498251f87dd5a94e500c5ec19c382dd593dd5ce9"
+dependencies = [
+ "higher-kinded-types",
+ "never-say-never",
+]
+
+[[package]]
 name = "ppv-lite86"
 version = "0.2.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -885,7 +911,7 @@ dependencies = [
 [[package]]
 name = "ribbit"
 version = "0.1.0"
-source = "git+https://github.com/nwtnni/ribbit.git#846129728119a6a3d33179229e249a32166ace81"
+source = "git+https://github.com/nwtnni/ribbit.git#bbf4ce6bfb24545e8c1df837b08f34c1adc076d9"
 dependencies = [
  "arbitrary-int",
  "ribbit-derive",
@@ -894,7 +920,7 @@ dependencies = [
 [[package]]
 name = "ribbit-derive"
 version = "0.1.0"
-source = "git+https://github.com/nwtnni/ribbit.git#846129728119a6a3d33179229e249a32166ace81"
+source = "git+https://github.com/nwtnni/ribbit.git#bbf4ce6bfb24545e8c1df837b08f34c1adc076d9"
 dependencies = [
  "darling",
  "heck",
