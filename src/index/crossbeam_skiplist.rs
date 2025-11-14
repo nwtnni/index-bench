@@ -5,6 +5,7 @@ impl<K: index::Key, H: index::Hasher> Index<K, H> for crossbeam_skiplist::SkipMa
     type Send<'a> = &'a Self;
 
     const IGNORE_INSERT: bool = true;
+    const IGNORE_GET: bool = true;
 
     fn new() -> Self {
         crossbeam_skiplist::SkipMap::new()

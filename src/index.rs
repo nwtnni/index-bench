@@ -64,6 +64,8 @@ where
     /// Whether to skip validation of `insert`.
     const IGNORE_INSERT: bool = false;
     const IGNORE_UPDATE: bool = Self::IGNORE_INSERT;
+    /// - `crossbeam-skiplist` can see a removal during insertion: https://github.com/crossbeam-rs/crossbeam/issues/1023
+    const IGNORE_GET: bool = false;
 
     type Send<'a>: IndexSend<K, H> + Send
     where
