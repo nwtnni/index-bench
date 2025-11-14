@@ -2,6 +2,7 @@ use serde::Deserialize;
 use serde::Serialize;
 
 mod arctic;
+mod art;
 mod b_plus_tree;
 mod bz_tree;
 mod concurrent_map;
@@ -31,6 +32,7 @@ pub enum Hash {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Name {
+    Art,
     Arctic,
     Bonsai,
     BPlusTree,
