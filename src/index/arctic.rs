@@ -50,7 +50,7 @@ where
     }
 
     fn update(&mut self, key: K, value: u32) -> Option<u32> {
-        arctic::concurrent::MapRef::update(self, key.borrow(), value)
+        arctic::concurrent::MapRef::update(self, key.borrow(), value).ok()
     }
 
     fn remove(&mut self, key: K) -> Option<u32> {
@@ -71,9 +71,7 @@ where
 
         guard
             .entries::<arctic::iter::Sorted>()
-            .for_each(|key, value| {
-                output.push((<K as arctic::Key>::clone_from_borrow(key), value))
-            });
+            .for_each(|key, value| output.push((K::clone_from_borrow(key), value)));
     }
 
     #[cfg(feature = "stat")]

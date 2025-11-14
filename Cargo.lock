@@ -23,7 +23,7 @@ checksum = "c858caffa49edfc4ecc45a4bec37abd3e88041a2903816f10f990b7b41abc281"
 [[package]]
 name = "arctic"
 version = "0.1.0"
-source = "git+ssh://github.com/nwtnni/arctic#569bae9541e15cbab9fcf7dc51cece3d7bb8ecf7"
+source = "git+ssh://github.com/nwtnni/arctic#5b3d1bc7dae1a17d9923bdd6ab5ad74c08fea9ec"
 dependencies = [
  "base64 0.22.1",
  "hdrhistogram",
@@ -911,7 +911,7 @@ dependencies = [
 [[package]]
 name = "ribbit"
 version = "0.1.0"
-source = "git+https://github.com/nwtnni/ribbit.git#bbf4ce6bfb24545e8c1df837b08f34c1adc076d9"
+source = "git+https://github.com/nwtnni/ribbit.git#2f6b83fb00d5db62f81a5179c75a4f63f3935d0e"
 dependencies = [
  "arbitrary-int",
  "ribbit-derive",
@@ -920,7 +920,7 @@ dependencies = [
 [[package]]
 name = "ribbit-derive"
 version = "0.1.0"
-source = "git+https://github.com/nwtnni/ribbit.git#bbf4ce6bfb24545e8c1df837b08f34c1adc076d9"
+source = "git+https://github.com/nwtnni/ribbit.git#2f6b83fb00d5db62f81a5179c75a4f63f3935d0e"
 dependencies = [
  "darling",
  "heck",
