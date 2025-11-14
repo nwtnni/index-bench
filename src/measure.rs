@@ -17,6 +17,7 @@ pub struct Global {
 #[derive(Deserialize, Serialize)]
 pub struct Process {
     pub index: serde_json::Value,
+    pub resource: Resource,
     pub thread: Vec<Thread>,
 }
 
@@ -26,7 +27,6 @@ pub struct Thread {
     pub core: usize,
     pub time: u128,
     pub operation_count: u64,
-    pub resource: Resource,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub perf: Option<perf::Report>,
     pub index: serde_json::Value,

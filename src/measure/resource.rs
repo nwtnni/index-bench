@@ -21,7 +21,7 @@ impl Sub for Resource {
 
     fn sub(self, rhs: Self) -> Self::Output {
         Self {
-            max_rss: self.max_rss.max(rhs.max_rss),
+            max_rss: self.max_rss.saturating_sub(rhs.max_rss),
             user_time: self.user_time.saturating_sub(rhs.user_time),
             system_time: self.system_time.saturating_sub(rhs.system_time),
             minor_fault_count: self.minor_fault_count.saturating_sub(rhs.minor_fault_count),
@@ -40,7 +40,7 @@ impl Resource {
     pub(crate) fn new() -> io::Result<Self> {
         let rusage = unsafe {
             let mut rusage = MaybeUninit::<libc::rusage>::zeroed();
-            match libc::getrusage(libc::RUSAGE_THREAD, rusage.as_mut_ptr()) {
+            match libc::getrusage(libc::RUSAGE_SELF, rusage.as_mut_ptr()) {
                 0 => rusage.assume_init(),
                 _ => return Err(io::Error::last_os_error()),
             }

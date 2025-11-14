@@ -43,7 +43,7 @@ pub fn run<K: KeyDistribution, I: Index<K::Key, H>, H: index::Hasher>(
     let barrier = &Barrier::new(config.global.thread_count + 1);
     let mut map = I::new();
 
-    let threads = thread::scope(|scope| -> anyhow::Result<_> {
+    let (resource, threads) = thread::scope(|scope| -> anyhow::Result<_> {
         let workload = &config.workload;
 
         let mut perf_external = match (env::var("PERF_CTL_FIFO"), env::var("PERF_ACK_FIFO")) {
@@ -60,16 +60,20 @@ pub fn run<K: KeyDistribution, I: Index<K::Key, H>, H: index::Hasher>(
                 perf.enable()?;
             }
 
+            let before = measure::Resource::new().context("Get resource usage")?;
+
             let _ = barrier.wait();
 
             // Threads complete
             let _ = barrier.wait();
 
+            let after = measure::Resource::new().context("Get resource usage")?;
+
             if let Some(perf) = &mut perf_external {
                 perf.disable()?;
             }
 
-            Ok(())
+            Ok(after - before)
         });
 
         let threads = (0..config.global.thread_count)
@@ -124,7 +128,6 @@ pub fn run<K: KeyDistribution, I: Index<K::Key, H>, H: index::Hasher>(
                     // External perf enabled
                     let _ = barrier.wait();
 
-                    let before = measure::Resource::new().context("Get resource usage")?;
                     if let Some(perf) = &mut perf {
                         perf.start().context("Start perf-event")?;
                     }
@@ -182,7 +185,6 @@ pub fn run<K: KeyDistribution, I: Index<K::Key, H>, H: index::Hasher>(
                         .map(|perf| perf.stop())
                         .transpose()
                         .context("Stop perf-event")?;
-                    let after = measure::Resource::new().context("Get resource usage")?;
                     let index_report = map.report();
 
                     let _ = barrier.wait();
@@ -192,7 +194,6 @@ pub fn run<K: KeyDistribution, I: Index<K::Key, H>, H: index::Hasher>(
                         core: core_id,
                         time: time.as_nanos(),
                         operation_count: operation_count_per_thread as u64,
-                        resource: after - before,
                         perf: perf_report,
                         index: index_report,
                     })
@@ -203,9 +204,9 @@ pub fn run<K: KeyDistribution, I: Index<K::Key, H>, H: index::Hasher>(
             .map(|handle| handle.join().unwrap())
             .collect::<anyhow::Result<Vec<_>>>()?;
 
-        coordinator.join().unwrap()?;
+        let resource = coordinator.join().unwrap()?;
 
-        Ok(threads)
+        Ok((resource, threads))
     })?;
 
     Ok(measure::Global {
@@ -213,6 +214,7 @@ pub fn run<K: KeyDistribution, I: Index<K::Key, H>, H: index::Hasher>(
         config,
         output: measure::Process {
             index: map.report(),
+            resource,
             thread: threads,
         },
     })
