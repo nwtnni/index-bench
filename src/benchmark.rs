@@ -147,8 +147,9 @@ pub fn run<K: KeyDistribution, I: Index<K::Key, H>, H: index::Hasher>(
                             match operation {
                                 ycsb::Operation::Read => {
                                     let (_, key) = runner.next_key_read(&mut rng);
+                                    let value = map.get(&key);
                                     if !I::IGNORE_GET {
-                                        assert_eq!(map.get(&key), Some(key.checksum()));
+                                        assert_eq!(value, Some(key.checksum()));
                                     }
                                 }
                                 ycsb::Operation::Update => {
