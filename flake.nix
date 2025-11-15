@@ -31,6 +31,11 @@
             linuxPackages_latest.perf
             gdb
 
+            # Build ART
+            cmake
+            mimalloc
+            tbb
+
             # Preprocess emails
             unrar
           ];
@@ -53,6 +58,8 @@
               tqdm
             ]))
           ];
+
+          NIX_ENFORCE_NO_NATIVE = false;
         };
       }
     );
