@@ -38,6 +38,7 @@ contrie = "0.1.4"
 dashmap = "6.1.0"
 bplustree = "0.1.0"
 mimalloc = { version = "0.1.48", optional = true }
+wormhole-sys = { path = "extern/wormhole/wormhole-sys" }
 
 # https://github.com/kaist-cp/smr-benchmark/blob/00b4e4d06d9b91f289b4644163f0cac0660d4af7/Cargo.toml#L42-L45
 [dependencies.crossbeam-ebr]

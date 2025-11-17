@@ -4,3 +4,12 @@
 [submodule "extern/HdrHistogram_py"]
 	path = extern/HdrHistogram_py
 	url = https://github.com/HdrHistogram/HdrHistogram_py.git
+[submodule "extern/index-microbench"]
+	path = extern/index-microbench
+	url = https://github.com/nwtnni/index-microbench.git
+[submodule "extern/masstree-beta"]
+	path = extern/masstree-beta
+	url = https://github.com/nwtnni/masstree-beta.git
+[submodule "extern/wormhole"]
+	path = extern/wormhole
+	url = https://github.com/nwtnni/wormhole.git

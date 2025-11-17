@@ -13,6 +13,7 @@ mod dash_map;
 pub mod kaist;
 mod papaya;
 mod scc;
+mod wormhole;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case")]
@@ -51,6 +52,7 @@ pub enum Name {
     Papaya,
     SccHashMap,
     SccTreeIndex,
+    Wormhole,
 }
 
 pub enum Insert {

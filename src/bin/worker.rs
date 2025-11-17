@@ -76,5 +76,8 @@ fn specialize_index<K: index_bench::workload::KeyDistribution, H: index_bench::i
         index_bench::index::Name::SccTreeIndex => {
             index_bench::run::<K, scc::TreeIndex<K::Key, u32>, H>(config)
         }
+        index_bench::index::Name::Wormhole => {
+            index_bench::run::<K, wormhole_sys::Wormhole, H>(config)
+        }
     }
 }
