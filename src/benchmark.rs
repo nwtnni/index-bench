@@ -214,7 +214,7 @@ pub fn run<K: KeyDistribution, I: Index<K::Key, H>, H: index::Hasher>(
         output: measure::Process {
             index: map.report(),
             #[cfg(feature = "mimalloc")]
-            mimalloc: crate::measure::mimalloc::stats(),
+            mimalloc: crate::measure::Mimalloc::new(),
             thread: threads,
         },
     })

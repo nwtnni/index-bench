@@ -3,6 +3,8 @@ pub(crate) mod mimalloc;
 pub(crate) mod perf;
 pub mod resource;
 
+#[cfg(feature = "mimalloc")]
+pub(crate) use mimalloc::Mimalloc;
 pub(crate) use perf::Perf;
 pub use resource::Resource;
 
@@ -20,7 +22,7 @@ pub struct Global {
 pub struct Process {
     pub index: serde_json::Value,
     #[cfg(feature = "mimalloc")]
-    pub mimalloc: serde_json::Value,
+    pub mimalloc: Mimalloc,
     pub thread: Vec<Thread>,
 }
 
