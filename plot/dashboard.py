@@ -404,7 +404,7 @@ def update(
             ]
         else:
             assert op == "show"
-            pass
+            aggregate_local_y = aggregate_local_y.first()
 
         aggregate_local.append(aggregate_local_y)
         aggregate_global.extend(aggregate_global_y)
