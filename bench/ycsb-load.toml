@@ -52,6 +52,10 @@ name = "scc_hash_map"
 hash = "rapid_hash"
 name = "scc_tree_index"
 
+[[index]]
+hash = "rapid_hash"
+name = "wormhole"
+
 [workload]
 load = [true]
 key = ["u64"]
