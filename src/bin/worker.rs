@@ -67,6 +67,7 @@ fn specialize_index<K: index_bench::workload::KeyDistribution, H: index_bench::i
         index_bench::index::Name::DashMap => {
             index_bench::run::<K, dashmap::DashMap<K::Key, u32, H>, H>(config)
         }
+        index_bench::index::Name::FbTree => index_bench::run::<K, fbtree_sys::FbTree, H>(config),
         index_bench::index::Name::Papaya => {
             index_bench::run::<K, papaya::HashMap<K::Key, u32, H>, H>(config)
         }

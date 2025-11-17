@@ -474,6 +474,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "fbtree-sys"
+version = "0.1.0"
+dependencies = [
+ "cxx",
+ "cxx-build",
+ "pkg-config",
+]
+
+[[package]]
 name = "find-msvc-tools"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -605,6 +614,7 @@ dependencies = [
  "crossbeam-epoch 0.9.18",
  "crossbeam-skiplist",
  "dashmap",
+ "fbtree-sys",
  "hwlocality",
  "libc",
  "log",

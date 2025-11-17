@@ -10,6 +10,7 @@ mod congee;
 mod contrie;
 mod crossbeam_skiplist;
 mod dash_map;
+mod fb_tree;
 pub mod kaist;
 mod papaya;
 mod scc;
@@ -49,6 +50,7 @@ pub enum Name {
     Contrie,
     CrossbeamSkiplist,
     DashMap,
+    FbTree,
     Papaya,
     SccHashMap,
     SccTreeIndex,

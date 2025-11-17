@@ -13,3 +13,6 @@
 [submodule "extern/wormhole"]
 	path = extern/wormhole
 	url = https://github.com/nwtnni/wormhole.git
+[submodule "extern/IndexResearch"]
+	path = extern/IndexResearch
+	url = https://github.com/nwtnni/IndexResearch.git
