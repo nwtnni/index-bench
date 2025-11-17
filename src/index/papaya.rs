@@ -4,7 +4,7 @@ use crate::index;
 impl<K: index::Key, H: index::Hasher> Index<K, H> for papaya::HashMap<K, u32, H> {
     type Send<'a> = &'a Self;
 
-    fn new() -> Self {
+    fn new(_: &index::Config) -> Self {
         papaya::HashMap::with_hasher(H::default())
     }
 

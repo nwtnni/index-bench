@@ -7,7 +7,7 @@ impl<K: index::Key, H: index::Hasher> Index<K, H> for crossbeam_skiplist::SkipMa
     const IGNORE_INSERT: bool = true;
     const IGNORE_GET: bool = true;
 
-    fn new() -> Self {
+    fn new(_: &index::Config) -> Self {
         crossbeam_skiplist::SkipMap::new()
     }
 

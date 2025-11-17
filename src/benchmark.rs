@@ -41,7 +41,7 @@ pub fn run<K: KeyDistribution, I: Index<K::Key, H>, H: index::Hasher>(
     config.global.numa.bind(topology)?;
 
     let barrier = &Barrier::new(config.global.thread_count + 1);
-    let mut map = I::new();
+    let mut map = I::new(&config.index);
 
     let threads = thread::scope(|scope| -> anyhow::Result<_> {
         let workload = &config.workload;

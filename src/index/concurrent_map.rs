@@ -4,7 +4,7 @@ use crate::index;
 impl<K: index::Key, H: index::Hasher> Index<K, H> for concurrent_map::ConcurrentMap<K, u32> {
     type Send<'a> = Self;
 
-    fn new() -> Self {
+    fn new(_: &index::Config) -> Self {
         concurrent_map::ConcurrentMap::new()
     }
 

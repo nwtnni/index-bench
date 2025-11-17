@@ -15,7 +15,7 @@ impl<K: index::Key, H: index::Hasher> Index<K, H> for bonsai::BonsaiTreeMap<K, u
     type Send<'a> = &'a Self;
     const IGNORE_INSERT: bool = true;
 
-    fn new() -> Self {
+    fn new(_: &index::Config) -> Self {
         bonsai::BonsaiTreeMap::new()
     }
 

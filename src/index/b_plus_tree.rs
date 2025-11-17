@@ -4,7 +4,7 @@ use crate::index;
 impl<K: index::Key, H: index::Hasher> Index<K, H> for bplustree::BPlusTree<K, u32> {
     type Send<'a> = &'a Self;
 
-    fn new() -> Self {
+    fn new(_: &index::Config) -> Self {
         bplustree::BPlusTree::new()
     }
 

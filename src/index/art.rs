@@ -7,7 +7,7 @@ impl<K: index::Key, H: index::Hasher> Index<K, H> for art_sys::Rowex {
 
     type Send<'a> = &'a Self;
 
-    fn new() -> Self {
+    fn new(_: &index::Config) -> Self {
         assert!(core::any::type_name::<K>() == "u64");
         const {
             assert!(core::mem::size_of::<usize>() == 8);

@@ -6,7 +6,7 @@ use crate::index;
 impl<K: index::Key, H: index::Hasher> Index<K, H> for scc::HashMap<K, u32, H> {
     type Send<'a> = &'a Self;
 
-    fn new() -> Self {
+    fn new(_: &index::Config) -> Self {
         scc::HashMap::with_hasher(H::default())
     }
 
@@ -53,7 +53,7 @@ impl<K: index::Key, H: index::Hasher> Index<K, H> for scc::TreeIndex<K, u32> {
 
     const IGNORE_INSERT: bool = true;
 
-    fn new() -> Self {
+    fn new(_: &index::Config) -> Self {
         scc::TreeIndex::new()
     }
 

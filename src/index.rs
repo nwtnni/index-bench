@@ -21,6 +21,12 @@ pub struct Config {
     pub name: Name,
     #[serde(default)]
     pub retry_scan: usize,
+    #[serde(default = "reclaim_threshold")]
+    pub reclaim_threshold: usize,
+}
+
+fn reclaim_threshold() -> usize {
+    16
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -73,7 +79,7 @@ where
     where
         Self: 'a;
 
-    fn new() -> Self;
+    fn new(config: &Config) -> Self;
 
     fn send<'a>(&'a self) -> Self::Send<'a>;
 

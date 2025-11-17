@@ -8,8 +8,8 @@ where
 {
     type Send<'a> = &'a arctic::concurrent::Map<K, u32>;
 
-    fn new() -> Self {
-        arctic::concurrent::Map::default()
+    fn new(config: &index::Config) -> Self {
+        arctic::concurrent::Map::with_reclaim_threshold(config.reclaim_threshold)
     }
 
     fn send<'a>(&'a self) -> Self::Send<'a> {

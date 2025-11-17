@@ -4,7 +4,7 @@ use crate::index;
 impl<K: index::Key, H: index::Hasher> Index<K, H> for congee::Congee<usize, usize> {
     type Send<'a> = &'a Self;
 
-    fn new() -> Self {
+    fn new(_: &index::Config) -> Self {
         assert!(core::any::type_name::<K>() == "u64");
         const {
             assert!(core::mem::size_of::<usize>() == 8);
