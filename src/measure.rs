@@ -1,8 +1,10 @@
+#[cfg(feature = "mimalloc")]
+pub(crate) mod mimalloc;
 pub(crate) mod perf;
-mod resource;
+pub mod resource;
 
 pub(crate) use perf::Perf;
-pub(crate) use resource::Resource;
+pub use resource::Resource;
 
 use serde::Deserialize;
 use serde::Serialize;
@@ -17,7 +19,8 @@ pub struct Global {
 #[derive(Deserialize, Serialize)]
 pub struct Process {
     pub index: serde_json::Value,
-    pub resource: Resource,
+    #[cfg(feature = "mimalloc")]
+    pub mimalloc: serde_json::Value,
     pub thread: Vec<Thread>,
 }
 

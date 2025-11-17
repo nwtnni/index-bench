@@ -43,7 +43,7 @@ pub fn run<K: KeyDistribution, I: Index<K::Key, H>, H: index::Hasher>(
     let barrier = &Barrier::new(config.global.thread_count + 1);
     let mut map = I::new();
 
-    let (resource, threads) = thread::scope(|scope| -> anyhow::Result<_> {
+    let threads = thread::scope(|scope| -> anyhow::Result<_> {
         let workload = &config.workload;
 
         let mut perf_external = match (env::var("PERF_CTL_FIFO"), env::var("PERF_ACK_FIFO")) {
@@ -60,20 +60,16 @@ pub fn run<K: KeyDistribution, I: Index<K::Key, H>, H: index::Hasher>(
                 perf.enable()?;
             }
 
-            let before = measure::Resource::new().context("Get resource usage")?;
-
             let _ = barrier.wait();
 
             // Threads complete
             let _ = barrier.wait();
 
-            let after = measure::Resource::new().context("Get resource usage")?;
-
             if let Some(perf) = &mut perf_external {
                 perf.disable()?;
             }
 
-            Ok(after - before)
+            Ok(())
         });
 
         let threads = (0..config.global.thread_count)
@@ -207,9 +203,9 @@ pub fn run<K: KeyDistribution, I: Index<K::Key, H>, H: index::Hasher>(
             .map(|handle| handle.join().unwrap())
             .collect::<anyhow::Result<Vec<_>>>()?;
 
-        let resource = coordinator.join().unwrap()?;
+        coordinator.join().unwrap()?;
 
-        Ok((resource, threads))
+        Ok(threads)
     })?;
 
     Ok(measure::Global {
@@ -217,7 +213,8 @@ pub fn run<K: KeyDistribution, I: Index<K::Key, H>, H: index::Hasher>(
         config,
         output: measure::Process {
             index: map.report(),
-            resource,
+            #[cfg(feature = "mimalloc")]
+            mimalloc: crate::measure::mimalloc::stats(),
             thread: threads,
         },
     })

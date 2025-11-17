@@ -37,7 +37,7 @@ impl Sub for Resource {
 }
 
 impl Resource {
-    pub(crate) fn new() -> io::Result<Self> {
+    pub fn new() -> io::Result<Self> {
         let rusage = unsafe {
             let mut rusage = MaybeUninit::<libc::rusage>::zeroed();
             match libc::getrusage(libc::RUSAGE_SELF, rusage.as_mut_ptr()) {
