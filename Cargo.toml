@@ -37,7 +37,7 @@ congee = "0.4.1"
 contrie = "0.1.4"
 dashmap = "6.1.0"
 bplustree = "0.1.0"
-mimalloc = { version = "0.1.48", optional = true }
+mimalloc = { git = "https://github.com/nwtnni/mimalloc_rust.git", optional = true, features = ["override"] }
 wormhole-sys = { path = "extern/wormhole/wormhole-sys" }
 fbtree-sys = { path = "extern/IndexResearch/fbtree-sys" }
 

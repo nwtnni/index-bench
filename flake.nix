@@ -36,6 +36,10 @@
             mimalloc
             tbb
 
+            # Build masstree
+            autoconf
+            automake
+
             # Preprocess emails
             unrar
           ];
