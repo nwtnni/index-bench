@@ -30,7 +30,7 @@ pub struct Config {
 }
 
 fn reclaim_threshold() -> usize {
-    16
+    64
 }
 
 fn smr() -> Smr {
