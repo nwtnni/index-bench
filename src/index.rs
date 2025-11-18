@@ -25,16 +25,36 @@ pub struct Config {
     pub retry_scan: usize,
     #[serde(default = "reclaim_threshold")]
     pub reclaim_threshold: usize,
+    #[serde(default = "smr")]
+    pub smr: Smr,
 }
 
 fn reclaim_threshold() -> usize {
     16
 }
 
+fn smr() -> Smr {
+    if cfg!(feature = "smr-disable") {
+        Smr::Disable
+    } else if cfg!(feature = "smr-epoch") {
+        Smr::Epoch
+    } else {
+        Smr::Hazard
+    }
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Hash {
     RapidHash,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Smr {
+    Disable,
+    Epoch,
+    Hazard,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

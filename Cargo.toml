@@ -10,6 +10,9 @@ opt-node3-get = ["arctic/opt-node3-get"]
 opt-node15-get = ["arctic/opt-node15-get"]
 opt = ["opt-node3-get", "opt-node15-get"]
 
+smr-disable = ["arctic/smr-disable"]
+smr-epoch = ["arctic/smr-epoch"]
+
 [dependencies]
 anyhow = "1.0.99"
 art-sys = { path = "extern/ARTSynchronized/art-sys" }
