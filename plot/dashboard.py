@@ -440,8 +440,29 @@ def update(
                 # log_y=True,
             )
 
-            fig.update_xaxes(title_text=x.name, tickvals=df[x.name].unique())
-            fig.update_yaxes(title_text=y.name, autorangeoptions_include=0.0)
+            # https://community.plotly.com/t/changing-label-of-plotly-express-facet-categories/28066/4
+            fig.for_each_annotation(
+                lambda a: a.update(
+                    text=a.text.removeprefix("config/workload/").replace("_", " ")
+                )
+            )
+
+            fig.update_xaxes(
+                title_text=x.name.removeprefix("config/global/").replace("_", " "),
+                tickvals=df[x.name].unique(),
+            )
+            fig.update_yaxes(
+                title_text=y.name.removeprefix("output/")
+                .removeprefix("thread/")
+                .replace("_", " "),
+                autorangeoptions_include=0.0,
+                matches=None,
+                showticklabels=True,
+            )
+
+            for col in range(1, df[facet_column.name].unique().len()):
+                fig.update_yaxes(title_text="", col=col + 1)
+
         else:
             normalize = True if op == "relative" else False
 
