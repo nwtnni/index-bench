@@ -9,7 +9,6 @@ stat = ["arctic/stat"]
 opt-node3-get = ["arctic/opt-node3-get"]
 opt-node15-get = ["arctic/opt-node15-get"]
 opt = ["opt-node3-get", "opt-node15-get"]
-mimalloc = ["dep:mimalloc"]
 
 [dependencies]
 anyhow = "1.0.99"
@@ -37,7 +36,7 @@ congee = "0.4.1"
 contrie = "0.1.4"
 dashmap = "6.1.0"
 bplustree = "0.1.0"
-mimalloc = { git = "https://github.com/nwtnni/mimalloc_rust.git", optional = true, features = ["override"] }
+mimalloc = { path = "extern/mimalloc_rust", features = ["v3"] }
 wormhole-sys = { path = "extern/wormhole/wormhole-sys" }
 fbtree-sys = { path = "extern/IndexResearch/fbtree-sys" }
 
@@ -50,3 +49,6 @@ branch = "smr-benchmark"
 # [features]
 # default = []
 # stat = ["art/stat"]
+
+[profile.release]
+debug = true

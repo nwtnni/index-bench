@@ -1,4 +1,3 @@
-#[cfg(feature = "mimalloc")]
 #[global_allocator]
 static MIMALLOC: mimalloc::MiMalloc = mimalloc::MiMalloc;
 

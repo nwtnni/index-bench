@@ -213,7 +213,6 @@ pub fn run<K: KeyDistribution, I: Index<K::Key, H>, H: index::Hasher>(
         config,
         output: measure::Process {
             index: map.report(),
-            #[cfg(feature = "mimalloc")]
             mimalloc: crate::measure::Mimalloc::new(),
             thread: threads,
         },
