@@ -42,6 +42,10 @@ name = "dash_map"
 
 [[index]]
 hash = "rapid_hash"
+name = "fb_tree"
+
+[[index]]
+hash = "rapid_hash"
 name = "papaya"
 
 [[index]]
