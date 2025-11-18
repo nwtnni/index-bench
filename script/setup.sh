@@ -8,12 +8,13 @@ set -o xtrace
 cd ~
 
 sudo apt update
-sudp apt install ripgrep
+sudo apt install ripgrep
 
 if command -v nix &>/dev/null; then
     echo "Skipping nix installation"
 else
     bash <(curl -L https://nixos.org/nix/install) --no-daemon
+    source ~/.nix-profile/etc/profile.d/nix.sh
 fi
 
 if command -v direnv &>/dev/null; then
@@ -32,12 +33,13 @@ else
     nix-shell '<home-manager>' -A install
 fi
 
-[ -d "~/.dot" ] || git clone git@github.com:nwtnni/.dot.git
+[ -d ".dot" ] || git clone git@github.com:nwtnni/.dot.git
 cd ~/.dot
 sed -i"" "s/local = true/local = false/" home.nix
 home-manager init --switch . -b bak
 
-[ -d "~/index-bench" ] || git clone git@github.com:nwtnni/index-bench.git
+cd ~
+[ -d "index-bench" ] || git clone git@github.com:nwtnni/index-bench.git
 cd ~/index-bench
 git submodule update --init --recursive
 rg -q "flake" .envrc || echo 'use flake' >> .envrc
