@@ -455,13 +455,7 @@ def update(
                 title_text=y.name.removeprefix("output/")
                 .removeprefix("thread/")
                 .replace("_", " "),
-                autorangeoptions_include=0.0,
-                matches=None,
-                showticklabels=True,
             )
-
-            for col in range(1, df[facet_column.name].unique().len()):
-                fig.update_yaxes(title_text="", col=col + 1)
 
         else:
             normalize = True if op == "relative" else False
@@ -487,14 +481,25 @@ def update(
                 y="y",
                 color=x.name,
                 barmode="group",
+                facet_col=facet_column.name if facet_column is not None else None,
                 log_y=True,
             )
 
             fig.update_xaxes(title_text=y.name)
             fig.update_yaxes(
                 title_text="Percentage" if normalize else "Count",
-                autorangeoptions_include=0.0,
+                minor=dict(showgrid=True),
             )
+
+        fig.update_yaxes(
+            autorangeoptions_include=0.0,
+            matches=None,
+            showticklabels=True,
+        )
+
+        if facet_column is not None:
+            for col in range(1, df[facet_column.name].unique().len()):
+                fig.update_yaxes(title_text="", col=col + 1)
 
         children.append(dcc.Graph(figure=fig))
 
@@ -516,16 +521,12 @@ def expand_histogram(normalize, width, histogram: HdrHistogram) -> pl.Series:
         return pl.Series([], dtype=pl.Struct(dict(x=pl.UInt64, y=pl.Float64)))
 
     items = []
-    iterator = histogram.get_linear_iterator(width)
-    last = 0.0
-    for index, item in enumerate(iterator):
-        x = index * width
-        y = None
+    iterator = histogram.get_recorded_iterator()
+    for _ in iterator:
+        x = iterator.value_at_index
+        y = iterator.count_at_this_value
         if normalize:
-            y = iterator.get_percentile_iterated_to() - last
-            last += y
-        else:
-            y = item.count_added_in_this_iter_step
+            y = y * 100 / iterator.total_count
 
         items.append(dict(x=x, y=y))
     return pl.Series(items, dtype=pl.Struct(dict(x=pl.UInt64, y=pl.Float64)))
