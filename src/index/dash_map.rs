@@ -36,4 +36,17 @@ impl<K: index::Key, H: index::Hasher> index::IndexPin<K> for &'_ dashmap::DashMa
     fn remove(&mut self, key: K) -> Option<u32> {
         dashmap::DashMap::remove(self, &key).map(|(_, value)| value)
     }
+
+    fn increment(&mut self, key: K) -> Option<u32> {
+        let mut old = Some(0);
+        let mut entry = dashmap::DashMap::entry(self, key).or_insert_with(|| {
+            old = None;
+            0
+        });
+        if old.is_some() {
+            old = Some(*entry);
+        }
+        *entry += 1;
+        old
+    }
 }

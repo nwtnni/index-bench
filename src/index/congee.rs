@@ -72,4 +72,16 @@ impl<K: index::Key> index::IndexPin<K> for &'_ congee::Congee<usize, usize> {
         )
         .map(|value| value as u32)
     }
+
+    fn increment(&mut self, key: K) -> Option<u32> {
+        let guard = self.pin();
+        congee::Congee::compute_or_insert(
+            self,
+            unsafe { core::mem::transmute_copy::<K, usize>(&key) },
+            |old| old.unwrap_or(0) + 1,
+            &guard,
+        )
+        .unwrap()
+        .map(|value| value as u32)
+    }
 }
