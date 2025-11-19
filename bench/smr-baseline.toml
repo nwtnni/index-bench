@@ -5,7 +5,6 @@ numa = [{ policy = "bind", node = 0 }]
 [[index]]
 hash = "rapid_hash"
 name = "arctic"
-reclaim_threshold = 0
 
 [workload]
 load = [true]
