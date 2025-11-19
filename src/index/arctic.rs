@@ -53,6 +53,10 @@ where
         arctic::concurrent::MapRef::update(self, key.borrow(), value).ok()
     }
 
+    fn increment(&mut self, key: K) -> Option<u32> {
+        arctic::concurrent::MapRef::insert_with(self, key.borrow(), |old| old.unwrap_or(0) + 1)
+    }
+
     fn remove(&mut self, key: K) -> Option<u32> {
         arctic::concurrent::MapRef::remove(self, key.borrow())
     }
