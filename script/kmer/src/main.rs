@@ -1,83 +1,68 @@
 // https://github.com/nicolasgarza/fetchkmer/blob/d910161007cb7e4c3396a49998081db6d6a1f134/src/compress.rs
 
-use ascii::AsciiChar;
-use bitstream_io::{BigEndian, BitWrite, BitWriter};
-use std::fs::File;
-use std::io::Write;
-use std::{fs, io, path::Path};
+use std::env;
+use std::fs;
+use std::io::BufRead as _;
+use std::io::BufReader;
+use std::io::BufWriter;
 
-fn main() {}
+use bitstream_io::BigEndian;
+use bitstream_io::BitWrite as _;
+use bitstream_io::BitWriter;
 
-const NEWLINE: u8 = b'\n';
+static USAGE: &str = "Usage: kmer <INPUT> <OUTPUT>";
 
-#[repr(u8)]
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub enum BaseType {
-    A = 0b00,
-    T = 0b01,
-    C = 0b10,
-    G = 0b11,
-}
+fn main() -> std::io::Result<()> {
+    let input = env::args().nth(1).expect(USAGE);
+    let output = env::args().nth(2).expect(USAGE);
 
-impl BaseType {
-    #[inline]
-    pub fn from_ascii(byte: u8) -> Option<Self> {
-        match AsciiChar::from_ascii(byte).ok()? {
-            AsciiChar::A | AsciiChar::a => Some(BaseType::A),
-            AsciiChar::T | AsciiChar::t => Some(BaseType::T),
-            AsciiChar::C | AsciiChar::c => Some(BaseType::C),
-            AsciiChar::G | AsciiChar::g => Some(BaseType::G),
-            _ => None,
+    let mut input = fs::File::open(input)
+        .map(BufReader::new)
+        .expect("Failed to open input");
+
+    let mut output: BitWriter<_, BigEndian> = fs::File::options()
+        .write(true)
+        .create_new(true)
+        .open(output)
+        .map(BufWriter::new)
+        .map(BitWriter::new)
+        .expect("Failed to open output");
+
+    let mut buffer: Vec<u8> = Vec::new();
+
+    // Hard-code for SRR31218470 for now
+    loop {
+        // Skip header
+        if input.skip_until(b'\n')? == 0 {
+            break;
         }
-    }
-}
 
-/// Strip headers/newlines, keep only A/T/C/G as BaseType.
-pub fn extract_bases(input: &[u8]) -> Vec<BaseType> {
-    let mut out = Vec::with_capacity(input.len());
-    let mut in_header = false;
+        for _ in 0..3 {
+            input.read_until(b'\n', &mut buffer)?;
+            buffer.pop();
+        }
 
-    for &b in input {
-        if b == NEWLINE {
-            in_header = false;
+        if buffer.contains(&b'N') {
+            eprintln!("Skipping line with N: {:?}", std::str::from_utf8(&buffer));
+            buffer.clear();
             continue;
         }
-        if in_header {
-            continue;
+
+        // Pack bases into 2-bit representation
+        for b in buffer.drain(..) {
+            output.write::<2, u8>(CONVERT[b as usize])?;
         }
-        if b == b'>' {
-            in_header = true;
-            continue;
-        }
-        if let Some(bt) = BaseType::from_ascii(b) {
-            out.push(bt);
-        }
+        output.byte_align()?;
     }
-    out
-}
 
-/// Pack bases into 2-bit representation; returns (packed_bytes, num_bases).
-pub fn compress_bases_2bit(bases: &[BaseType]) -> io::Result<(Vec<u8>, usize)> {
-    let mut buffer: Vec<u8> = Vec::with_capacity((bases.len() + 3) / 4);
-    {
-        let mut writer = BitWriter::endian(&mut buffer, BigEndian);
-        for &b in bases {
-            writer.write::<2, u32>(b as u32)?;
-        }
-        writer.byte_align()?;
-    }
-    Ok((buffer, bases.len()))
-}
-
-/// Read a FASTA, compress to 2-bit, write:
-/// [8-byte little-endian base count][packed 2-bit bases...]
-pub fn compress_fasta_file_single(input_path: &Path, output_path: &Path) -> io::Result<()> {
-    let file = fs::read(input_path)?;
-    let bases = extract_bases(&file);
-    let (compressed, count) = compress_bases_2bit(&bases)?;
-
-    let mut f = File::create(output_path)?;
-    f.write_all(&(count as u32).to_le_bytes())?;
-    f.write_all(&compressed)?;
     Ok(())
 }
+
+static CONVERT: [u8; 256] = {
+    let mut table = [u8::MAX; 256];
+    table[b'A' as usize] = 0b00;
+    table[b'T' as usize] = 0b01;
+    table[b'C' as usize] = 0b10;
+    table[b'G' as usize] = 0b11;
+    table
+};
