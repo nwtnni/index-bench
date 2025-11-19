@@ -22,7 +22,7 @@ use serde::Serialize;
 
 #[derive(Cartesian)]
 #[rustfmt::skip]
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Config {
     pub index: index::Config,
     #[cartesian(flatten)]

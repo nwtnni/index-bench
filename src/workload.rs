@@ -20,7 +20,7 @@ pub struct Config {
     pub ycsb: ycsb::Workload,
 }
 
-#[derive(Copy, Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Key {
     U64,
@@ -41,7 +41,7 @@ impl Config {
 
     pub(crate) fn loader<K: KeyDistribution>(
         &self,
-        config: Key,
+        config: &Key,
         thread_count: usize,
         thread_id: usize,
     ) -> Loader<K> {
@@ -51,7 +51,7 @@ impl Config {
         }
     }
 
-    pub(crate) fn runner<K: KeyDistribution>(&self, config: Key) -> Runner<K> {
+    pub(crate) fn runner<K: KeyDistribution>(&self, config: &Key) -> Runner<K> {
         Runner {
             inner: self.ycsb.runner(&ACKNOWLEDGED),
             keys: K::new(config),
@@ -107,7 +107,7 @@ impl<'ycsb, K: KeyDistribution> Runner<'ycsb, K> {
 
 pub trait KeyDistribution {
     type Key: index::Key;
-    fn new(config: Key) -> Self;
+    fn new(config: &Key) -> Self;
     fn get(&self, index: u64) -> Self::Key;
 }
 
@@ -116,7 +116,7 @@ pub struct U64;
 impl KeyDistribution for U64 {
     type Key = u64;
 
-    fn new(_: Key) -> Self {
+    fn new(_: &Key) -> Self {
         Self
     }
 
@@ -136,7 +136,7 @@ pub struct Email(&'static [&'static str]);
 impl KeyDistribution for Email {
     type Key = String;
 
-    fn new(_: Key) -> Self {
+    fn new(_: &Key) -> Self {
         Self(LazyLock::force(&EMAIL).as_slice())
     }
 
@@ -150,13 +150,13 @@ pub struct Prefix(usize);
 impl KeyDistribution for Prefix {
     type Key = Vec<u8>;
 
-    fn new(config: Key) -> Self {
+    fn new(config: &Key) -> Self {
         let len = match config {
             Key::Prefix(len) => len,
             _ => unreachable!(),
         };
 
-        Self(len)
+        Self(*len)
     }
 
     fn get(&self, index: u64) -> Self::Key {
@@ -172,13 +172,13 @@ pub struct Sparse(f64);
 impl KeyDistribution for Sparse {
     type Key = u64;
 
-    fn new(config: Key) -> Self {
+    fn new(config: &Key) -> Self {
         let sparse = match config {
             Key::Sparse(sparse) => sparse,
             _ => unreachable!(),
         };
 
-        Self(sparse)
+        Self(*sparse)
     }
 
     fn get(&self, index: u64) -> Self::Key {
