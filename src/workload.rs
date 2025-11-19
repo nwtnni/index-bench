@@ -1,5 +1,3 @@
-use std::fs;
-use std::path::PathBuf;
 use std::sync::LazyLock;
 
 use cartesian::Cartesian;
@@ -29,7 +27,7 @@ pub enum Key {
     Email,
     Prefix(usize),
     Sparse(f64),
-    Kmer(PathBuf),
+    Kmer,
 }
 
 static ACKNOWLEDGED: Acknowledged = Acknowledged::new();
@@ -189,19 +187,17 @@ impl KeyDistribution for Sparse {
     }
 }
 
-pub struct Kmer(Vec<u8>);
+static KMER_BUFFER: LazyLock<Vec<u8>> = LazyLock::new(|| {
+    std::fs::read("data/SRR31218470.bin").expect("Failed to find data/SRR31218470.bin.txt")
+});
+
+pub struct Kmer(&'static [u8]);
 
 impl KeyDistribution for Kmer {
     type Key = u64;
 
-    fn new(config: &Key) -> Self {
-        let path = match config {
-            Key::Kmer(path) => path,
-            _ => unreachable!(),
-        };
-
-        let data = fs::read(path).expect("Failed to read compressed FASTA data");
-        Self(data)
+    fn new(_: &Key) -> Self {
+        Self(LazyLock::force(&KMER_BUFFER).as_ref())
     }
 
     /// https://github.com/nicolasgarza/fetchkmer/blob/d910161007cb7e4c3396a49998081db6d6a1f134/src/fetch.rs#L1-L20

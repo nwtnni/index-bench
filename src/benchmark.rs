@@ -133,7 +133,7 @@ pub fn run<K: KeyDistribution, I: Index<K::Key, H>, H: index::Hasher>(
 
                     if workload.load {
                         match &key {
-                            workload::Key::Kmer(_) => {
+                            workload::Key::Kmer => {
                                 while let Some(key) = loader.next_key() {
                                     map.increment(key);
                                 }

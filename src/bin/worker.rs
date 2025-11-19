@@ -22,9 +22,7 @@ fn specialize_key(config: index_bench::Config) -> anyhow::Result<index_bench::me
         index_bench::workload::Key::Sparse(_) => {
             specialize_hash::<index_bench::workload::Sparse>(config)
         }
-        index_bench::workload::Key::Kmer(_) => {
-            specialize_hash::<index_bench::workload::Kmer>(config)
-        }
+        index_bench::workload::Key::Kmer => specialize_hash::<index_bench::workload::Kmer>(config),
     }
 }
 
