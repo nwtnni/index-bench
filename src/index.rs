@@ -170,6 +170,13 @@ where
         self.insert(key, value)
     }
 
+    fn increment(&mut self, _key: K) -> Option<u32> {
+        unimplemented!(
+            "TODO: implement increment for {}",
+            std::any::type_name::<Self>()
+        )
+    }
+
     fn remove(&mut self, _key: K) -> Option<u32> {
         unimplemented!(
             "TODO: implement remove for {}",

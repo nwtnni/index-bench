@@ -18,6 +18,7 @@ use crate::index::IndexPin as _;
 use crate::index::IndexSend as _;
 use crate::index::Key as _;
 use crate::measure;
+use crate::workload;
 use crate::workload::KeyDistribution;
 
 pub fn run<K: KeyDistribution, I: Index<K::Key, H>, H: index::Hasher>(
@@ -131,9 +132,18 @@ pub fn run<K: KeyDistribution, I: Index<K::Key, H>, H: index::Hasher>(
                     let start = Instant::now();
 
                     if workload.load {
-                        while let Some(key) = loader.next_key() {
-                            let checksum = key.checksum();
-                            map.insert(key, checksum);
+                        match &key {
+                            workload::Key::Kmer(_) => {
+                                while let Some(key) = loader.next_key() {
+                                    map.increment(key);
+                                }
+                            }
+                            _ => {
+                                while let Some(key) = loader.next_key() {
+                                    let checksum = key.checksum();
+                                    map.insert(key, checksum);
+                                }
+                            }
                         }
                     } else {
                         for _ in 0..operation_count_per_thread {
