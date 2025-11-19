@@ -9,6 +9,7 @@ use std::io::BufWriter;
 use bitstream_io::BigEndian;
 use bitstream_io::BitWrite as _;
 use bitstream_io::BitWriter;
+use libflate::gzip;
 
 static USAGE: &str = "Usage: kmer <INPUT> <OUTPUT>";
 
@@ -18,7 +19,11 @@ fn main() -> std::io::Result<()> {
 
     let mut input = fs::File::open(input)
         .map(BufReader::new)
-        .expect("Failed to open input");
+        .map(gzip::Decoder::new)
+        .expect("Failed to open input")
+        // HACK: work around `gzip::Decoder` not implementing `BufRead`
+        .map(BufReader::new)
+        .expect("Failed to open gzip");
 
     let mut output: BitWriter<_, BigEndian> = fs::File::options()
         .write(true)
