@@ -1,3 +1,7 @@
+use std::fs;
+use std::io::BufReader;
+use std::io::Read as _;
+use std::path::PathBuf;
 use std::sync::LazyLock;
 
 use cartesian::Cartesian;
@@ -27,6 +31,7 @@ pub enum Key {
     Email,
     Prefix(usize),
     Sparse(f64),
+    Kmer(PathBuf),
 }
 
 static ACKNOWLEDGED: Acknowledged = Acknowledged::new();
@@ -183,5 +188,59 @@ impl KeyDistribution for Sparse {
 
     fn get(&self, index: u64) -> Self::Key {
         (index as f64 * self.0) as u64
+    }
+}
+
+pub struct Kmer(Vec<u8>);
+
+impl KeyDistribution for Kmer {
+    type Key = u64;
+
+    fn new(config: &Key) -> Self {
+        let path = match config {
+            Key::Kmer(path) => path,
+            _ => unreachable!(),
+        };
+
+        let mut file = fs::File::open(path)
+            .map(BufReader::new)
+            .expect("Failed to open compressed FASTA file");
+
+        let mut count = [0u8; 4];
+        file.read_exact(&mut count)
+            .expect("Failed to read compressed FASTA count");
+        let count = u32::from_le_bytes(count) as usize;
+        // Align to 4 (base pairs per byte) and divide by 4 to get byte length
+        let expected = (count + 0b11) >> 2;
+        let mut data = Vec::with_capacity(expected);
+        let actual = file
+            .read_to_end(&mut data)
+            .expect("Failed to read compressed FASTA data");
+        assert_eq!(actual, expected);
+        Self(data)
+    }
+
+    /// https://github.com/nicolasgarza/fetchkmer/blob/d910161007cb7e4c3396a49998081db6d6a1f134/src/fetch.rs#L1-L20
+    fn get(&self, index: u64) -> Self::Key {
+        // const K: usize = 32;
+
+        let bit_offset = index * 2;
+        let byte_offset = bit_offset / 8;
+        let intra_byte_offset = bit_offset % 8;
+
+        // let mut buf: u128 = 0;
+        // for j in 0..K / 2 {
+        //     let byte = self.0[byte_offset as usize + j];
+        //     buf |= (byte as u128) << (8 * j);
+        // }
+        //
+        // let shifted = buf >> intra_byte_offset;
+        //
+        // // mask exactly 64 bits
+        // (shifted & 0xFFFF_FFFF_FFFF_FFFFu128) as u64
+
+        // Load as native endian integer
+        let buf = u128::from_be_bytes(self.0[byte_offset as usize..][..16].try_into().unwrap());
+        ((buf << intra_byte_offset) >> 64) as u64
     }
 }
