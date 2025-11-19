@@ -11,7 +11,9 @@ set -o xtrace
 git submodule update --init --recursive
 
 cd "$ROOT/../extern/mimalloc_rust/libmimalloc-sys/c_src/mimalloc/v3/"
-mkdir build && cd build
+mkdir -p build && cd build
 cmake ..
 make -j mimalloc-static
 
+cd "$ROOT/../extern/IndexResearch/util/"
+git apply ../util.patch || true
