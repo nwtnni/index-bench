@@ -1,6 +1,4 @@
 use std::fs;
-use std::io::BufReader;
-use std::io::Read as _;
 use std::path::PathBuf;
 use std::sync::LazyLock;
 
@@ -202,29 +200,20 @@ impl KeyDistribution for Kmer {
             _ => unreachable!(),
         };
 
-        let mut file = fs::File::open(path)
-            .map(BufReader::new)
-            .expect("Failed to open compressed FASTA file");
-
-        let mut count = [0u8; 4];
-        file.read_exact(&mut count)
-            .expect("Failed to read compressed FASTA count");
-        let count = u32::from_le_bytes(count) as usize;
-        // Align to 4 (base pairs per byte) and divide by 4 to get byte length
-        let expected = (count + 0b11) >> 2;
-        let mut data = Vec::with_capacity(expected);
-        let actual = file
-            .read_to_end(&mut data)
-            .expect("Failed to read compressed FASTA data");
-        assert_eq!(actual, expected);
+        let data = fs::read(path).expect("Failed to read compressed FASTA data");
         Self(data)
     }
 
     /// https://github.com/nicolasgarza/fetchkmer/blob/d910161007cb7e4c3396a49998081db6d6a1f134/src/fetch.rs#L1-L20
     fn get(&self, index: u64) -> Self::Key {
-        // const K: usize = 32;
+        // Hard-code for 28-mer (from KMC-2 and Gerbil papers) and f. vesca sequence
+        // Each sequence is 151 base pairs = 302 bits = 38 bytes
+        // There are 123 28-mers in each sequence (0..28, 1..29, ..., 123..151)
+        let sequence_index = index / 123;
+        let sequence_byte_offset = sequence_index * 38;
+        let kmer_index = index % 123;
 
-        let bit_offset = index * 2;
+        let bit_offset = kmer_index * 2;
         let byte_offset = bit_offset / 8;
         let intra_byte_offset = bit_offset % 8;
 
@@ -240,7 +229,15 @@ impl KeyDistribution for Kmer {
         // (shifted & 0xFFFF_FFFF_FFFF_FFFFu128) as u64
 
         // Load as native endian integer
-        let buf = u128::from_be_bytes(self.0[byte_offset as usize..][..16].try_into().unwrap());
-        ((buf << intra_byte_offset) >> 64) as u64
+        // FIXME: doesn't check for boundary condition near EOF
+        let buf = u128::from_be_bytes(
+            self.0[(sequence_byte_offset + byte_offset) as usize..][..16]
+                .try_into()
+                .unwrap(),
+        );
+
+        // 28-mer means keep top 56 bits
+        const K_MASK: u64 = !(u64::MAX >> 56);
+        (((buf << intra_byte_offset) >> 64) as u64) & K_MASK
     }
 }
