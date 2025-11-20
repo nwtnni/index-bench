@@ -32,12 +32,14 @@ impl<K: index::Key, H: index::Hasher> index::IndexSend<K, H> for &'_ wormhole_sy
 
 impl<K: index::Key> index::IndexPin<K> for wormhole_sys::WormRef<'_> {
     fn get(&mut self, key: &K) -> Option<u64> {
-        key.with_ptr(|ptr| unsafe { wormhole_sys::WormRef::get(self, ptr, key.len()) })
+        todo!()
+        // key.with_ptr(|ptr| unsafe { wormhole_sys::WormRef::get(self, ptr, key.len()) })
     }
 
     fn insert(&mut self, key: K, value: u64) -> Option<u64> {
-        key.with_ptr(|ptr| unsafe { wormhole_sys::WormRef::put(self, ptr, key.len(), value) });
-        None
+        todo!()
+        // key.with_ptr(|ptr| unsafe { wormhole_sys::WormRef::put(self, ptr, key.len(), value) });
+        // None
     }
 
     fn update(&mut self, key: K, value: u64) -> Option<u64> {
@@ -46,7 +48,8 @@ impl<K: index::Key> index::IndexPin<K> for wormhole_sys::WormRef<'_> {
     }
 
     fn remove(&mut self, key: K) -> Option<u64> {
-        key.with_ptr(|ptr| unsafe { wormhole_sys::WormRef::del(self, ptr, key.len()) });
-        None
+        todo!()
+        // key.with_ptr(|ptr| unsafe { wormhole_sys::WormRef::del(self, ptr, key.len()) });
+        // None
     }
 }

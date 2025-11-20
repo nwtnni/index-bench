@@ -139,7 +139,11 @@ pub trait Key:
     + ::concurrent_map::Minimum
     + 'static
 {
-    fn with_ptr<F: FnOnce(*const ffi::c_void) -> T, T>(&self, apply: F) -> T;
+    fn to_owned(borrow: Self::Borrow<'_>) -> Self {
+        ::arctic::raw::Key::clone_from_borrow(borrow)
+    }
+
+    fn with_ptr<F: FnOnce(*const ffi::c_void) -> T, T>(borrow: Self::Borrow<'_>, apply: F) -> T;
 
     fn checksum(&self) -> u64;
 
@@ -155,8 +159,8 @@ impl Key for u64 {
         8
     }
 
-    fn with_ptr<F: FnOnce(*const ffi::c_void) -> T, T>(&self, apply: F) -> T {
-        let key = self.swap_bytes();
+    fn with_ptr<F: FnOnce(*const ffi::c_void) -> T, T>(borrow: Self::Borrow<'_>, apply: F) -> T {
+        let key = borrow.swap_bytes();
         let ptr = (&key) as *const u64 as *const ffi::c_void;
         apply(ptr)
     }
@@ -171,8 +175,8 @@ impl Key for String {
         String::len(self)
     }
 
-    fn with_ptr<F: FnOnce(*const ffi::c_void) -> T, T>(&self, apply: F) -> T {
-        apply(self.as_str().as_ptr().cast())
+    fn with_ptr<F: FnOnce(*const ffi::c_void) -> T, T>(borrow: Self::Borrow<'_>, apply: F) -> T {
+        apply(borrow.as_ptr().cast())
     }
 }
 
@@ -185,8 +189,8 @@ impl Key for Vec<u8> {
         Vec::len(self)
     }
 
-    fn with_ptr<F: FnOnce(*const ffi::c_void) -> T, T>(&self, apply: F) -> T {
-        apply(self.as_slice().as_ptr().cast())
+    fn with_ptr<F: FnOnce(*const ffi::c_void) -> T, T>(borrow: Self::Borrow<'_>, apply: F) -> T {
+        apply(borrow.as_ptr().cast())
     }
 }
 
