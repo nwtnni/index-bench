@@ -1,3 +1,5 @@
+use core::ffi;
+
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -138,11 +140,23 @@ pub trait Key:
     + 'static
 {
     fn checksum(&self) -> u32;
+
+    fn as_ptr(&self) -> *const ffi::c_void;
+
+    fn len(&self) -> usize;
 }
 
 impl Key for u64 {
     fn checksum(&self) -> u32 {
         *self as u32
+    }
+
+    fn as_ptr(&self) -> *const ffi::c_void {
+        self as *const u64 as _
+    }
+
+    fn len(&self) -> usize {
+        8
     }
 }
 
@@ -150,11 +164,27 @@ impl Key for String {
     fn checksum(&self) -> u32 {
         self.len() as u32
     }
+
+    fn as_ptr(&self) -> *const ffi::c_void {
+        self.as_str().as_ptr().cast()
+    }
+
+    fn len(&self) -> usize {
+        String::len(self)
+    }
 }
 
 impl Key for Vec<u8> {
     fn checksum(&self) -> u32 {
         self.len() as u32
+    }
+
+    fn as_ptr(&self) -> *const ffi::c_void {
+        self.as_slice().as_ptr().cast()
+    }
+
+    fn len(&self) -> usize {
+        Vec::len(self)
     }
 }
 
