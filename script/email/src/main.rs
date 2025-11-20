@@ -61,10 +61,22 @@ fn main() -> io::Result<()> {
                     let mut total = 0;
 
                     for r#match in valid.find_iter(&data) {
+                        // https://stackoverflow.com/a/574698
+                        // https://www.rfc-editor.org/errata_search.php?rfc=3696
+                        if r#match.as_bytes().len() > 254 {
+                            continue;
+                        }
+
                         let email = core::str::from_utf8(r#match.as_bytes())
                             .expect("Email regex is valid UTF-8");
+
                         let (username, domain) =
                             email.split_once('@').expect("Email regex has one @");
+
+                        // https://www.rfc-editor.org/errata_search.php?rfc=3696
+                        if username.len() > 64 || domain.len() > 255 {
+                            continue;
+                        }
 
                         for segment in domain.split('.').rev() {
                             buffer.push_str(segment);
