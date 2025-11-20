@@ -141,14 +141,14 @@ pub trait Key:
 {
     fn with_ptr<F: FnOnce(*const ffi::c_void) -> T, T>(&self, apply: F) -> T;
 
-    fn checksum(&self) -> u32;
+    fn checksum(&self) -> u64;
 
     fn len(&self) -> usize;
 }
 
 impl Key for u64 {
-    fn checksum(&self) -> u32 {
-        *self as u32
+    fn checksum(&self) -> u64 {
+        *self as u64
     }
 
     fn len(&self) -> usize {
@@ -163,8 +163,8 @@ impl Key for u64 {
 }
 
 impl Key for String {
-    fn checksum(&self) -> u32 {
-        self.len() as u32
+    fn checksum(&self) -> u64 {
+        self.len() as u64
     }
 
     fn len(&self) -> usize {
@@ -177,8 +177,8 @@ impl Key for String {
 }
 
 impl Key for Vec<u8> {
-    fn checksum(&self) -> u32 {
-        self.len() as u32
+    fn checksum(&self) -> u64 {
+        self.len() as u64
     }
 
     fn len(&self) -> usize {
@@ -194,22 +194,22 @@ pub trait IndexPin<K>
 where
     K: Key,
 {
-    fn get(&mut self, key: &K) -> Option<u32>;
+    fn get(&mut self, key: &K) -> Option<u64>;
 
-    fn insert(&mut self, key: K, value: u32) -> Option<u32>;
+    fn insert(&mut self, key: K, value: u64) -> Option<u64>;
 
-    fn update(&mut self, key: K, value: u32) -> Option<u32> {
+    fn update(&mut self, key: K, value: u64) -> Option<u64> {
         self.insert(key, value)
     }
 
-    fn increment(&mut self, _key: K) -> Option<u32> {
+    fn increment(&mut self, _key: K) -> Option<u64> {
         unimplemented!(
             "TODO: implement increment for {}",
             std::any::type_name::<Self>()
         )
     }
 
-    fn remove(&mut self, _key: K) -> Option<u32> {
+    fn remove(&mut self, _key: K) -> Option<u64> {
         unimplemented!(
             "TODO: implement remove for {}",
             std::any::type_name::<Self>()
@@ -221,7 +221,7 @@ where
         _retry_scan: usize,
         _min: &'a K,
         _max: &'a K,
-        _output: &mut Vec<(K, u32)>,
+        _output: &mut Vec<(K, u64)>,
     ) {
         unimplemented!(
             "TODO: implement range for {}",
@@ -229,7 +229,7 @@ where
         );
     }
 
-    fn scan(&mut self, _key: &K, _count: usize) -> impl Iterator<Item = u32> {
+    fn scan(&mut self, _key: &K, _count: usize) -> impl Iterator<Item = u64> {
         unimplemented!("TODO: implement scan for {}", std::any::type_name::<Self>());
 
         #[expect(unreachable_code)]

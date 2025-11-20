@@ -30,17 +30,17 @@ impl<K: index::Key, H: index::Hasher> index::IndexSend<K, H> for &'_ congee::Con
 }
 
 impl<K: index::Key> index::IndexPin<K> for &'_ congee::Congee<usize, usize> {
-    fn get(&mut self, key: &K) -> Option<u32> {
+    fn get(&mut self, key: &K) -> Option<u64> {
         let guard = self.pin();
         congee::Congee::get(
             self,
             unsafe { core::mem::transmute::<&K, &usize>(key) },
             &guard,
         )
-        .map(|value| value as u32)
+        .map(|value| value as u64)
     }
 
-    fn insert(&mut self, key: K, value: u32) -> Option<u32> {
+    fn insert(&mut self, key: K, value: u64) -> Option<u64> {
         let guard = self.pin();
         congee::Congee::insert(
             self,
@@ -49,10 +49,10 @@ impl<K: index::Key> index::IndexPin<K> for &'_ congee::Congee<usize, usize> {
             &guard,
         )
         .unwrap()
-        .map(|value| value as u32)
+        .map(|value| value as u64)
     }
 
-    fn update(&mut self, key: K, value: u32) -> Option<u32> {
+    fn update(&mut self, key: K, value: u64) -> Option<u64> {
         let guard = self.pin();
         congee::Congee::compute_if_present(
             self,
@@ -60,20 +60,20 @@ impl<K: index::Key> index::IndexPin<K> for &'_ congee::Congee<usize, usize> {
             |_| Some(value as usize),
             &guard,
         )
-        .map(|(old, _)| old as u32)
+        .map(|(old, _)| old as u64)
     }
 
-    fn remove(&mut self, key: K) -> Option<u32> {
+    fn remove(&mut self, key: K) -> Option<u64> {
         let guard = self.pin();
         congee::Congee::remove(
             self,
             &unsafe { core::mem::transmute_copy::<K, usize>(&key) },
             &guard,
         )
-        .map(|value| value as u32)
+        .map(|value| value as u64)
     }
 
-    fn increment(&mut self, key: K) -> Option<u32> {
+    fn increment(&mut self, key: K) -> Option<u64> {
         let guard = self.pin();
         congee::Congee::compute_or_insert(
             self,
@@ -82,6 +82,6 @@ impl<K: index::Key> index::IndexPin<K> for &'_ congee::Congee<usize, usize> {
             &guard,
         )
         .unwrap()
-        .map(|value| value as u32)
+        .map(|value| value as u64)
     }
 }

@@ -31,24 +31,21 @@ impl<K: index::Key, H: index::Hasher> index::IndexSend<K, H> for &'_ wormhole_sy
 }
 
 impl<K: index::Key> index::IndexPin<K> for wormhole_sys::WormRef<'_> {
-    fn get(&mut self, key: &K) -> Option<u32> {
+    fn get(&mut self, key: &K) -> Option<u64> {
         key.with_ptr(|ptr| unsafe { wormhole_sys::WormRef::get(self, ptr, key.len()) })
-            .map(|value| value as u32)
     }
 
-    fn insert(&mut self, key: K, value: u32) -> Option<u32> {
-        key.with_ptr(|ptr| unsafe {
-            wormhole_sys::WormRef::put(self, ptr, key.len(), value as u64)
-        });
+    fn insert(&mut self, key: K, value: u64) -> Option<u64> {
+        key.with_ptr(|ptr| unsafe { wormhole_sys::WormRef::put(self, ptr, key.len(), value) });
         None
     }
 
-    fn update(&mut self, key: K, value: u32) -> Option<u32> {
+    fn update(&mut self, key: K, value: u64) -> Option<u64> {
         self.insert(key, value);
         None
     }
 
-    fn remove(&mut self, key: K) -> Option<u32> {
+    fn remove(&mut self, key: K) -> Option<u64> {
         key.with_ptr(|ptr| unsafe { wormhole_sys::WormRef::del(self, ptr, key.len()) });
         None
     }

@@ -43,41 +43,41 @@ fn specialize_index<K: index_bench::workload::KeyDistribution, H: index_bench::i
     match config.index.name {
         index_bench::index::Name::Art => index_bench::run::<K, art_sys::Rowex, H>(config),
         index_bench::index::Name::Arctic => {
-            index_bench::run::<K, arctic::concurrent::Map<K::Key, u32>, H>(config)
+            index_bench::run::<K, arctic::concurrent::Map<K::Key, u64>, H>(config)
         }
         index_bench::index::Name::Bonsai => {
-            index_bench::run::<K, index_bench::index::kaist::BonsaiTreeMap<K::Key, u32>, H>(config)
+            index_bench::run::<K, index_bench::index::kaist::BonsaiTreeMap<K::Key, u64>, H>(config)
         }
         index_bench::index::Name::BPlusTree => {
-            index_bench::run::<K, bplustree::BPlusTree<K::Key, u32>, H>(config)
+            index_bench::run::<K, bplustree::BPlusTree<K::Key, u64>, H>(config)
         }
         index_bench::index::Name::BzTree => {
-            index_bench::run::<K, bztree::BzTree<K::Key, u32>, H>(config)
+            index_bench::run::<K, bztree::BzTree<K::Key, u64>, H>(config)
         }
         index_bench::index::Name::ConcurrentMap => {
-            index_bench::run::<K, concurrent_map::ConcurrentMap<K::Key, u32>, H>(config)
+            index_bench::run::<K, concurrent_map::ConcurrentMap<K::Key, u64>, H>(config)
         }
         index_bench::index::Name::Congee => {
             index_bench::run::<K, congee::Congee<usize, usize>, H>(config)
         }
         index_bench::index::Name::Contrie => {
-            index_bench::run::<K, contrie::CloneConMap<K::Key, u32>, H>(config)
+            index_bench::run::<K, contrie::CloneConMap<K::Key, u64>, H>(config)
         }
         index_bench::index::Name::CrossbeamSkiplist => {
-            index_bench::run::<K, crossbeam_skiplist::SkipMap<K::Key, u32>, H>(config)
+            index_bench::run::<K, crossbeam_skiplist::SkipMap<K::Key, u64>, H>(config)
         }
         index_bench::index::Name::DashMap => {
-            index_bench::run::<K, dashmap::DashMap<K::Key, u32, H>, H>(config)
+            index_bench::run::<K, dashmap::DashMap<K::Key, u64, H>, H>(config)
         }
         index_bench::index::Name::FbTree => index_bench::run::<K, fbtree_sys::FbTree, H>(config),
         index_bench::index::Name::Papaya => {
-            index_bench::run::<K, papaya::HashMap<K::Key, u32, H>, H>(config)
+            index_bench::run::<K, papaya::HashMap<K::Key, u64, H>, H>(config)
         }
         index_bench::index::Name::SccHashMap => {
-            index_bench::run::<K, scc::HashMap<K::Key, u32, H>, H>(config)
+            index_bench::run::<K, scc::HashMap<K::Key, u64, H>, H>(config)
         }
         index_bench::index::Name::SccTreeIndex => {
-            index_bench::run::<K, scc::TreeIndex<K::Key, u32>, H>(config)
+            index_bench::run::<K, scc::TreeIndex<K::Key, u64>, H>(config)
         }
         index_bench::index::Name::Wormhole => {
             index_bench::run::<K, wormhole_sys::Wormhole, H>(config)

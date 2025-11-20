@@ -3,7 +3,7 @@ use core::ops::RangeInclusive;
 use crate::Index;
 use crate::index;
 
-impl<K: index::Key, H: index::Hasher> Index<K, H> for scc::HashMap<K, u32, H> {
+impl<K: index::Key, H: index::Hasher> Index<K, H> for scc::HashMap<K, u64, H> {
     type Send<'a> = &'a Self;
 
     fn new(_: &index::Config) -> Self {
@@ -15,7 +15,7 @@ impl<K: index::Key, H: index::Hasher> Index<K, H> for scc::HashMap<K, u32, H> {
     }
 }
 
-impl<K: index::Key, H: index::Hasher> index::IndexSend<K, H> for &'_ scc::HashMap<K, u32, H> {
+impl<K: index::Key, H: index::Hasher> index::IndexSend<K, H> for &'_ scc::HashMap<K, u64, H> {
     type Handle<'a>
         = Self
     where
@@ -26,16 +26,16 @@ impl<K: index::Key, H: index::Hasher> index::IndexSend<K, H> for &'_ scc::HashMa
     }
 }
 
-impl<K: index::Key, H: index::Hasher> index::IndexPin<K> for &'_ scc::HashMap<K, u32, H> {
-    fn get(&mut self, key: &K) -> Option<u32> {
+impl<K: index::Key, H: index::Hasher> index::IndexPin<K> for &'_ scc::HashMap<K, u64, H> {
+    fn get(&mut self, key: &K) -> Option<u64> {
         self.read_sync(key, |_, value| *value)
     }
 
-    fn insert(&mut self, key: K, value: u32) -> Option<u32> {
+    fn insert(&mut self, key: K, value: u64) -> Option<u64> {
         self.upsert_sync(key, value)
     }
 
-    fn update(&mut self, key: K, value: u32) -> Option<u32> {
+    fn update(&mut self, key: K, value: u64) -> Option<u64> {
         self.update_sync(&key, |_, old| {
             let save = *old;
             *old = value;
@@ -43,12 +43,12 @@ impl<K: index::Key, H: index::Hasher> index::IndexPin<K> for &'_ scc::HashMap<K,
         })
     }
 
-    fn remove(&mut self, key: K) -> Option<u32> {
+    fn remove(&mut self, key: K) -> Option<u64> {
         self.remove_sync(&key).map(|(_, value)| value)
     }
 }
 
-impl<K: index::Key, H: index::Hasher> Index<K, H> for scc::TreeIndex<K, u32> {
+impl<K: index::Key, H: index::Hasher> Index<K, H> for scc::TreeIndex<K, u64> {
     type Send<'a> = &'a Self;
 
     const IGNORE_INSERT: bool = true;
@@ -62,7 +62,7 @@ impl<K: index::Key, H: index::Hasher> Index<K, H> for scc::TreeIndex<K, u32> {
     }
 }
 
-impl<K: index::Key, H: index::Hasher> index::IndexSend<K, H> for &'_ scc::TreeIndex<K, u32> {
+impl<K: index::Key, H: index::Hasher> index::IndexSend<K, H> for &'_ scc::TreeIndex<K, u64> {
     type Handle<'a>
         = Self
     where
@@ -73,18 +73,18 @@ impl<K: index::Key, H: index::Hasher> index::IndexSend<K, H> for &'_ scc::TreeIn
     }
 }
 
-impl<K: index::Key> index::IndexPin<K> for &'_ scc::TreeIndex<K, u32> {
-    fn get(&mut self, key: &K) -> Option<u32> {
+impl<K: index::Key> index::IndexPin<K> for &'_ scc::TreeIndex<K, u64> {
+    fn get(&mut self, key: &K) -> Option<u64> {
         let guard = scc::Guard::new();
         self.peek(key, &guard).copied()
     }
 
-    fn insert(&mut self, key: K, value: u32) -> Option<u32> {
+    fn insert(&mut self, key: K, value: u64) -> Option<u64> {
         // NOTE: does not insert if exists
         self.insert_sync(key, value).err().map(|(_, value)| value)
     }
 
-    fn remove(&mut self, key: K) -> Option<u32> {
+    fn remove(&mut self, key: K) -> Option<u64> {
         self.remove_sync(&key).then_some(0)
     }
 
@@ -93,7 +93,7 @@ impl<K: index::Key> index::IndexPin<K> for &'_ scc::TreeIndex<K, u32> {
         _retry_scan: usize,
         min: &'a K,
         max: &'a K,
-        output: &mut Vec<(K, u32)>,
+        output: &mut Vec<(K, u64)>,
     ) {
         let guard = scc::Guard::new();
         output.extend(

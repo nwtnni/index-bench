@@ -1,7 +1,7 @@
 use crate::Index;
 use crate::index;
 
-impl<K: index::Key, H: index::Hasher> Index<K, H> for crossbeam_skiplist::SkipMap<K, u32> {
+impl<K: index::Key, H: index::Hasher> Index<K, H> for crossbeam_skiplist::SkipMap<K, u64> {
     type Send<'a> = &'a Self;
 
     const IGNORE_INSERT: bool = true;
@@ -17,7 +17,7 @@ impl<K: index::Key, H: index::Hasher> Index<K, H> for crossbeam_skiplist::SkipMa
 }
 
 impl<K: index::Key, H: index::Hasher> index::IndexSend<K, H>
-    for &crossbeam_skiplist::SkipMap<K, u32>
+    for &crossbeam_skiplist::SkipMap<K, u64>
 {
     type Handle<'a>
         = Self
@@ -29,12 +29,12 @@ impl<K: index::Key, H: index::Hasher> index::IndexSend<K, H>
     }
 }
 
-impl<K: index::Key> index::IndexPin<K> for &'_ crossbeam_skiplist::SkipMap<K, u32> {
-    fn get(&mut self, key: &K) -> Option<u32> {
+impl<K: index::Key> index::IndexPin<K> for &'_ crossbeam_skiplist::SkipMap<K, u64> {
+    fn get(&mut self, key: &K) -> Option<u64> {
         Some(*crossbeam_skiplist::SkipMap::get(self, key)?.value())
     }
 
-    fn insert(&mut self, key: K, value: u32) -> Option<u32> {
+    fn insert(&mut self, key: K, value: u64) -> Option<u64> {
         Some(*crossbeam_skiplist::SkipMap::insert(self, key, value).value())
     }
 }

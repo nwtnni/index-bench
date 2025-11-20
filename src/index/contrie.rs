@@ -1,7 +1,7 @@
 use crate::Index;
 use crate::index;
 
-impl<K: index::Key, H: index::Hasher> Index<K, H> for contrie::CloneConMap<K, u32> {
+impl<K: index::Key, H: index::Hasher> Index<K, H> for contrie::CloneConMap<K, u64> {
     type Send<'a> = &'a Self;
 
     fn new(_: &index::Config) -> Self {
@@ -13,7 +13,7 @@ impl<K: index::Key, H: index::Hasher> Index<K, H> for contrie::CloneConMap<K, u3
     }
 }
 
-impl<K: index::Key, H: index::Hasher> index::IndexSend<K, H> for &'_ contrie::CloneConMap<K, u32> {
+impl<K: index::Key, H: index::Hasher> index::IndexSend<K, H> for &'_ contrie::CloneConMap<K, u64> {
     type Handle<'a>
         = Self
     where
@@ -24,12 +24,12 @@ impl<K: index::Key, H: index::Hasher> index::IndexSend<K, H> for &'_ contrie::Cl
     }
 }
 
-impl<K: index::Key> index::IndexPin<K> for &'_ contrie::CloneConMap<K, u32> {
-    fn get(&mut self, key: &K) -> Option<u32> {
+impl<K: index::Key> index::IndexPin<K> for &'_ contrie::CloneConMap<K, u64> {
+    fn get(&mut self, key: &K) -> Option<u64> {
         contrie::CloneConMap::get(self, key).map(|(_, value)| value)
     }
 
-    fn insert(&mut self, key: K, value: u32) -> Option<u32> {
+    fn insert(&mut self, key: K, value: u64) -> Option<u64> {
         contrie::CloneConMap::insert(self, key, value).map(|(_, value)| value)
     }
 }

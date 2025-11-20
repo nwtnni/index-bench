@@ -31,25 +31,28 @@ impl<K: index::Key, H: index::Hasher> index::IndexSend<K, H> for &'_ fbtree_sys:
 }
 
 impl<K: index::Key> index::IndexPin<K> for &'_ fbtree_sys::FbTree {
-    fn get(&mut self, key: &K) -> Option<u32> {
-        fbtree_sys::FbTree::lookup(self, unsafe { core::mem::transmute_copy::<K, u64>(key) })
+    fn get(&mut self, key: &K) -> Option<u64> {
+        todo!()
+        // fbtree_sys::FbTree::lookup(self, unsafe { core::mem::transmute_copy::<K, u64>(key) })
     }
 
-    fn insert(&mut self, key: K, value: u32) -> Option<u32> {
-        fbtree_sys::FbTree::upsert(
-            self,
-            unsafe { core::mem::transmute_copy::<K, u64>(&key) },
-            value,
-        );
-        None
+    fn insert(&mut self, key: K, value: u64) -> Option<u64> {
+        todo!()
+        // fbtree_sys::FbTree::upsert(
+        //     self,
+        //     unsafe { core::mem::transmute_copy::<K, u64>(&key) },
+        //     value,
+        // );
+        // None
     }
 
-    fn update(&mut self, key: K, value: u32) -> Option<u32> {
-        fbtree_sys::FbTree::update(
-            self,
-            unsafe { core::mem::transmute_copy::<K, u64>(&key) },
-            value,
-        );
-        None
+    fn update(&mut self, key: K, value: u64) -> Option<u64> {
+        todo!()
+        // fbtree_sys::FbTree::update(
+        //     self,
+        //     unsafe { core::mem::transmute_copy::<K, u64>(&key) },
+        //     value,
+        // );
+        // None
     }
 }
