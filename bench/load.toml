@@ -1,5 +1,5 @@
 [global]
-thread_count = [1, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80]
+thread_count = [1, 10, 20, 30, 40, 50, 60, 70, 80]
 numa = [{ policy = "bind", node = 0 }]
 
 [[index]]
@@ -62,7 +62,7 @@ name = "wormhole"
 
 [workload]
 load = [true]
-key = ["u64", "kmer"]
+key = ["u64", "kmer", "email", "url"]
 insert_order = ["ordered", "hashed"]
 record_count = [100800000]
 operation_count = [0]
