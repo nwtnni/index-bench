@@ -670,6 +670,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "58f929b4d672ea937a23a1ab494143d968337a5f47e56d0815df1e0890ddf174"
 
 [[package]]
+name = "libm"
+version = "0.2.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f9fbbcab51052fe104eb5e5d351cf728d30a5be1fe14d9be8a3b097481fb97de"
+
+[[package]]
 name = "libmimalloc-sys"
 version = "0.1.44"
 dependencies = [
@@ -810,6 +816,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "071dfc062690e90b734c0b2273ce72ad0ffa95f0c74596bc250dcfd960262841"
 dependencies = [
  "autocfg",
+ "libm",
 ]
 
 [[package]]
@@ -1011,6 +1018,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "99d9a13982dcf210057a8a78572b2217b667c3beacbf3a0d8b454f6f82837d38"
 dependencies = [
  "getrandom",
+]
+
+[[package]]
+name = "rand_distr"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6a8615d50dcf34fa31f7ab52692afec947c4dd0ab803cc87cb3b0b4570ff7463"
+dependencies = [
+ "num-traits",
+ "rand",
 ]
 
 [[package]]
@@ -1585,10 +1602,11 @@ dependencies = [
 [[package]]
 name = "ycsb"
 version = "0.1.0"
-source = "git+https://github.com/nwtnni/ycsb.git#cdebc21f29c0fc91e7d1fe264563c0c5b10f5143"
+source = "git+https://github.com/nwtnni/ycsb.git#c10518c8449abfa6d33eba3e39073e2d6e626dc8"
 dependencies = [
  "cartesian",
  "rand",
+ "rand_distr",
  "rapidhash 1.4.0",
  "serde",
 ]
