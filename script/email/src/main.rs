@@ -1,3 +1,5 @@
+use core::sync::atomic::AtomicU64;
+use core::sync::atomic::Ordering;
 use std::env;
 use std::fs::File;
 use std::io;
@@ -6,6 +8,9 @@ use std::io::Write as _;
 use std::sync::Arc;
 
 const USAGE: &str = "Usage: email <INPUT> <OUTPUT>";
+
+static TOTAL: AtomicU64 = AtomicU64::new(0);
+static UNIQUE: AtomicU64 = AtomicU64::new(0);
 
 fn main() -> io::Result<()> {
     let input = env::args().nth(1).expect(USAGE);
@@ -20,8 +25,10 @@ fn main() -> io::Result<()> {
 
     // https://stackoverflow.com/a/8829363
     // https://html.spec.whatwg.org/multipage/input.html#valid-e-mail-address
+    //
+    // NOTE: revised to exclude integers in domain
     let valid = regex::bytes::Regex::new(
-        r#"[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*"#,
+        r#"[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z](?:[a-zA-Z]{0,61}[a-zA-Z])?(?:\.[a-zA-Z](?:[a-zA-Z]{0,61}[a-zA-Z])?)*"#,
     ).unwrap();
 
     let mut map = Arc::new(arctic::concurrent::Map::<String, u64>::new());
@@ -37,8 +44,8 @@ fn main() -> io::Result<()> {
                         continue;
                     };
 
-                    if name.ends_with(".rar") {
-                        eprintln!("Skip RAR: {name:?}");
+                    if name.ends_with(".rar") || name.ends_with(".ZIP") {
+                        eprintln!("Skip archive: {name:?}");
                         continue;
                     }
 
@@ -54,8 +61,10 @@ fn main() -> io::Result<()> {
                     let mut total = 0;
 
                     for r#match in valid.find_iter(&data) {
-                        let email = core::str::from_utf8(r#match.as_bytes()).unwrap();
-                        let (username, domain) = email.split_once('@').unwrap();
+                        let email = core::str::from_utf8(r#match.as_bytes())
+                            .expect("Email regex is valid UTF-8");
+                        let (username, domain) =
+                            email.split_once('@').expect("Email regex has one @");
 
                         for segment in domain.split('.').rev() {
                             buffer.push_str(segment);
@@ -66,10 +75,13 @@ fn main() -> io::Result<()> {
                         buffer.push('@');
                         buffer.push_str(username);
                         buffer.push('\n');
+                        buffer.make_ascii_lowercase();
+
                         total += 1;
-                        if pin.get_or_insert(&buffer, 0).1 {
+                        if !pin.get_or_insert(&buffer, 0).1 {
                             unique += 1;
                         }
+
                         buffer.clear();
                     }
 
@@ -80,16 +92,34 @@ fn main() -> io::Result<()> {
                         total,
                         (unique * 100) as f32 / total as f32
                     );
+
+                    UNIQUE.fetch_add(unique, Ordering::Relaxed);
+                    TOTAL.fetch_add(total, Ordering::Relaxed);
                 }
             }
         })
         .into_iter()
         .count();
 
-    std::thread::sleep(std::time::Duration::from_secs(1));
-    let map = Arc::get_mut(&mut map).unwrap();
-    let mut iter = map.as_sequential().iter::<arctic::iter::Sorted>();
+    let map = loop {
+        // Wait for `Arc` to be dropped
+        match Arc::get_mut(&mut map) {
+            Some(map) => break map,
+            None => std::thread::sleep(std::time::Duration::from_secs(1)),
+        }
+    };
 
+    let unique = UNIQUE.load(Ordering::Relaxed);
+    let total = TOTAL.load(Ordering::Relaxed);
+
+    eprintln!(
+        "{}/{} ({:.02}%)",
+        unique,
+        total,
+        (unique * 100) as f32 / total as f32
+    );
+
+    let mut iter = map.as_sequential().iter::<arctic::iter::Sorted>();
     while let Some((key, _)) = iter.lend() {
         output.write_all(key.as_bytes()).unwrap();
     }
