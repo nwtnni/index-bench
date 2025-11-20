@@ -46,7 +46,7 @@ where
     }
 
     fn insert(&mut self, key: K, value: u32) -> Option<u32> {
-        arctic::concurrent::MapRef::insert(self, key.borrow(), value)
+        arctic::concurrent::MapRef::upsert(self, key.borrow(), value)
     }
 
     fn update(&mut self, key: K, value: u32) -> Option<u32> {
@@ -54,7 +54,7 @@ where
     }
 
     fn increment(&mut self, key: K) -> Option<u32> {
-        arctic::concurrent::MapRef::insert_with(self, key.borrow(), |old| old.unwrap_or(0) + 1)
+        arctic::concurrent::MapRef::upsert_with(self, key.borrow(), |old| old.unwrap_or(0) + 1)
     }
 
     fn remove(&mut self, key: K) -> Option<u32> {
