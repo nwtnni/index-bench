@@ -26,7 +26,7 @@ pub enum Key {
     U64,
     Email,
     Url,
-    Prefix(usize),
+    // Prefix(usize),
     Sparse(f64),
     Kmer,
 }
@@ -71,7 +71,7 @@ where
     K: KeyDistribution,
 {
     #[inline]
-    pub(crate) fn next_key(&mut self) -> Option<K::Key> {
+    pub(crate) fn next_key(&mut self) -> Option<<K::Key as ::arctic::raw::Key>::Borrow<'_>> {
         Some(self.keys.get(self.inner.next_key()?.id()))
     }
 }
@@ -86,18 +86,28 @@ impl<'ycsb, K: KeyDistribution> Runner<'ycsb, K> {
         self.inner.next_operation(rng)
     }
 
-    pub(crate) fn next_key_range<R: rand::Rng>(&mut self, rng: &mut R, start: ycsb::Key) -> K::Key {
+    #[expect(unused)]
+    pub(crate) fn next_key_range<R: rand::Rng>(
+        &mut self,
+        rng: &mut R,
+        start: ycsb::Key,
+    ) -> <K::Key as ::arctic::raw::Key>::Borrow<'_> {
         let delta = self.inner.next_scan_length(rng);
         let end = start.id() + delta as u64 - 1;
         self.keys.get(end)
     }
 
-    pub(crate) fn next_key_read<R: rand::Rng>(&mut self, rng: &mut R) -> (ycsb::Key, K::Key) {
+    pub(crate) fn next_key_read<R: rand::Rng>(
+        &mut self,
+        rng: &mut R,
+    ) -> (ycsb::Key, <K::Key as ::arctic::raw::Key>::Borrow<'_>) {
         let key = self.inner.next_key_read(rng);
         (key, self.keys.get(key.id()))
     }
 
-    pub(crate) fn next_key_insert(&mut self) -> (ycsb::Key, K::Key) {
+    pub(crate) fn next_key_insert(
+        &mut self,
+    ) -> (ycsb::Key, <K::Key as ::arctic::raw::Key>::Borrow<'_>) {
         let key = self.inner.next_key_insert();
         (key, self.keys.get(key.id()))
     }
@@ -110,7 +120,7 @@ impl<'ycsb, K: KeyDistribution> Runner<'ycsb, K> {
 pub trait KeyDistribution {
     type Key: index::Key;
     fn new(config: &Key) -> Self;
-    fn get(&self, index: u64) -> Self::Key;
+    fn get(&self, index: u64) -> <Self::Key as ::arctic::raw::Key>::Borrow<'_>;
 }
 
 pub struct U64;
@@ -143,8 +153,8 @@ impl KeyDistribution for Email {
         Self(LazyLock::force(&EMAIL_INDEX).as_slice())
     }
 
-    fn get(&self, index: u64) -> Self::Key {
-        self.0[index as usize % self.0.len()].to_owned()
+    fn get(&self, index: u64) -> &str {
+        self.0[index as usize % self.0.len()]
     }
 }
 
@@ -163,32 +173,32 @@ impl KeyDistribution for Url {
         Self(LazyLock::force(&URL_INDEX).as_slice())
     }
 
-    fn get(&self, index: u64) -> Self::Key {
-        self.0[index as usize % self.0.len()].to_owned()
+    fn get(&self, index: u64) -> &str {
+        self.0[index as usize % self.0.len()]
     }
 }
 
-pub struct Prefix(usize);
-
-impl KeyDistribution for Prefix {
-    type Key = Vec<u8>;
-
-    fn new(config: &Key) -> Self {
-        let len = match config {
-            Key::Prefix(len) => len,
-            _ => unreachable!(),
-        };
-
-        Self(*len)
-    }
-
-    fn get(&self, index: u64) -> Self::Key {
-        let mut key = Vec::with_capacity(self.0 + 8);
-        key.extend((0..self.0).map(|_| 0));
-        key.extend(index.to_be_bytes());
-        key
-    }
-}
+// pub struct Prefix(usize);
+//
+// impl KeyDistribution for Prefix {
+//     type Key = Vec<u8>;
+//
+//     fn new(config: &Key) -> Self {
+//         let len = match config {
+//             Key::Prefix(len) => len,
+//             _ => unreachable!(),
+//         };
+//
+//         Self(*len)
+//     }
+//
+//     fn get(&self, index: u64) -> Self::Key {
+//         let mut key = Vec::with_capacity(self.0 + 8);
+//         key.extend((0..self.0).map(|_| 0));
+//         key.extend(index.to_be_bytes());
+//         key
+//     }
+// }
 
 pub struct Sparse(f64);
 

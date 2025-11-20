@@ -1,7 +1,7 @@
 use crate::Index;
 use crate::index;
 
-impl<K: index::Key, H: index::Hasher> Index<K, H> for dashmap::DashMap<K, u64, H> {
+impl<H: index::Hasher> Index<u64, H> for dashmap::DashMap<u64, u64, H> {
     type Send<'a> = &'a Self;
 
     fn new(_: &index::Config) -> Self {
@@ -13,7 +13,7 @@ impl<K: index::Key, H: index::Hasher> Index<K, H> for dashmap::DashMap<K, u64, H
     }
 }
 
-impl<K: index::Key, H: index::Hasher> index::IndexSend<K, H> for &'_ dashmap::DashMap<K, u64, H> {
+impl<H: index::Hasher> index::IndexSend<u64, H> for &'_ dashmap::DashMap<u64, u64, H> {
     type Handle<'a>
         = Self
     where
@@ -24,20 +24,20 @@ impl<K: index::Key, H: index::Hasher> index::IndexSend<K, H> for &'_ dashmap::Da
     }
 }
 
-impl<K: index::Key, H: index::Hasher> index::IndexPin<K> for &'_ dashmap::DashMap<K, u64, H> {
-    fn get(&mut self, key: &K) -> Option<u64> {
-        dashmap::DashMap::get(self, key).map(|value| *value)
+impl<H: index::Hasher> index::IndexPin<u64> for &'_ dashmap::DashMap<u64, u64, H> {
+    fn get(&mut self, key: u64) -> Option<u64> {
+        dashmap::DashMap::get(self, &key).map(|value| *value)
     }
 
-    fn insert(&mut self, key: K, value: u64) -> Option<u64> {
+    fn insert(&mut self, key: u64, value: u64) -> Option<u64> {
         dashmap::DashMap::insert(self, key, value)
     }
 
-    fn remove(&mut self, key: K) -> Option<u64> {
+    fn remove(&mut self, key: u64) -> Option<u64> {
         dashmap::DashMap::remove(self, &key).map(|(_, value)| value)
     }
 
-    fn increment(&mut self, key: K) -> Option<u64> {
+    fn increment(&mut self, key: u64) -> Option<u64> {
         let mut old = Some(0);
         let mut entry = dashmap::DashMap::entry(self, key).or_insert_with(|| {
             old = None;

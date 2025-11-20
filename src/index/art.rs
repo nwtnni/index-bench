@@ -1,17 +1,13 @@
 use crate::Index;
 use crate::index;
 
-impl<K: index::Key, H: index::Hasher> Index<K, H> for art_sys::Rowex {
+impl<H: index::Hasher> Index<u64, H> for art_sys::Rowex {
     const IGNORE_GET: bool = true;
     const IGNORE_INSERT: bool = true;
 
     type Send<'a> = &'a Self;
 
     fn new(_: &index::Config) -> Self {
-        assert!(core::any::type_name::<K>() == "u64");
-        const {
-            assert!(core::mem::size_of::<usize>() == 8);
-        }
         Self::default()
     }
 
@@ -20,7 +16,7 @@ impl<K: index::Key, H: index::Hasher> Index<K, H> for art_sys::Rowex {
     }
 }
 
-impl<K: index::Key, H: index::Hasher> index::IndexSend<K, H> for &'_ art_sys::Rowex {
+impl<H: index::Hasher> index::IndexSend<u64, H> for &'_ art_sys::Rowex {
     type Handle<'a>
         = art_sys::RowexRef<'a>
     where
@@ -31,24 +27,24 @@ impl<K: index::Key, H: index::Hasher> index::IndexSend<K, H> for &'_ art_sys::Ro
     }
 }
 
-impl<K: index::Key> index::IndexPin<K> for art_sys::RowexRef<'_> {
-    fn get(&mut self, key: &K) -> Option<u64> {
-        art_sys::RowexRef::get(self, unsafe { core::mem::transmute_copy::<K, u64>(key) });
+impl index::IndexPin<u64> for art_sys::RowexRef<'_> {
+    fn get(&mut self, key: u64) -> Option<u64> {
+        art_sys::RowexRef::get(self, key);
         None
     }
 
-    fn insert(&mut self, key: K, _: u64) -> Option<u64> {
-        art_sys::RowexRef::insert(self, unsafe { core::mem::transmute_copy::<K, u64>(&key) });
+    fn insert(&mut self, key: u64, _: u64) -> Option<u64> {
+        art_sys::RowexRef::insert(self, key);
         None
     }
 
-    fn update(&mut self, key: K, value: u64) -> Option<u64> {
+    fn update(&mut self, key: u64, value: u64) -> Option<u64> {
         self.insert(key, value);
         None
     }
 
-    fn remove(&mut self, key: K) -> Option<u64> {
-        art_sys::RowexRef::remove(self, unsafe { core::mem::transmute_copy::<K, u64>(&key) });
+    fn remove(&mut self, key: u64) -> Option<u64> {
+        art_sys::RowexRef::remove(self, key);
         None
     }
 }

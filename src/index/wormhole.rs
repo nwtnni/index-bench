@@ -1,16 +1,12 @@
 use crate::Index;
 use crate::index;
 
-impl<K: index::Key, H: index::Hasher> Index<K, H> for wormhole_sys::Wormhole {
+impl<H: index::Hasher> Index<u64, H> for wormhole_sys::Wormhole {
     const IGNORE_INSERT: bool = true;
 
     type Send<'a> = &'a Self;
 
     fn new(_: &index::Config) -> Self {
-        assert!(core::any::type_name::<K>() == "u64");
-        const {
-            assert!(core::mem::size_of::<usize>() == 8);
-        }
         Self::default()
     }
 
@@ -19,7 +15,7 @@ impl<K: index::Key, H: index::Hasher> Index<K, H> for wormhole_sys::Wormhole {
     }
 }
 
-impl<K: index::Key, H: index::Hasher> index::IndexSend<K, H> for &'_ wormhole_sys::Wormhole {
+impl<H: index::Hasher> index::IndexSend<u64, H> for &'_ wormhole_sys::Wormhole {
     type Handle<'a>
         = wormhole_sys::WormRef<'a>
     where
@@ -30,26 +26,29 @@ impl<K: index::Key, H: index::Hasher> index::IndexSend<K, H> for &'_ wormhole_sy
     }
 }
 
-impl<K: index::Key> index::IndexPin<K> for wormhole_sys::WormRef<'_> {
-    fn get(&mut self, key: &K) -> Option<u64> {
-        todo!()
-        // key.with_ptr(|ptr| unsafe { wormhole_sys::WormRef::get(self, ptr, key.len()) })
+impl index::IndexPin<u64> for wormhole_sys::WormRef<'_> {
+    fn get(&mut self, key: u64) -> Option<u64> {
+        let key = key.to_be_bytes();
+        let ptr = key.as_ptr().cast();
+        unsafe { wormhole_sys::WormRef::get(self, ptr, key.len()) }
     }
 
-    fn insert(&mut self, key: K, value: u64) -> Option<u64> {
-        todo!()
-        // key.with_ptr(|ptr| unsafe { wormhole_sys::WormRef::put(self, ptr, key.len(), value) });
-        // None
+    fn insert(&mut self, key: u64, value: u64) -> Option<u64> {
+        let key = key.to_be_bytes();
+        let ptr = key.as_ptr().cast();
+        unsafe { wormhole_sys::WormRef::put(self, ptr, key.len(), value) }
+        None
     }
 
-    fn update(&mut self, key: K, value: u64) -> Option<u64> {
+    fn update(&mut self, key: u64, value: u64) -> Option<u64> {
         self.insert(key, value);
         None
     }
 
-    fn remove(&mut self, key: K) -> Option<u64> {
-        todo!()
-        // key.with_ptr(|ptr| unsafe { wormhole_sys::WormRef::del(self, ptr, key.len()) });
-        // None
+    fn remove(&mut self, key: u64) -> Option<u64> {
+        let key = key.to_be_bytes();
+        let ptr = key.as_ptr().cast();
+        unsafe { wormhole_sys::WormRef::del(self, ptr, key.len()) };
+        None
     }
 }

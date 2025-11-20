@@ -1,12 +1,11 @@
 use crate::Index;
 use crate::index;
 
-impl<K, H> Index<K, H> for arctic::concurrent::Map<K, u64>
+impl<H> Index<u64, H> for arctic::concurrent::Map<u64, u64>
 where
-    K: index::Key,
     H: index::Hasher,
 {
-    type Send<'a> = &'a arctic::concurrent::Map<K, u64>;
+    type Send<'a> = &'a arctic::concurrent::Map<u64, u64>;
 
     fn new(config: &index::Config) -> Self {
         arctic::concurrent::Map::with_reclaim_threshold(config.reclaim_threshold)
@@ -22,13 +21,9 @@ where
     }
 }
 
-impl<K, H> index::IndexSend<K, H> for &'_ arctic::concurrent::Map<K, u64>
-where
-    K: index::Key,
-    H: index::Hasher,
-{
+impl<H> index::IndexSend<u64, H> for &'_ arctic::concurrent::Map<u64, u64> {
     type Handle<'a>
-        = arctic::concurrent::MapRef<'a, K, u64>
+        = arctic::concurrent::MapRef<'a, u64, u64>
     where
         Self: 'a;
 
@@ -37,46 +32,43 @@ where
     }
 }
 
-impl<'a, K> index::IndexPin<K> for arctic::concurrent::MapRef<'a, K, u64>
-where
-    K: index::Key,
-{
-    fn get(&mut self, key: &K) -> Option<u64> {
-        arctic::concurrent::MapRef::get(self, key.borrow())
+impl<'a> index::IndexPin<u64> for arctic::concurrent::MapRef<'a, u64, u64> {
+    fn get(&mut self, key: u64) -> Option<u64> {
+        arctic::concurrent::MapRef::get(self, key)
     }
 
-    fn insert(&mut self, key: K, value: u64) -> Option<u64> {
-        arctic::concurrent::MapRef::upsert(self, key.borrow(), value)
+    fn insert(&mut self, key: u64, value: u64) -> Option<u64> {
+        arctic::concurrent::MapRef::upsert(self, key, value)
     }
 
-    fn update(&mut self, key: K, value: u64) -> Option<u64> {
-        arctic::concurrent::MapRef::update(self, key.borrow(), value).ok()
+    fn update(&mut self, key: u64, value: u64) -> Option<u64> {
+        arctic::concurrent::MapRef::update(self, key, value).ok()
     }
 
-    fn increment(&mut self, key: K) -> Option<u64> {
-        arctic::concurrent::MapRef::upsert_with(self, key.borrow(), |old| old.unwrap_or(0) + 1)
+    fn increment(&mut self, key: u64) -> Option<u64> {
+        arctic::concurrent::MapRef::upsert_with(self, key, |old| old.unwrap_or(0) + 1)
     }
 
-    fn remove(&mut self, key: K) -> Option<u64> {
-        arctic::concurrent::MapRef::remove(self, key.borrow())
+    fn remove(&mut self, key: u64) -> Option<u64> {
+        arctic::concurrent::MapRef::remove(self, key)
     }
 
-    fn range<'b>(
-        &'b mut self,
-        _retry_scan: usize,
-        min: &'b K,
-        max: &'b K,
-        output: &mut Vec<(K, u64)>,
-    ) {
-        let Some(guard) = arctic::concurrent::MapRef::range(self, min.borrow(), max.borrow())
-        else {
-            return;
-        };
-
-        guard
-            .entries::<arctic::iter::Sorted>()
-            .for_each(|key, value| output.push((K::clone_from_borrow(key), value)));
-    }
+    // fn range<'b>(
+    //     &'b mut self,
+    //     _retry_scan: usize,
+    //     min: &'b u64,
+    //     max: &'b u64,
+    //     output: &mut Vec<(K, u64)>,
+    // ) {
+    //     let Some(guard) = arctic::concurrent::MapRef::range(self, min.borrow(), max.borrow())
+    //     else {
+    //         return;
+    //     };
+    //
+    //     guard
+    //         .entries::<arctic::iter::Sorted>()
+    //         .for_each(|key, value| output.push((K::clone_from_borrow(key), value)));
+    // }
 
     #[cfg(feature = "stat")]
     fn report(&mut self) -> serde_json::Value {

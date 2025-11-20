@@ -1,19 +1,17 @@
-use core::ffi;
-
 use serde::Deserialize;
 use serde::Serialize;
 
 mod arctic;
 mod art;
-mod b_plus_tree;
-mod bz_tree;
+// mod b_plus_tree;
+// mod bz_tree;
 mod concurrent_map;
 mod congee;
-mod contrie;
+// mod contrie;
 mod crossbeam_skiplist;
 mod dash_map;
 mod fb_tree;
-pub mod kaist;
+// pub mod kaist;
 mod papaya;
 mod scc;
 mod wormhole;
@@ -64,12 +62,12 @@ pub enum Smr {
 pub enum Name {
     Art,
     Arctic,
-    Bonsai,
-    BPlusTree,
-    BzTree,
+    // Bonsai,
+    // BPlusTree,
+    // BzTree,
     ConcurrentMap,
     Congee,
-    Contrie,
+    // Contrie,
     CrossbeamSkiplist,
     DashMap,
     FbTree,
@@ -85,11 +83,7 @@ pub enum Insert {
     OldExists,
 }
 
-pub trait Index<K, H>
-where
-    K: Key,
-    H: Hasher,
-{
+pub trait Index<K: Key, H> {
     /// HACK
     ///
     /// - `crossbeam-skiplist` returns the new value instead of the old
@@ -114,106 +108,50 @@ where
     }
 }
 
-pub trait IndexSend<K, H>
-where
-    K: Key,
-    H: Hasher,
-{
+pub trait IndexSend<K: Key, H> {
     type Handle<'a>: IndexPin<K>
     where
         Self: 'a;
+
     fn pin<'a>(&'a self) -> Self::Handle<'a>;
 }
 
 pub trait Hasher: core::hash::BuildHasher + Clone + Default + Send + Sync + 'static {}
 impl<T> Hasher for T where T: core::hash::BuildHasher + Clone + Default + Send + Sync + 'static {}
 
-pub trait Key:
-    ::arctic::Key
-    + Clone
-    + core::hash::Hash
-    + Eq
-    + Send
-    + Sync
-    + Sized
-    + ::concurrent_map::Minimum
-    + 'static
-{
-    fn to_owned(borrow: Self::Borrow<'_>) -> Self {
-        ::arctic::raw::Key::clone_from_borrow(borrow)
-    }
-
-    fn with_ptr<F: FnOnce(*const ffi::c_void) -> T, T>(borrow: Self::Borrow<'_>, apply: F) -> T;
-
-    fn checksum(&self) -> u64;
-
-    fn len(&self) -> usize;
+pub trait Key: ::arctic::Key {
+    fn checksum(key: Self::Borrow<'_>) -> u64;
 }
 
 impl Key for u64 {
-    fn checksum(&self) -> u64 {
-        *self as u64
-    }
-
-    fn len(&self) -> usize {
-        8
-    }
-
-    fn with_ptr<F: FnOnce(*const ffi::c_void) -> T, T>(borrow: Self::Borrow<'_>, apply: F) -> T {
-        let key = borrow.swap_bytes();
-        let ptr = (&key) as *const u64 as *const ffi::c_void;
-        apply(ptr)
+    fn checksum(key: Self::Borrow<'_>) -> u64 {
+        key
     }
 }
 
 impl Key for String {
-    fn checksum(&self) -> u64 {
-        self.len() as u64
-    }
-
-    fn len(&self) -> usize {
-        String::len(self)
-    }
-
-    fn with_ptr<F: FnOnce(*const ffi::c_void) -> T, T>(borrow: Self::Borrow<'_>, apply: F) -> T {
-        apply(borrow.as_ptr().cast())
+    fn checksum(key: Self::Borrow<'_>) -> u64 {
+        key.len() as u64
     }
 }
 
-impl Key for Vec<u8> {
-    fn checksum(&self) -> u64 {
-        self.len() as u64
-    }
+pub trait IndexPin<K: Key> {
+    fn get(&mut self, key: <K as ::arctic::raw::Key>::Borrow<'_>) -> Option<u64>;
 
-    fn len(&self) -> usize {
-        Vec::len(self)
-    }
+    fn insert(&mut self, key: <K as ::arctic::raw::Key>::Borrow<'_>, value: u64) -> Option<u64>;
 
-    fn with_ptr<F: FnOnce(*const ffi::c_void) -> T, T>(borrow: Self::Borrow<'_>, apply: F) -> T {
-        apply(borrow.as_ptr().cast())
-    }
-}
-
-pub trait IndexPin<K>
-where
-    K: Key,
-{
-    fn get(&mut self, key: &K) -> Option<u64>;
-
-    fn insert(&mut self, key: K, value: u64) -> Option<u64>;
-
-    fn update(&mut self, key: K, value: u64) -> Option<u64> {
+    fn update(&mut self, key: <K as ::arctic::raw::Key>::Borrow<'_>, value: u64) -> Option<u64> {
         self.insert(key, value)
     }
 
-    fn increment(&mut self, _key: K) -> Option<u64> {
+    fn increment(&mut self, _key: <K as ::arctic::raw::Key>::Borrow<'_>) -> Option<u64> {
         unimplemented!(
             "TODO: implement increment for {}",
             std::any::type_name::<Self>()
         )
     }
 
-    fn remove(&mut self, _key: K) -> Option<u64> {
+    fn remove(&mut self, _key: <K as ::arctic::raw::Key>::Borrow<'_>) -> Option<u64> {
         unimplemented!(
             "TODO: implement remove for {}",
             std::any::type_name::<Self>()
@@ -233,7 +171,11 @@ where
         );
     }
 
-    fn scan(&mut self, _key: &K, _count: usize) -> impl Iterator<Item = u64> {
+    fn scan(
+        &mut self,
+        _key: <K as ::arctic::raw::Key>::Borrow<'_>,
+        _count: usize,
+    ) -> impl Iterator<Item = u64> {
         unimplemented!("TODO: implement scan for {}", std::any::type_name::<Self>());
 
         #[expect(unreachable_code)]

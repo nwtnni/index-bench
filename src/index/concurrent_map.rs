@@ -1,7 +1,7 @@
 use crate::Index;
 use crate::index;
 
-impl<K: index::Key, H: index::Hasher> Index<K, H> for concurrent_map::ConcurrentMap<K, u64> {
+impl<H: index::Hasher> Index<u64, H> for concurrent_map::ConcurrentMap<u64, u64> {
     type Send<'a> = Self;
 
     fn new(_: &index::Config) -> Self {
@@ -13,9 +13,7 @@ impl<K: index::Key, H: index::Hasher> Index<K, H> for concurrent_map::Concurrent
     }
 }
 
-impl<K: index::Key, H: index::Hasher> index::IndexSend<K, H>
-    for concurrent_map::ConcurrentMap<K, u64>
-{
+impl<H: index::Hasher> index::IndexSend<u64, H> for concurrent_map::ConcurrentMap<u64, u64> {
     type Handle<'a> = &'a Self;
 
     fn pin<'a>(&'a self) -> Self::Handle<'a> {
@@ -23,22 +21,12 @@ impl<K: index::Key, H: index::Hasher> index::IndexSend<K, H>
     }
 }
 
-impl<K: index::Key> index::IndexPin<K> for &'_ concurrent_map::ConcurrentMap<K, u64> {
-    fn get(&mut self, key: &K) -> Option<u64> {
-        concurrent_map::ConcurrentMap::get(self, key)
+impl index::IndexPin<u64> for &'_ concurrent_map::ConcurrentMap<u64, u64> {
+    fn get(&mut self, key: u64) -> Option<u64> {
+        concurrent_map::ConcurrentMap::get(self, &key)
     }
 
-    fn insert(&mut self, key: K, value: u64) -> Option<u64> {
+    fn insert(&mut self, key: u64, value: u64) -> Option<u64> {
         concurrent_map::ConcurrentMap::insert(self, key, value)
-    }
-
-    fn range<'b>(
-        &'b mut self,
-        _retry_scan: usize,
-        min: &'b K,
-        max: &'b K,
-        output: &mut Vec<(K, u64)>,
-    ) {
-        output.extend(concurrent_map::ConcurrentMap::range(self, min..=max));
     }
 }

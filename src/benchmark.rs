@@ -103,7 +103,7 @@ pub fn run<K: KeyDistribution, I: Index<K::Key, H>, H: index::Hasher>(
 
                     if !workload.load {
                         while let Some(key) = loader.next_key() {
-                            let checksum = key.checksum();
+                            let checksum = K::Key::checksum(key);
                             map.insert(key, checksum);
                         }
                     }
@@ -127,7 +127,7 @@ pub fn run<K: KeyDistribution, I: Index<K::Key, H>, H: index::Hasher>(
                         perf.start().context("Start perf-event")?;
                     }
 
-                    let mut range = Vec::with_capacity(workload.ycsb.max_scan_length);
+                    // let mut range = Vec::with_capacity(workload.ycsb.max_scan_length);
 
                     let start = Instant::now();
 
@@ -140,7 +140,7 @@ pub fn run<K: KeyDistribution, I: Index<K::Key, H>, H: index::Hasher>(
                             }
                             _ => {
                                 while let Some(key) = loader.next_key() {
-                                    let checksum = key.checksum();
+                                    let checksum = K::Key::checksum(key);
                                     map.insert(key, checksum);
                                 }
                             }
@@ -151,28 +151,29 @@ pub fn run<K: KeyDistribution, I: Index<K::Key, H>, H: index::Hasher>(
                             match operation {
                                 ycsb::Operation::Read => {
                                     let (_, key) = runner.next_key_read(&mut rng);
-                                    let value = map.get(&key);
+                                    let value = map.get(key);
                                     if !I::IGNORE_GET {
-                                        assert_eq!(value, Some(key.checksum()));
+                                        assert_eq!(value, Some(K::Key::checksum(key)));
                                     }
                                 }
                                 ycsb::Operation::Update => {
                                     let (_, key) = runner.next_key_read(&mut rng);
-                                    let checksum = key.checksum();
+                                    let checksum = K::Key::checksum(key);
                                     let old = map.update(key, checksum);
                                     if !I::IGNORE_UPDATE {
                                         assert_eq!(old, Some(checksum));
                                     }
                                 }
                                 ycsb::Operation::Scan => {
-                                    let (start, a) = runner.next_key_read(&mut rng);
-                                    let b = runner.next_key_range(&mut rng, start);
-                                    range.clear();
-                                    map.range(config.index.retry_scan, &a, &b, &mut range);
+                                    todo!()
+                                    // let (start, a) = runner.next_key_read(&mut rng);
+                                    // let b = runner.next_key_range(&mut rng, start);
+                                    // range.clear();
+                                    // map.range(config.index.retry_scan, &a, &b, &mut range);
                                 }
                                 ycsb::Operation::Insert => {
                                     let (id, key) = runner.next_key_insert();
-                                    let checksum = key.checksum();
+                                    let checksum = K::Key::checksum(key);
                                     let old = map.insert(key, checksum);
                                     if !I::IGNORE_INSERT {
                                         assert_eq!(old, None);
