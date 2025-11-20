@@ -139,9 +139,9 @@ pub trait Key:
     + ::concurrent_map::Minimum
     + 'static
 {
-    fn checksum(&self) -> u32;
+    fn with_ptr<F: FnOnce(*const ffi::c_void) -> T, T>(&self, apply: F) -> T;
 
-    fn as_ptr(&self) -> *const ffi::c_void;
+    fn checksum(&self) -> u32;
 
     fn len(&self) -> usize;
 }
@@ -151,12 +151,14 @@ impl Key for u64 {
         *self as u32
     }
 
-    fn as_ptr(&self) -> *const ffi::c_void {
-        self as *const u64 as _
-    }
-
     fn len(&self) -> usize {
         8
+    }
+
+    fn with_ptr<F: FnOnce(*const ffi::c_void) -> T, T>(&self, apply: F) -> T {
+        let key = self.swap_bytes();
+        let ptr = (&key) as *const u64 as *const ffi::c_void;
+        apply(ptr)
     }
 }
 
@@ -165,12 +167,12 @@ impl Key for String {
         self.len() as u32
     }
 
-    fn as_ptr(&self) -> *const ffi::c_void {
-        self.as_str().as_ptr().cast()
-    }
-
     fn len(&self) -> usize {
         String::len(self)
+    }
+
+    fn with_ptr<F: FnOnce(*const ffi::c_void) -> T, T>(&self, apply: F) -> T {
+        apply(self.as_str().as_ptr().cast())
     }
 }
 
@@ -179,12 +181,12 @@ impl Key for Vec<u8> {
         self.len() as u32
     }
 
-    fn as_ptr(&self) -> *const ffi::c_void {
-        self.as_slice().as_ptr().cast()
-    }
-
     fn len(&self) -> usize {
         Vec::len(self)
+    }
+
+    fn with_ptr<F: FnOnce(*const ffi::c_void) -> T, T>(&self, apply: F) -> T {
+        apply(self.as_slice().as_ptr().cast())
     }
 }
 
