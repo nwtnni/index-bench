@@ -31,6 +31,14 @@ fn main() -> anyhow::Result<()> {
             continue;
         }
 
+        // HACK: hashing doesn't make sense for k-mer workload, but we also
+        // don't want to duplicate the configuration file to avoid one case
+        if matches!(config.workload.key, index_bench::workload::Key::Kmer)
+            && matches!(config.workload.ycsb.insert_order, ycsb::InsertOrder::Hashed)
+        {
+            continue;
+        }
+
         eprintln!("{config:?}");
 
         let mut child = Command::new(if cfg!(debug_assertions) {

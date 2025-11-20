@@ -16,6 +16,7 @@ fn specialize_key(config: index_bench::Config) -> anyhow::Result<index_bench::me
         index_bench::workload::Key::Email => {
             specialize_hash::<index_bench::workload::Email>(config)
         }
+        index_bench::workload::Key::Url => specialize_hash::<index_bench::workload::Url>(config),
         index_bench::workload::Key::Prefix(_) => {
             specialize_hash::<index_bench::workload::Prefix>(config)
         }

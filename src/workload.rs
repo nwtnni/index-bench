@@ -25,6 +25,7 @@ pub struct Config {
 pub enum Key {
     U64,
     Email,
+    Url,
     Prefix(usize),
     Sparse(f64),
     Kmer,
@@ -130,7 +131,7 @@ static EMAIL_BUFFER: LazyLock<String> = LazyLock::new(|| {
     std::fs::read_to_string("data/email.txt").expect("Failed to find data/email.txt")
 });
 
-static EMAIL: LazyLock<Vec<&'static str>> =
+static EMAIL_INDEX: LazyLock<Vec<&'static str>> =
     LazyLock::new(|| EMAIL_BUFFER.split_inclusive('\n').collect());
 
 pub struct Email(&'static [&'static str]);
@@ -139,7 +140,27 @@ impl KeyDistribution for Email {
     type Key = String;
 
     fn new(_: &Key) -> Self {
-        Self(LazyLock::force(&EMAIL).as_slice())
+        Self(LazyLock::force(&EMAIL_INDEX).as_slice())
+    }
+
+    fn get(&self, index: u64) -> Self::Key {
+        self.0[index as usize % self.0.len()].to_owned()
+    }
+}
+
+static URL_BUFFER: LazyLock<String> =
+    LazyLock::new(|| std::fs::read_to_string("data/url.txt").expect("Failed to find data/url.txt"));
+
+static URL_INDEX: LazyLock<Vec<&'static str>> =
+    LazyLock::new(|| URL_BUFFER.split_inclusive('\n').collect());
+
+pub struct Url(&'static [&'static str]);
+
+impl KeyDistribution for Url {
+    type Key = String;
+
+    fn new(_: &Key) -> Self {
+        Self(LazyLock::force(&URL_INDEX).as_slice())
     }
 
     fn get(&self, index: u64) -> Self::Key {
