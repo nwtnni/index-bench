@@ -130,7 +130,8 @@ static EMAIL_BUFFER: LazyLock<String> = LazyLock::new(|| {
     std::fs::read_to_string("data/email.txt").expect("Failed to find data/email.txt")
 });
 
-static EMAIL: LazyLock<Vec<&'static str>> = LazyLock::new(|| EMAIL_BUFFER.lines().collect());
+static EMAIL: LazyLock<Vec<&'static str>> =
+    LazyLock::new(|| EMAIL_BUFFER.split_inclusive('\n').collect());
 
 pub struct Email(&'static [&'static str]);
 
