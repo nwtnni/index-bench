@@ -3,15 +3,26 @@ use std::fs::File;
 use std::io::BufRead as _;
 use std::io::BufReader;
 
+use libflate::gzip;
+
 fn main() -> std::io::Result<()> {
-    let path = env::args().nth(1).expect("USAGE: analyze <PATH>");
-    let mut file = File::open(path).map(BufReader::new).unwrap();
+    let path = env::args().nth(1).expect("USAGE: analyze <PATH.gz>");
+
+    let mut file = File::open(path)
+        .map(BufReader::new)
+        .map(gzip::Decoder::new)
+        .expect("Failed to open file")
+        // HACK: double-buffer to work around lack of `std::io::BufRead` for `gzip::Decoder`
+        .map(BufReader::new)
+        .expect("Failed to create gzip decoder");
+
     let mut buffer = Vec::new();
 
     let mut invalid = 0;
     let mut len = hdrhistogram::Histogram::<u32>::new(3).unwrap();
 
     loop {
+        buffer.clear();
         if file.read_until(b'\n', &mut buffer)? == 0 {
             break;
         }
@@ -26,7 +37,6 @@ fn main() -> std::io::Result<()> {
         };
 
         len.record(string.len() as u64).unwrap();
-        buffer.clear();
     }
 
     let total = len.len() + invalid;
@@ -49,7 +59,7 @@ fn main() -> std::io::Result<()> {
         ("max", 1.0),
     ] {
         let value = len.value_at_quantile(quantile);
-        println!("{} = {}", name, value);
+        println!("{name} = {value}");
     }
 
     Ok(())

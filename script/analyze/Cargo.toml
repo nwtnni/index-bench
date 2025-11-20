@@ -5,3 +5,4 @@ edition = "2024"
 
 [dependencies]
 hdrhistogram = "7.5.4"
+libflate = "2.2.1"
