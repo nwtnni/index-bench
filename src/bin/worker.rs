@@ -26,9 +26,11 @@ fn specialize_key<H: index_bench::index::Hasher>(
             specialize_index_u64::<H, index_bench::workload::U64>(config)
         }
         index_bench::workload::Key::Email => {
-            specialize_index_string::<H, index_bench::workload::Email>(config)
+            // specialize_index_str::<H, index_bench::workload::Email>(config)
+            specialize_index_str::<H, index_bench::workload::Email>(config)
         }
         index_bench::workload::Key::Url => {
+            // specialize_index_str::<H, index_bench::workload::Url>(config)
             specialize_index_string::<H, index_bench::workload::Url>(config)
         }
         index_bench::workload::Key::Sparse(_) => {
@@ -79,7 +81,8 @@ fn specialize_index_u64<
     }
 }
 
-fn specialize_index_string<
+#[allow(unused)]
+fn specialize_index_str<
     H: index_bench::index::Hasher,
     K: index_bench::workload::KeyDistribution<Key = String>,
 >(
@@ -111,6 +114,46 @@ fn specialize_index_string<
         }
         index_bench::index::Name::SccTreeIndex => {
             index_bench::run::<K, scc::TreeIndex<&'static str, u64>, H>(config)
+        }
+        index_bench::index::Name::Wormhole => {
+            index_bench::run::<K, wormhole_sys::Wormhole, H>(config)
+        }
+    }
+}
+
+#[allow(unused)]
+fn specialize_index_string<
+    H: index_bench::index::Hasher,
+    K: index_bench::workload::KeyDistribution<Key = String>,
+>(
+    config: index_bench::Config,
+) -> anyhow::Result<index_bench::measure::Global> {
+    match config.index.name {
+        index_bench::index::Name::Art => index_bench::run::<K, art_sys::Rowex<String>, H>(config),
+        index_bench::index::Name::Arctic => {
+            index_bench::run::<K, arctic::concurrent::Map<String, u64>, H>(config)
+        }
+        index_bench::index::Name::ConcurrentMap => {
+            index_bench::run::<K, concurrent_map::ConcurrentMap<String, u64>, H>(config)
+        }
+        index_bench::index::Name::Congee => {
+            unimplemented!("Congee does not support string keys")
+        }
+        index_bench::index::Name::CrossbeamSkiplist => {
+            index_bench::run::<K, crossbeam_skiplist::SkipMap<String, u64>, H>(config)
+        }
+        index_bench::index::Name::DashMap => {
+            index_bench::run::<K, dashmap::DashMap<String, u64, H>, H>(config)
+        }
+        index_bench::index::Name::FbTree => index_bench::run::<K, fbtree_sys::FbString, H>(config),
+        index_bench::index::Name::Papaya => {
+            index_bench::run::<K, papaya::HashMap<String, u64, H>, H>(config)
+        }
+        index_bench::index::Name::SccHashMap => {
+            index_bench::run::<K, scc::HashMap<String, u64, H>, H>(config)
+        }
+        index_bench::index::Name::SccTreeIndex => {
+            index_bench::run::<K, scc::TreeIndex<String, u64>, H>(config)
         }
         index_bench::index::Name::Wormhole => {
             index_bench::run::<K, wormhole_sys::Wormhole, H>(config)
