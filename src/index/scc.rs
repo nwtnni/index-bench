@@ -91,6 +91,15 @@ impl index::IndexPin<u64> for &'_ scc::TreeIndex<u64, u64> {
     fn remove(&mut self, key: u64) -> Option<u64> {
         self.remove_sync(&key).then_some(0)
     }
+
+    fn scan(&mut self, key: u64, count: usize, buffer: &mut Vec<u64>) {
+        let guard = scc::Guard::new();
+        buffer.extend(
+            scc::TreeIndex::range(self, key.., &guard)
+                .take(count)
+                .map(|(_, value)| *value),
+        );
+    }
 }
 
 impl_index!(String, &'static str);
@@ -132,19 +141,14 @@ impl index::IndexPin<String> for &'_ scc::TreeIndex<&'static str, u64> {
         self.remove_sync(&key).then_some(0)
     }
 
-    // fn range<'a>(
-    //     &'a mut self,
-    //     _retry_scan: usize,
-    //     min: &'a K,
-    //     max: &'a K,
-    //     output: &mut Vec<(K, u64)>,
-    // ) {
-    //     let guard = scc::Guard::new();
-    //     output.extend(
-    //         scc::TreeIndex::range::<K, RangeInclusive<&'_ K>>(self, min..=max, &guard)
-    //             .map(|(key, value)| (key.clone(), *value)),
-    //     );
-    // }
+    fn scan(&mut self, key: &'static str, count: usize, buffer: &mut Vec<u64>) {
+        let guard = scc::Guard::new();
+        buffer.extend(
+            scc::TreeIndex::range(self, key.., &guard)
+                .take(count)
+                .map(|(_, value)| *value),
+        );
+    }
 }
 
 impl_index!(String, String);
@@ -186,5 +190,18 @@ impl index::IndexPin<String> for &'_ scc::TreeIndex<String, u64> {
 
     fn remove(&mut self, key: &'static str) -> Option<u64> {
         self.remove_sync(key).then_some(0)
+    }
+
+    fn scan(&mut self, key: &'static str, count: usize, buffer: &mut Vec<u64>) {
+        let guard = scc::Guard::new();
+        buffer.extend(
+            scc::TreeIndex::range::<str, _>(
+                self,
+                (core::ops::Bound::Included(key), core::ops::Bound::Unbounded),
+                &guard,
+            )
+            .take(count)
+            .map(|(_, value)| *value),
+        );
     }
 }
