@@ -67,6 +67,16 @@ where
         arctic::concurrent::MapRef::remove(self, key)
     }
 
+    fn scan(
+        &mut self,
+        key: <K as arctic::raw::Key>::Borrow<'static>,
+        count: usize,
+        buffer: &mut Vec<u64>,
+    ) {
+        let prefix = arctic::concurrent::MapRef::scan(self, key);
+        buffer.extend(prefix.values::<arctic::iter::Sorted>().take(count));
+    }
+
     #[cfg(feature = "stat")]
     fn report(&mut self) -> serde_json::Value {
         serde_json::to_value(arctic::stat::thread()).unwrap()
