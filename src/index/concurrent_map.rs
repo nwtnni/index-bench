@@ -37,6 +37,14 @@ impl index::IndexPin<u64> for &'_ concurrent_map::ConcurrentMap<u64, u64> {
     fn insert(&mut self, key: u64, value: u64) -> Option<u64> {
         concurrent_map::ConcurrentMap::insert(self, key, value)
     }
+
+    fn scan(&mut self, key: u64, count: usize, buffer: &mut Vec<u64>) {
+        buffer.extend(
+            concurrent_map::ConcurrentMap::range(self, key..)
+                .take(count)
+                .map(|(_, value)| value),
+        );
+    }
 }
 
 impl_index!(String, &'static str);
@@ -49,6 +57,14 @@ impl index::IndexPin<String> for &'_ concurrent_map::ConcurrentMap<&'static str,
     fn insert(&mut self, key: &'static str, value: u64) -> Option<u64> {
         concurrent_map::ConcurrentMap::insert(self, key, value)
     }
+
+    fn scan(&mut self, key: &'static str, count: usize, buffer: &mut Vec<u64>) {
+        buffer.extend(
+            concurrent_map::ConcurrentMap::range(self, key..)
+                .take(count)
+                .map(|(_, value)| value),
+        );
+    }
 }
 
 impl_index!(String, String);
@@ -60,5 +76,16 @@ impl index::IndexPin<String> for &'_ concurrent_map::ConcurrentMap<String, u64> 
 
     fn insert(&mut self, key: &'static str, value: u64) -> Option<u64> {
         concurrent_map::ConcurrentMap::insert(self, key.to_owned(), value)
+    }
+
+    fn scan(&mut self, key: &'static str, count: usize, buffer: &mut Vec<u64>) {
+        buffer.extend(
+            concurrent_map::ConcurrentMap::range::<str, _>(
+                self,
+                (core::ops::Bound::Included(key), core::ops::Bound::Unbounded),
+            )
+            .take(count)
+            .map(|(_, value)| value),
+        );
     }
 }
