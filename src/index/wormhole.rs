@@ -51,6 +51,17 @@ impl index::IndexPin<u64> for wormhole_sys::WormRef<'_> {
         unsafe { wormhole_sys::WormRef::del(self, ptr, key.len()) };
         None
     }
+
+    fn scan(
+        &mut self,
+        key: <u64 as arctic::raw::Key>::Borrow<'static>,
+        count: usize,
+        buffer: &mut Vec<u64>,
+    ) {
+        let key = key.to_be_bytes();
+        let ptr = key.as_ptr().cast();
+        buffer.extend(unsafe { wormhole_sys::WormRef::iter(self, ptr, key.len()) }.take(count));
+    }
 }
 
 impl<H: index::Hasher> Index<String, H> for wormhole_sys::Wormhole {
@@ -96,5 +107,12 @@ impl index::IndexPin<String> for wormhole_sys::WormRef<'_> {
     fn remove(&mut self, key: &'static str) -> Option<u64> {
         unsafe { wormhole_sys::WormRef::del(self, key.as_ptr().cast(), key.len()) };
         None
+    }
+
+    fn scan(&mut self, key: &'static str, count: usize, buffer: &mut Vec<u64>) {
+        buffer.extend(
+            unsafe { wormhole_sys::WormRef::iter(self, key.as_ptr().cast(), key.len()) }
+                .take(count),
+        );
     }
 }
