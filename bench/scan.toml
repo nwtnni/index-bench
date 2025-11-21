@@ -1,0 +1,50 @@
+[global]
+thread_count = [1, 10, 20, 30, 40, 50, 60, 70, 80]
+numa = [{ policy = "bind", node = 0 }]
+
+[[index]]
+hash = "rapid_hash"
+name = "arctic"
+
+[[index]]
+hash = "rapid_hash"
+name = "art"
+
+[[index]]
+hash = "rapid_hash"
+name = "concurrent_map"
+
+[[index]]
+hash = "rapid_hash"
+name = "congee"
+
+[[index]]
+hash = "rapid_hash"
+name = "crossbeam_skiplist"
+
+[[index]]
+hash = "rapid_hash"
+name = "fb_tree"
+
+[[index]]
+hash = "rapid_hash"
+name = "scc_tree_index"
+
+[[index]]
+hash = "rapid_hash"
+name = "wormhole"
+
+[workload]
+load = [false]
+key = ["u64", "url", "email"]
+insert_order = ["ordered", "hashed"]
+record_count = [100800000]
+operation_count = [1000000]
+read_proportion = [0.0]
+update_proportion = [0.0]
+insert_proportion = [0.5]
+delete_proportion = [0.0]
+scan_proportion = [0.95]
+max_scan_length = [100]
+read_modify_write_proportion = [0.0]
+request_distribution = ["uniform", { "zipfian" = 0.99 }]
