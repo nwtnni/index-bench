@@ -71,7 +71,7 @@ where
     K: KeyDistribution,
 {
     #[inline]
-    pub(crate) fn next_key(&mut self) -> Option<<K::Key as ::arctic::raw::Key>::Borrow<'_>> {
+    pub(crate) fn next_key(&mut self) -> Option<<K::Key as ::arctic::raw::Key>::Borrow<'static>> {
         Some(self.keys.get(self.inner.next_key()?.id()))
     }
 }
@@ -91,7 +91,7 @@ impl<'ycsb, K: KeyDistribution> Runner<'ycsb, K> {
         &mut self,
         rng: &mut R,
         start: ycsb::Key,
-    ) -> <K::Key as ::arctic::raw::Key>::Borrow<'_> {
+    ) -> <K::Key as ::arctic::raw::Key>::Borrow<'static> {
         let delta = self.inner.next_scan_length(rng);
         let end = start.id() + delta as u64 - 1;
         self.keys.get(end)
@@ -100,14 +100,14 @@ impl<'ycsb, K: KeyDistribution> Runner<'ycsb, K> {
     pub(crate) fn next_key_read<R: rand::Rng>(
         &mut self,
         rng: &mut R,
-    ) -> (ycsb::Key, <K::Key as ::arctic::raw::Key>::Borrow<'_>) {
+    ) -> (ycsb::Key, <K::Key as ::arctic::raw::Key>::Borrow<'static>) {
         let key = self.inner.next_key_read(rng);
         (key, self.keys.get(key.id()))
     }
 
     pub(crate) fn next_key_insert(
         &mut self,
-    ) -> (ycsb::Key, <K::Key as ::arctic::raw::Key>::Borrow<'_>) {
+    ) -> (ycsb::Key, <K::Key as ::arctic::raw::Key>::Borrow<'static>) {
         let key = self.inner.next_key_insert();
         (key, self.keys.get(key.id()))
     }
@@ -120,7 +120,7 @@ impl<'ycsb, K: KeyDistribution> Runner<'ycsb, K> {
 pub trait KeyDistribution {
     type Key: index::Key;
     fn new(config: &Key) -> Self;
-    fn get(&self, index: u64) -> <Self::Key as ::arctic::raw::Key>::Borrow<'_>;
+    fn get(&self, index: u64) -> <Self::Key as ::arctic::raw::Key>::Borrow<'static>;
 }
 
 pub struct U64;
@@ -153,7 +153,7 @@ impl KeyDistribution for Email {
         Self(LazyLock::force(&EMAIL_INDEX).as_slice())
     }
 
-    fn get(&self, index: u64) -> &str {
+    fn get(&self, index: u64) -> &'static str {
         self.0[index as usize % self.0.len()]
     }
 }
@@ -173,7 +173,7 @@ impl KeyDistribution for Url {
         Self(LazyLock::force(&URL_INDEX).as_slice())
     }
 
-    fn get(&self, index: u64) -> &str {
+    fn get(&self, index: u64) -> &'static str {
         self.0[index as usize % self.0.len()]
     }
 }

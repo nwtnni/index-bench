@@ -136,22 +136,30 @@ impl Key for String {
 }
 
 pub trait IndexPin<K: Key> {
-    fn get(&mut self, key: <K as ::arctic::raw::Key>::Borrow<'_>) -> Option<u64>;
+    fn get(&mut self, key: <K as ::arctic::raw::Key>::Borrow<'static>) -> Option<u64>;
 
-    fn insert(&mut self, key: <K as ::arctic::raw::Key>::Borrow<'_>, value: u64) -> Option<u64>;
+    fn insert(
+        &mut self,
+        key: <K as ::arctic::raw::Key>::Borrow<'static>,
+        value: u64,
+    ) -> Option<u64>;
 
-    fn update(&mut self, key: <K as ::arctic::raw::Key>::Borrow<'_>, value: u64) -> Option<u64> {
+    fn update(
+        &mut self,
+        key: <K as ::arctic::raw::Key>::Borrow<'static>,
+        value: u64,
+    ) -> Option<u64> {
         self.insert(key, value)
     }
 
-    fn increment(&mut self, _key: <K as ::arctic::raw::Key>::Borrow<'_>) -> Option<u64> {
+    fn increment(&mut self, _key: <K as ::arctic::raw::Key>::Borrow<'static>) -> Option<u64> {
         unimplemented!(
             "TODO: implement increment for {}",
             std::any::type_name::<Self>()
         )
     }
 
-    fn remove(&mut self, _key: <K as ::arctic::raw::Key>::Borrow<'_>) -> Option<u64> {
+    fn remove(&mut self, _key: <K as ::arctic::raw::Key>::Borrow<'static>) -> Option<u64> {
         unimplemented!(
             "TODO: implement remove for {}",
             std::any::type_name::<Self>()
@@ -173,7 +181,7 @@ pub trait IndexPin<K: Key> {
 
     fn scan(
         &mut self,
-        _key: <K as ::arctic::raw::Key>::Borrow<'_>,
+        _key: <K as ::arctic::raw::Key>::Borrow<'static>,
         _count: usize,
     ) -> impl Iterator<Item = u64> {
         unimplemented!("TODO: implement scan for {}", std::any::type_name::<Self>());
