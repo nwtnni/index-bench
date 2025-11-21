@@ -7,6 +7,7 @@ import click
 import dash
 from dash import Dash, html, dcc, Input, State, Output, callback
 from dash.dash_table import DataTable
+from dash.dash_table.Format import Format, Group, Scheme
 import dash_bootstrap_components as dbc
 
 # HACK: https://stackoverflow.com/questions/9059699/use-a-library-locally-instead-of-installing-it
@@ -463,6 +464,20 @@ def update(
 
             table = []
 
+            columns = [
+                dict(id=x.name, name=x.name),
+                column_int("count"),
+                column_float("avg"),
+                column_float("std"),
+            ]
+
+            columns.extend(
+                [
+                    column_int(label)
+                    for label in ["min", "p50", "p75", "p90", "p99", "max"]
+                ]
+            )
+
             for name in df.select(x.name).to_series(0).unique():
                 histograms = df.select(
                     pl.col(y.name).filter(pl.col(x.name) == name)
@@ -475,12 +490,11 @@ def update(
                 for h in histograms.slice(1):
                     histogram.add(h)
 
-                row = dict()
+                row = summarize_histogram(histogram)
                 row[x.name] = name
-                histogram_append_row(histogram, row)
                 table.append(row)
 
-            children.append(DataTable(table))
+            children.append(DataTable(table, columns))
 
             df = (
                 df.with_columns(
@@ -528,11 +542,30 @@ def update(
     return children
 
 
-def histogram_append_row(histogram: HdrHistogram, row):
-    row["count"] = histogram.get_total_count()
-    row["avg"] = histogram.get_mean_value()
-    row["std"] = histogram.get_stddev()
+def column_float(name):
+    return dict(
+        id=name,
+        name=name,
+        type="numeric",
+        format=Format(precision=1, scheme=Scheme.fixed),
+    )
 
+
+def column_int(name):
+    return dict(
+        id=name,
+        name=name,
+        type="numeric",
+        format=Format(group=True, groups=[3]),
+    )
+
+
+def summarize_histogram(histogram: HdrHistogram):
+    row = dict(
+        count=histogram.get_total_count(),
+        avg=histogram.get_mean_value(),
+        std=histogram.get_stddev(),
+    )
     for label, percentile in [
         ("min", 0.0),
         ("p50", 50.0),
@@ -542,6 +575,7 @@ def histogram_append_row(histogram: HdrHistogram, row):
         ("max", 100.0),
     ]:
         row[label] = histogram.get_value_at_percentile(percentile)
+    return row
 
 
 def decode_histograms(series: pl.Series) -> HdrHistogram:
