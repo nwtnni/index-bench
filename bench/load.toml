@@ -28,9 +28,9 @@ name = "concurrent_map"
 hash = "rapid_hash"
 name = "congee"
 
-[[index]]
-hash = "rapid_hash"
-name = "contrie"
+# [[index]]
+# hash = "rapid_hash"
+# name = "contrie"
 
 [[index]]
 hash = "rapid_hash"
