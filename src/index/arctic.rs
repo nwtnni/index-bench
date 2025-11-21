@@ -63,10 +63,6 @@ where
         arctic::concurrent::MapRef::update(self, key, value).ok()
     }
 
-    fn increment(&mut self, key: <K as ::arctic::raw::Key>::Borrow<'static>) -> Option<u64> {
-        arctic::concurrent::MapRef::upsert_with(self, key, |old| old.unwrap_or(0) + 1)
-    }
-
     fn remove(&mut self, key: <K as ::arctic::raw::Key>::Borrow<'static>) -> Option<u64> {
         arctic::concurrent::MapRef::remove(self, key)
     }

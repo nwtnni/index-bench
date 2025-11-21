@@ -36,19 +36,6 @@ impl<H: index::Hasher> index::IndexPin<u64> for &'_ dashmap::DashMap<u64, u64, H
     fn remove(&mut self, key: u64) -> Option<u64> {
         dashmap::DashMap::remove(self, &key).map(|(_, value)| value)
     }
-
-    fn increment(&mut self, key: u64) -> Option<u64> {
-        let mut old = Some(0);
-        let mut entry = dashmap::DashMap::entry(self, key).or_insert_with(|| {
-            old = None;
-            0
-        });
-        if old.is_some() {
-            old = Some(*entry);
-        }
-        *entry += 1;
-        old
-    }
 }
 
 impl<H: index::Hasher> Index<String, H> for dashmap::DashMap<&'static str, u64, H> {

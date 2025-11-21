@@ -152,13 +152,6 @@ pub trait IndexPin<K: Key> {
         self.insert(key, value)
     }
 
-    fn increment(&mut self, _key: <K as ::arctic::raw::Key>::Borrow<'static>) -> Option<u64> {
-        unimplemented!(
-            "TODO: implement increment for {}",
-            std::any::type_name::<Self>()
-        )
-    }
-
     fn remove(&mut self, _key: <K as ::arctic::raw::Key>::Borrow<'static>) -> Option<u64> {
         unimplemented!(
             "TODO: implement remove for {}",

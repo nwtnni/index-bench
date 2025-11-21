@@ -47,11 +47,4 @@ impl index::IndexPin<u64> for &'_ congee::Congee<usize, usize> {
         let guard = self.pin();
         congee::Congee::remove(self, &(key as usize), &guard).map(|value| value as u64)
     }
-
-    fn increment(&mut self, key: u64) -> Option<u64> {
-        let guard = self.pin();
-        congee::Congee::compute_or_insert(self, key as usize, |old| old.unwrap_or(0) + 1, &guard)
-            .unwrap()
-            .map(|value| value as u64)
-    }
 }

@@ -1,5 +1,3 @@
-use core::cell::Cell;
-
 use crate::Index;
 use crate::index;
 
@@ -45,20 +43,6 @@ impl<H: index::Hasher> index::IndexPin<u64> for &'_ papaya::HashMap<u64, u64, H>
     fn remove(&mut self, key: u64) -> Option<u64> {
         let map = self.pin();
         map.remove(&key).copied()
-    }
-
-    fn increment(&mut self, key: u64) -> Option<u64> {
-        let map = self.pin();
-        let old = Cell::new(None);
-        map.update_or_insert(
-            key,
-            |count| {
-                old.set(Some(*count));
-                count + 1
-            },
-            1,
-        );
-        old.into_inner()
     }
 }
 
