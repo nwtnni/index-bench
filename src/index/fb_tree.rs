@@ -40,6 +40,10 @@ impl index::IndexPin<u64> for &'_ fbtree_sys::FbU64 {
         fbtree_sys::FbU64::update(self, key, value);
         None
     }
+
+    fn scan(&mut self, key: u64, count: usize, buffer: &mut Vec<u64>) {
+        buffer.extend(self.iter(key).take(count));
+    }
 }
 
 impl<H: index::Hasher> Index<String, H> for fbtree_sys::FbString {
@@ -80,5 +84,9 @@ impl index::IndexPin<String> for &'_ fbtree_sys::FbString {
     fn update(&mut self, key: &'static str, value: u64) -> Option<u64> {
         fbtree_sys::FbString::update(self, key, value);
         None
+    }
+
+    fn scan(&mut self, key: &'static str, count: usize, buffer: &mut Vec<u64>) {
+        buffer.extend(self.iter(key).take(count));
     }
 }

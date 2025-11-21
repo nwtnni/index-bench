@@ -159,28 +159,13 @@ pub trait IndexPin<K: Key> {
         )
     }
 
-    fn range<'a>(
-        &'a mut self,
-        _retry_scan: usize,
-        _min: &'a K,
-        _max: &'a K,
-        _output: &mut Vec<(K, u64)>,
-    ) {
-        unimplemented!(
-            "TODO: implement range for {}",
-            std::any::type_name::<Self>()
-        );
-    }
-
     fn scan(
         &mut self,
         _key: <K as ::arctic::raw::Key>::Borrow<'static>,
         _count: usize,
-    ) -> impl Iterator<Item = u64> {
-        unimplemented!("TODO: implement scan for {}", std::any::type_name::<Self>());
-
-        #[expect(unreachable_code)]
-        core::iter::empty()
+        _buffer: &mut Vec<u64>,
+    ) {
+        unimplemented!("TODO: implement scan for {}", std::any::type_name::<Self>())
     }
 
     fn report(&mut self) -> serde_json::Value {

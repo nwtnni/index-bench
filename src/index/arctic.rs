@@ -67,23 +67,6 @@ where
         arctic::concurrent::MapRef::remove(self, key)
     }
 
-    // fn range<'b>(
-    //     &'b mut self,
-    //     _retry_scan: usize,
-    //     min: &'b u64,
-    //     max: &'b u64,
-    //     output: &mut Vec<(K, u64)>,
-    // ) {
-    //     let Some(guard) = arctic::concurrent::MapRef::range(self, min.borrow(), max.borrow())
-    //     else {
-    //         return;
-    //     };
-    //
-    //     guard
-    //         .entries::<arctic::iter::Sorted>()
-    //         .for_each(|key, value| output.push((K::clone_from_borrow(key), value)));
-    // }
-
     #[cfg(feature = "stat")]
     fn report(&mut self) -> serde_json::Value {
         serde_json::to_value(arctic::stat::thread()).unwrap()
