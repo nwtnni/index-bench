@@ -1,31 +1,39 @@
 use crate::Index;
 use crate::index;
 
-impl<H: index::Hasher> Index<u64, H> for crossbeam_skiplist::SkipMap<u64, u64> {
-    type Send<'a> = &'a Self;
+macro_rules! impl_index {
+    ($index:ty, $map:ty) => {
+        impl<H: index::Hasher> Index<$index, H> for crossbeam_skiplist::SkipMap<$map, u64> {
+            type Send<'a> = &'a Self;
 
-    const IGNORE_INSERT: bool = true;
-    const IGNORE_GET: bool = true;
+            const IGNORE_INSERT: bool = true;
+            const IGNORE_GET: bool = true;
 
-    fn new(_: &index::Config) -> Self {
-        crossbeam_skiplist::SkipMap::new()
-    }
+            fn new(_: &index::Config) -> Self {
+                crossbeam_skiplist::SkipMap::new()
+            }
 
-    fn send<'a>(&'a self) -> Self::Send<'a> {
-        self
-    }
+            fn send<'a>(&'a self) -> Self::Send<'a> {
+                self
+            }
+        }
+
+        impl<H: index::Hasher> index::IndexSend<$index, H>
+            for &crossbeam_skiplist::SkipMap<$map, u64>
+        {
+            type Handle<'a>
+                = Self
+            where
+                Self: 'a;
+
+            fn pin<'a>(&'a self) -> Self::Handle<'a> {
+                self
+            }
+        }
+    };
 }
 
-impl<H: index::Hasher> index::IndexSend<u64, H> for &crossbeam_skiplist::SkipMap<u64, u64> {
-    type Handle<'a>
-        = Self
-    where
-        Self: 'a;
-
-    fn pin<'a>(&'a self) -> Self::Handle<'a> {
-        self
-    }
-}
+impl_index!(u64, u64);
 
 impl index::IndexPin<u64> for &'_ crossbeam_skiplist::SkipMap<u64, u64> {
     fn get(&mut self, key: u64) -> Option<u64> {
@@ -37,33 +45,7 @@ impl index::IndexPin<u64> for &'_ crossbeam_skiplist::SkipMap<u64, u64> {
     }
 }
 
-impl<H: index::Hasher> Index<String, H> for crossbeam_skiplist::SkipMap<&'static str, u64> {
-    type Send<'a> = &'a Self;
-
-    const IGNORE_INSERT: bool = true;
-    const IGNORE_GET: bool = true;
-
-    fn new(_: &index::Config) -> Self {
-        crossbeam_skiplist::SkipMap::new()
-    }
-
-    fn send<'a>(&'a self) -> Self::Send<'a> {
-        self
-    }
-}
-
-impl<H: index::Hasher> index::IndexSend<String, H>
-    for &crossbeam_skiplist::SkipMap<&'static str, u64>
-{
-    type Handle<'a>
-        = Self
-    where
-        Self: 'a;
-
-    fn pin<'a>(&'a self) -> Self::Handle<'a> {
-        self
-    }
-}
+impl_index!(String, &'static str);
 
 impl index::IndexPin<String> for &'_ crossbeam_skiplist::SkipMap<&'static str, u64> {
     fn get(&mut self, key: &'static str) -> Option<u64> {
@@ -72,5 +54,17 @@ impl index::IndexPin<String> for &'_ crossbeam_skiplist::SkipMap<&'static str, u
 
     fn insert(&mut self, key: &'static str, value: u64) -> Option<u64> {
         Some(*crossbeam_skiplist::SkipMap::insert(self, key, value).value())
+    }
+}
+
+impl_index!(String, String);
+
+impl index::IndexPin<String> for &'_ crossbeam_skiplist::SkipMap<String, u64> {
+    fn get(&mut self, key: &'static str) -> Option<u64> {
+        Some(*crossbeam_skiplist::SkipMap::get(self, key)?.value())
+    }
+
+    fn insert(&mut self, key: &'static str, value: u64) -> Option<u64> {
+        Some(*crossbeam_skiplist::SkipMap::insert(self, key.to_owned(), value).value())
     }
 }
