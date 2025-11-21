@@ -43,6 +43,14 @@ impl index::IndexPin<u64> for &'_ crossbeam_skiplist::SkipMap<u64, u64> {
     fn insert(&mut self, key: u64, value: u64) -> Option<u64> {
         Some(*crossbeam_skiplist::SkipMap::insert(self, key, value).value())
     }
+
+    fn scan(&mut self, key: u64, count: usize, buffer: &mut Vec<u64>) {
+        buffer.extend(
+            crossbeam_skiplist::SkipMap::range(self, key..)
+                .take(count)
+                .map(|entry| *entry.value()),
+        )
+    }
 }
 
 impl_index!(String, &'static str);
@@ -55,6 +63,14 @@ impl index::IndexPin<String> for &'_ crossbeam_skiplist::SkipMap<&'static str, u
     fn insert(&mut self, key: &'static str, value: u64) -> Option<u64> {
         Some(*crossbeam_skiplist::SkipMap::insert(self, key, value).value())
     }
+
+    fn scan(&mut self, key: &'static str, count: usize, buffer: &mut Vec<u64>) {
+        buffer.extend(
+            crossbeam_skiplist::SkipMap::range(self, key..)
+                .take(count)
+                .map(|entry| *entry.value()),
+        )
+    }
 }
 
 impl_index!(String, String);
@@ -66,5 +82,18 @@ impl index::IndexPin<String> for &'_ crossbeam_skiplist::SkipMap<String, u64> {
 
     fn insert(&mut self, key: &'static str, value: u64) -> Option<u64> {
         Some(*crossbeam_skiplist::SkipMap::insert(self, key.to_owned(), value).value())
+    }
+
+    fn scan(&mut self, key: &'static str, count: usize, buffer: &mut Vec<u64>) {
+        buffer.extend(
+            crossbeam_skiplist::SkipMap::range::<str, _>(
+                self,
+                // NOTE: `key..` doesn't work due to 'static lifetime?
+                // Not sure why (&*key).. doesn't work
+                (core::ops::Bound::Included(key), core::ops::Bound::Unbounded),
+            )
+            .take(count)
+            .map(|entry| *entry.value()),
+        )
     }
 }
