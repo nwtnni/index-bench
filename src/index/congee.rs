@@ -47,4 +47,20 @@ impl index::IndexPin<u64> for &'_ congee::Congee<usize, usize> {
         let guard = self.pin();
         congee::Congee::remove(self, &(key as usize), &guard).map(|value| value as u64)
     }
+
+    fn scan(&mut self, key: u64, count: usize, buffer: &mut Vec<u64>) {
+        const {
+            assert!(core::mem::align_of::<(usize, usize)>() == core::mem::align_of::<u64>());
+        }
+
+        // HACK: work around congee API
+        // Reserve enough room for (usize, usize)
+        buffer.resize(count * 2, 0);
+        let buffer = unsafe {
+            core::slice::from_raw_parts_mut(buffer.as_mut_ptr().cast::<(usize, usize)>(), count)
+        };
+
+        let guard = self.pin();
+        congee::Congee::range(self, &(key as usize), &usize::MAX, buffer, &guard);
+    }
 }
