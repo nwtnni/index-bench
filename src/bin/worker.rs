@@ -23,57 +23,40 @@ fn specialize_key<H: index_bench::index::Hasher>(
 ) -> anyhow::Result<index_bench::measure::Global> {
     match config.workload.key {
         index_bench::workload::Key::U64 => {
-            specialize_index::<H, index_bench::workload::U64>(config)
+            specialize_index_u64::<H, index_bench::workload::U64>(config)
         }
         index_bench::workload::Key::Email => {
-            todo!()
+            specialize_index_string::<H, index_bench::workload::Email>(config)
         }
-        index_bench::workload::Key::Url => todo!(),
-        // index_bench::workload::Key::Email => {
-        //     specialize_hash::<index_bench::workload::Email>(config)
-        // }
-        // index_bench::workload::Key::Url => specialize_hash::<index_bench::workload::Url>(config),
-        // index_bench::workload::Key::Prefix(_) => {
-        //     specialize_hash::<index_bench::workload::Prefix>(config)
-        // }
+        index_bench::workload::Key::Url => {
+            specialize_index_string::<H, index_bench::workload::Url>(config)
+        }
         index_bench::workload::Key::Sparse(_) => {
-            specialize_index::<H, index_bench::workload::Sparse>(config)
+            specialize_index_u64::<H, index_bench::workload::Sparse>(config)
         }
         index_bench::workload::Key::Kmer => {
-            specialize_index::<H, index_bench::workload::Kmer>(config)
+            specialize_index_u64::<H, index_bench::workload::Kmer>(config)
         }
     }
 }
 
-fn specialize_index<
+fn specialize_index_u64<
     H: index_bench::index::Hasher,
     K: index_bench::workload::KeyDistribution<Key = u64>,
 >(
     config: index_bench::Config,
 ) -> anyhow::Result<index_bench::measure::Global> {
     match config.index.name {
-        index_bench::index::Name::Art => index_bench::run::<K, art_sys::Rowex<u64>, H>(config),
+        index_bench::index::Name::Art => index_bench::run::<K, art_sys::Rowex<K::Key>, H>(config),
         index_bench::index::Name::Arctic => {
             index_bench::run::<K, arctic::concurrent::Map<K::Key, u64>, H>(config)
         }
-        // index_bench::index::Name::Bonsai => {
-        //     index_bench::run::<K, index_bench::index::kaist::BonsaiTreeMap<K::Key, u64>, H>(config)
-        // }
-        // index_bench::index::Name::BPlusTree => {
-        //     index_bench::run::<K, bplustree::BPlusTree<K::Key, u64>, H>(config)
-        // }
-        // index_bench::index::Name::BzTree => {
-        //     index_bench::run::<K, bztree::BzTree<K::Key, u64>, H>(config)
-        // }
         index_bench::index::Name::ConcurrentMap => {
             index_bench::run::<K, concurrent_map::ConcurrentMap<K::Key, u64>, H>(config)
         }
         index_bench::index::Name::Congee => {
             index_bench::run::<K, congee::Congee<usize, usize>, H>(config)
         }
-        // index_bench::index::Name::Contrie => {
-        //     index_bench::run::<K, contrie::CloneConMap<K::Key, u64>, H>(config)
-        // }
         index_bench::index::Name::CrossbeamSkiplist => {
             index_bench::run::<K, crossbeam_skiplist::SkipMap<K::Key, u64>, H>(config)
         }
@@ -89,6 +72,45 @@ fn specialize_index<
         }
         index_bench::index::Name::SccTreeIndex => {
             index_bench::run::<K, scc::TreeIndex<K::Key, u64>, H>(config)
+        }
+        index_bench::index::Name::Wormhole => {
+            index_bench::run::<K, wormhole_sys::Wormhole, H>(config)
+        }
+    }
+}
+
+fn specialize_index_string<
+    H: index_bench::index::Hasher,
+    K: index_bench::workload::KeyDistribution<Key = String>,
+>(
+    config: index_bench::Config,
+) -> anyhow::Result<index_bench::measure::Global> {
+    match config.index.name {
+        index_bench::index::Name::Art => index_bench::run::<K, art_sys::Rowex<String>, H>(config),
+        index_bench::index::Name::Arctic => {
+            index_bench::run::<K, arctic::concurrent::Map<String, u64>, H>(config)
+        }
+        index_bench::index::Name::ConcurrentMap => {
+            index_bench::run::<K, concurrent_map::ConcurrentMap<&'static str, u64>, H>(config)
+        }
+        index_bench::index::Name::Congee => {
+            unimplemented!("Congee does not support string keys")
+        }
+        index_bench::index::Name::CrossbeamSkiplist => {
+            index_bench::run::<K, crossbeam_skiplist::SkipMap<&'static str, u64>, H>(config)
+        }
+        index_bench::index::Name::DashMap => {
+            index_bench::run::<K, dashmap::DashMap<&'static str, u64, H>, H>(config)
+        }
+        index_bench::index::Name::FbTree => index_bench::run::<K, fbtree_sys::FbString, H>(config),
+        index_bench::index::Name::Papaya => {
+            index_bench::run::<K, papaya::HashMap<&'static str, u64, H>, H>(config)
+        }
+        index_bench::index::Name::SccHashMap => {
+            index_bench::run::<K, scc::HashMap<&'static str, u64, H>, H>(config)
+        }
+        index_bench::index::Name::SccTreeIndex => {
+            index_bench::run::<K, scc::TreeIndex<&'static str, u64>, H>(config)
         }
         index_bench::index::Name::Wormhole => {
             index_bench::run::<K, wormhole_sys::Wormhole, H>(config)

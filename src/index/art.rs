@@ -48,3 +48,51 @@ impl index::IndexPin<u64> for art_sys::RowexRef<'_, u64> {
         None
     }
 }
+
+impl<H: index::Hasher> Index<String, H> for art_sys::Rowex<String> {
+    const IGNORE_GET: bool = true;
+    const IGNORE_INSERT: bool = true;
+
+    type Send<'a> = &'a Self;
+
+    fn new(_: &index::Config) -> Self {
+        Self::new_string()
+    }
+
+    fn send<'a>(&'a self) -> Self::Send<'a> {
+        self
+    }
+}
+
+impl<H: index::Hasher> index::IndexSend<String, H> for &'_ art_sys::Rowex<String> {
+    type Handle<'a>
+        = art_sys::RowexRef<'a, String>
+    where
+        Self: 'a;
+
+    fn pin<'a>(&'a self) -> Self::Handle<'a> {
+        art_sys::Rowex::pin(self)
+    }
+}
+
+impl index::IndexPin<String> for art_sys::RowexRef<'_, String> {
+    fn get(&mut self, key: &'static str) -> Option<u64> {
+        art_sys::RowexRef::get_string(self, key);
+        None
+    }
+
+    fn insert(&mut self, key: &'static str, _: u64) -> Option<u64> {
+        art_sys::RowexRef::insert_string(self, key);
+        None
+    }
+
+    fn update(&mut self, key: &'static str, value: u64) -> Option<u64> {
+        self.insert(key, value);
+        None
+    }
+
+    fn remove(&mut self, key: &'static str) -> Option<u64> {
+        art_sys::RowexRef::remove_string(self, key);
+        None
+    }
+}

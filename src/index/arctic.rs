@@ -1,11 +1,15 @@
 use crate::Index;
 use crate::index;
 
-impl<H> Index<u64, H> for arctic::concurrent::Map<u64, u64>
+impl<K, H> Index<K, H> for arctic::concurrent::Map<K, u64>
 where
+    K: index::Key + ::arctic::Key,
     H: index::Hasher,
 {
-    type Send<'a> = &'a arctic::concurrent::Map<u64, u64>;
+    type Send<'a>
+        = &'a arctic::concurrent::Map<K, u64>
+    where
+        K: 'a;
 
     fn new(config: &index::Config) -> Self {
         arctic::concurrent::Map::with_reclaim_threshold(config.reclaim_threshold)
@@ -21,9 +25,12 @@ where
     }
 }
 
-impl<H> index::IndexSend<u64, H> for &'_ arctic::concurrent::Map<u64, u64> {
+impl<K, H> index::IndexSend<K, H> for &'_ arctic::concurrent::Map<K, u64>
+where
+    K: index::Key + ::arctic::Key,
+{
     type Handle<'a>
-        = arctic::concurrent::MapRef<'a, u64, u64>
+        = arctic::concurrent::MapRef<'a, K, u64>
     where
         Self: 'a;
 
@@ -32,24 +39,35 @@ impl<H> index::IndexSend<u64, H> for &'_ arctic::concurrent::Map<u64, u64> {
     }
 }
 
-impl<'a> index::IndexPin<u64> for arctic::concurrent::MapRef<'a, u64, u64> {
-    fn get(&mut self, key: u64) -> Option<u64> {
+impl<'a, K> index::IndexPin<K> for arctic::concurrent::MapRef<'a, K, u64>
+where
+    K: index::Key + ::arctic::Key,
+{
+    fn get(&mut self, key: <K as ::arctic::raw::Key>::Borrow<'static>) -> Option<u64> {
         arctic::concurrent::MapRef::get(self, key)
     }
 
-    fn insert(&mut self, key: u64, value: u64) -> Option<u64> {
+    fn insert(
+        &mut self,
+        key: <K as ::arctic::raw::Key>::Borrow<'static>,
+        value: u64,
+    ) -> Option<u64> {
         arctic::concurrent::MapRef::upsert(self, key, value)
     }
 
-    fn update(&mut self, key: u64, value: u64) -> Option<u64> {
+    fn update(
+        &mut self,
+        key: <K as ::arctic::raw::Key>::Borrow<'static>,
+        value: u64,
+    ) -> Option<u64> {
         arctic::concurrent::MapRef::update(self, key, value).ok()
     }
 
-    fn increment(&mut self, key: u64) -> Option<u64> {
+    fn increment(&mut self, key: <K as ::arctic::raw::Key>::Borrow<'static>) -> Option<u64> {
         arctic::concurrent::MapRef::upsert_with(self, key, |old| old.unwrap_or(0) + 1)
     }
 
-    fn remove(&mut self, key: u64) -> Option<u64> {
+    fn remove(&mut self, key: <K as ::arctic::raw::Key>::Borrow<'static>) -> Option<u64> {
         arctic::concurrent::MapRef::remove(self, key)
     }
 

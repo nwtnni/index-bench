@@ -41,7 +41,7 @@ impl index::IndexPin<u64> for wormhole_sys::WormRef<'_> {
     }
 
     fn update(&mut self, key: u64, value: u64) -> Option<u64> {
-        self.insert(key, value);
+        <Self as index::IndexPin<u64>>::insert(self, key, value);
         None
     }
 
@@ -49,6 +49,52 @@ impl index::IndexPin<u64> for wormhole_sys::WormRef<'_> {
         let key = key.to_be_bytes();
         let ptr = key.as_ptr().cast();
         unsafe { wormhole_sys::WormRef::del(self, ptr, key.len()) };
+        None
+    }
+}
+
+impl<H: index::Hasher> Index<String, H> for wormhole_sys::Wormhole {
+    const IGNORE_INSERT: bool = true;
+
+    type Send<'a> = &'a Self;
+
+    fn new(_: &index::Config) -> Self {
+        Self::default()
+    }
+
+    fn send<'a>(&'a self) -> Self::Send<'a> {
+        self
+    }
+}
+
+impl<H: index::Hasher> index::IndexSend<String, H> for &'_ wormhole_sys::Wormhole {
+    type Handle<'a>
+        = wormhole_sys::WormRef<'a>
+    where
+        Self: 'a;
+
+    fn pin<'a>(&'a self) -> Self::Handle<'a> {
+        wormhole_sys::Wormhole::pin(self)
+    }
+}
+
+impl index::IndexPin<String> for wormhole_sys::WormRef<'_> {
+    fn get(&mut self, key: &'static str) -> Option<u64> {
+        unsafe { wormhole_sys::WormRef::get(self, key.as_ptr().cast(), key.len()) }
+    }
+
+    fn insert(&mut self, key: &'static str, value: u64) -> Option<u64> {
+        unsafe { wormhole_sys::WormRef::put(self, key.as_ptr().cast(), key.len(), value) }
+        None
+    }
+
+    fn update(&mut self, key: &'static str, value: u64) -> Option<u64> {
+        <Self as index::IndexPin<String>>::insert(self, key, value);
+        None
+    }
+
+    fn remove(&mut self, key: &'static str) -> Option<u64> {
+        unsafe { wormhole_sys::WormRef::del(self, key.as_ptr().cast(), key.len()) };
         None
     }
 }
