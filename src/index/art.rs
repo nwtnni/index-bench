@@ -41,6 +41,11 @@ impl index::IndexPin<u64> for art_sys::RowexRef<'_, u64> {
         self.insert(key, value);
         None
     }
+
+    fn scan(&mut self, key: u64, count: usize, buffer: &mut Vec<u64>) {
+        buffer.resize(count, 0);
+        self.get_range_u64(key, u64::MAX, buffer);
+    }
 }
 
 impl<H: index::Hasher> Index<String, H> for art_sys::Rowex<String> {
@@ -82,5 +87,11 @@ impl index::IndexPin<String> for art_sys::RowexRef<'_, String> {
     fn update(&mut self, key: &'static str, value: u64) -> Option<u64> {
         self.insert(key, value);
         None
+    }
+
+    fn scan(&mut self, key: &'static str, count: usize, buffer: &mut Vec<u64>) {
+        buffer.resize(count, 0);
+        // HACK: input data is a subset of ASCII and shouldn't contain any bytes >= 0x7F
+        self.get_range_string(key, "\x7F", buffer);
     }
 }
