@@ -2,7 +2,6 @@ use crate::Index;
 use crate::index;
 
 impl<H: index::Hasher> Index<u64, H> for art_sys::Rowex<u64> {
-    const IGNORE_GET: bool = true;
     const IGNORE_INSERT: bool = true;
 
     type Send<'a> = &'a Self;
@@ -33,18 +32,13 @@ impl index::IndexPin<u64> for art_sys::RowexRef<'_, u64> {
         None
     }
 
-    fn insert(&mut self, key: u64, _: u64) -> Option<u64> {
-        art_sys::RowexRef::insert_u64(self, key);
+    fn insert(&mut self, key: u64, value: u64) -> Option<u64> {
+        art_sys::RowexRef::insert_u64(self, key, value);
         None
     }
 
     fn update(&mut self, key: u64, value: u64) -> Option<u64> {
         self.insert(key, value);
-        None
-    }
-
-    fn remove(&mut self, key: u64) -> Option<u64> {
-        art_sys::RowexRef::remove_u64(self, key);
         None
     }
 }
@@ -77,22 +71,16 @@ impl<H: index::Hasher> index::IndexSend<String, H> for &'_ art_sys::Rowex<String
 
 impl index::IndexPin<String> for art_sys::RowexRef<'_, String> {
     fn get(&mut self, key: &'static str) -> Option<u64> {
-        art_sys::RowexRef::get_string(self, key);
-        None
+        art_sys::RowexRef::get_string(self, key)
     }
 
-    fn insert(&mut self, key: &'static str, _: u64) -> Option<u64> {
-        art_sys::RowexRef::insert_string(self, key);
+    fn insert(&mut self, key: &'static str, value: u64) -> Option<u64> {
+        art_sys::RowexRef::insert_string(self, key, value);
         None
     }
 
     fn update(&mut self, key: &'static str, value: u64) -> Option<u64> {
         self.insert(key, value);
-        None
-    }
-
-    fn remove(&mut self, key: &'static str) -> Option<u64> {
-        art_sys::RowexRef::remove_string(self, key);
         None
     }
 }
