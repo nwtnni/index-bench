@@ -97,6 +97,10 @@ impl<'ycsb, K: KeyDistribution> Runner<'ycsb, K> {
         self.keys.get(end)
     }
 
+    pub(crate) fn next_scan_length<R: rand::Rng>(&mut self, rng: &mut R) -> usize {
+        self.inner.next_scan_length(rng)
+    }
+
     pub(crate) fn next_key_read<R: rand::Rng>(
         &mut self,
         rng: &mut R,
