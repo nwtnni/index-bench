@@ -62,7 +62,7 @@ name = "wormhole"
 
 [workload]
 load = [true]
-key = ["u64", "kmer", "email", "url"]
+key = ["u64", "kmer", "ts", "email", "url"]
 insert_order = ["ordered", "hashed"]
 record_count = [100800000]
 operation_count = [0]

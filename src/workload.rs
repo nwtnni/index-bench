@@ -29,6 +29,7 @@ pub enum Key {
     // Prefix(usize),
     Sparse(f64),
     Kmer,
+    Ts,
 }
 
 static ACKNOWLEDGED: Acknowledged = Acknowledged::new();
@@ -271,5 +272,21 @@ impl KeyDistribution for Kmer {
         // 28-mer means keep top 56 bits
         const K_MASK: u64 = !(u64::MAX >> 56);
         (((buf << intra_byte_offset) >> 64) as u64) & K_MASK
+    }
+}
+
+pub struct Ts;
+
+impl KeyDistribution for Ts {
+    type Key = u64;
+
+    fn new(_: &Key) -> Self {
+        Self
+    }
+
+    fn get(&self, _: u64) -> Self::Key {
+        let ts = unsafe { core::arch::x86_64::_rdtsc() };
+        let id = crate::THREAD_ID.get() as u64;
+        (ts & !(u8::MAX as u64)) | id
     }
 }

@@ -25,6 +25,15 @@ fn specialize_key<H: index_bench::index::Hasher>(
         index_bench::workload::Key::U64 => {
             specialize_index_u64::<H, index_bench::workload::U64>(config)
         }
+        index_bench::workload::Key::Sparse(_) => {
+            specialize_index_u64::<H, index_bench::workload::Sparse>(config)
+        }
+        index_bench::workload::Key::Kmer => {
+            specialize_index_u64::<H, index_bench::workload::Kmer>(config)
+        }
+        index_bench::workload::Key::Ts => {
+            specialize_index_u64::<H, index_bench::workload::Ts>(config)
+        }
         index_bench::workload::Key::Email => {
             // specialize_index_str::<H, index_bench::workload::Email>(config)
             specialize_index_str::<H, index_bench::workload::Email>(config)
@@ -32,12 +41,6 @@ fn specialize_key<H: index_bench::index::Hasher>(
         index_bench::workload::Key::Url => {
             // specialize_index_str::<H, index_bench::workload::Url>(config)
             specialize_index_string::<H, index_bench::workload::Url>(config)
-        }
-        index_bench::workload::Key::Sparse(_) => {
-            specialize_index_u64::<H, index_bench::workload::Sparse>(config)
-        }
-        index_bench::workload::Key::Kmer => {
-            specialize_index_u64::<H, index_bench::workload::Kmer>(config)
         }
     }
 }

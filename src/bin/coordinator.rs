@@ -31,10 +31,12 @@ fn main() -> anyhow::Result<()> {
             continue;
         }
 
-        // HACK: hashing doesn't make sense for k-mer workload, but we also
+        // HACK: hashing doesn't make sense for k-mer or timestamp workloads, but we also
         // don't want to duplicate the configuration file to avoid one case
-        if matches!(config.workload.key, index_bench::workload::Key::Kmer)
-            && matches!(config.workload.ycsb.insert_order, ycsb::InsertOrder::Hashed)
+        if matches!(
+            config.workload.key,
+            index_bench::workload::Key::Kmer | index_bench::workload::Key::Ts
+        ) && matches!(config.workload.ycsb.insert_order, ycsb::InsertOrder::Hashed)
         {
             continue;
         }
