@@ -1,7 +1,7 @@
 use crate::Index;
 use crate::index;
 
-impl<H: index::Hasher> Index<u64, H> for fbtree_sys::FbTree {
+impl<H: index::Hasher> Index<u64, H> for fbtree_sys::FbU64 {
     const IGNORE_INSERT: bool = true;
 
     type Send<'a> = &'a Self;
@@ -15,9 +15,9 @@ impl<H: index::Hasher> Index<u64, H> for fbtree_sys::FbTree {
     }
 }
 
-impl<H: index::Hasher> index::IndexSend<u64, H> for &'_ fbtree_sys::FbTree {
+impl<H: index::Hasher> index::IndexSend<u64, H> for &'_ fbtree_sys::FbU64 {
     type Handle<'a>
-        = &'a fbtree_sys::FbTree
+        = &'a fbtree_sys::FbU64
     where
         Self: 'a;
 
@@ -26,29 +26,18 @@ impl<H: index::Hasher> index::IndexSend<u64, H> for &'_ fbtree_sys::FbTree {
     }
 }
 
-impl index::IndexPin<u64> for &'_ fbtree_sys::FbTree {
-    fn get(&mut self, _key: u64) -> Option<u64> {
-        todo!()
-        // fbtree_sys::FbTree::lookup(self, key)
+impl index::IndexPin<u64> for &'_ fbtree_sys::FbU64 {
+    fn get(&mut self, key: u64) -> Option<u64> {
+        fbtree_sys::FbU64::lookup(self, key)
     }
 
-    fn insert(&mut self, _key: u64, _value: u64) -> Option<u64> {
-        todo!()
-        // fbtree_sys::FbTree::upsert(
-        //     self,
-        //     unsafe { core::mem::transmute_copy::<K, u64>(&key) },
-        //     value,
-        // );
-        // None
+    fn insert(&mut self, key: u64, value: u64) -> Option<u64> {
+        fbtree_sys::FbU64::upsert(self, key, value);
+        None
     }
 
-    fn update(&mut self, _key: u64, _value: u64) -> Option<u64> {
-        todo!()
-        // fbtree_sys::FbTree::update(
-        //     self,
-        //     unsafe { core::mem::transmute_copy::<K, u64>(&key) },
-        //     value,
-        // );
-        // None
+    fn update(&mut self, key: u64, value: u64) -> Option<u64> {
+        fbtree_sys::FbU64::update(self, key, value);
+        None
     }
 }

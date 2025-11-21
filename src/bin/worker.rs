@@ -80,7 +80,7 @@ fn specialize_index<
         index_bench::index::Name::DashMap => {
             index_bench::run::<K, dashmap::DashMap<K::Key, u64, H>, H>(config)
         }
-        index_bench::index::Name::FbTree => index_bench::run::<K, fbtree_sys::FbTree, H>(config),
+        index_bench::index::Name::FbTree => index_bench::run::<K, fbtree_sys::FbU64, H>(config),
         index_bench::index::Name::Papaya => {
             index_bench::run::<K, papaya::HashMap<K::Key, u64, H>, H>(config)
         }
