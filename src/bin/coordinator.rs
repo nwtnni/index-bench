@@ -39,6 +39,16 @@ fn main() -> anyhow::Result<()> {
             continue;
         }
 
+        // HACK: congee doesn't support string keys
+        if matches!(config.index.name, index_bench::index::Name::Congee)
+            && matches!(
+                config.workload.key,
+                index_bench::workload::Key::Url | index_bench::workload::Key::Email
+            )
+        {
+            continue;
+        }
+
         eprintln!("{config:?}");
 
         let mut child = Command::new(if cfg!(debug_assertions) {
