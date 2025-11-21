@@ -6,6 +6,7 @@ from typing import Optional
 import click
 import dash
 from dash import Dash, html, dcc, Input, State, Output, callback
+from dash.dash_table import DataTable
 import dash_bootstrap_components as dbc
 
 # HACK: https://stackoverflow.com/questions/9059699/use-a-library-locally-instead-of-installing-it
@@ -460,6 +461,27 @@ def update(
         else:
             normalize = True if op == "relative" else False
 
+            table = []
+
+            for name in df.select(x.name).to_series(0).unique():
+                histograms = df.select(
+                    pl.col(y.name).filter(pl.col(x.name) == name)
+                ).to_series(0)
+
+                if len(histograms) == 0:
+                    continue
+
+                histogram = histograms.first()
+                for h in histograms.slice(1):
+                    histogram.add(h)
+
+                row = dict()
+                row[x.name] = name
+                histogram_append_row(histogram, row)
+                table.append(row)
+
+            children.append(DataTable(table))
+
             df = (
                 df.with_columns(
                     pl.col(x.name).cast(pl.String),
@@ -504,6 +526,22 @@ def update(
         children.append(dcc.Graph(figure=fig))
 
     return children
+
+
+def histogram_append_row(histogram: HdrHistogram, row):
+    row["count"] = histogram.get_total_count()
+    row["avg"] = histogram.get_mean_value()
+    row["std"] = histogram.get_stddev()
+
+    for label, percentile in [
+        ("min", 0.0),
+        ("p50", 50.0),
+        ("p75", 75.0),
+        ("p90", 90.0),
+        ("p99", 99.0),
+        ("max", 100.0),
+    ]:
+        row[label] = histogram.get_value_at_percentile(percentile)
 
 
 def decode_histograms(series: pl.Series) -> HdrHistogram:
