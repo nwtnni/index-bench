@@ -465,7 +465,7 @@ def update(
             table = []
 
             columns = [
-                dict(id=x.name, name=x.name),
+                dict(id="group", name="group"),
                 column_int("count"),
                 column_float("avg"),
                 column_float("std"),
@@ -478,10 +478,12 @@ def update(
                 ]
             )
 
-            for name in df.select(x.name).to_series(0).unique():
-                histograms = df.select(
-                    pl.col(y.name).filter(pl.col(x.name) == name)
-                ).to_series(0)
+            for name, data in df.group_by(
+                x.name,
+                *([facet_column.name] if facet_column is not None else []),
+                maintain_order=True,
+            ):
+                histograms = data.select(y.name).to_series(0)
 
                 if len(histograms) == 0:
                     continue
@@ -491,7 +493,7 @@ def update(
                     histogram.add(h)
 
                 row = summarize_histogram(histogram)
-                row[x.name] = name
+                row["group"] = "-".join(name)
                 table.append(row)
 
             children.append(DataTable(table, columns))
@@ -521,7 +523,7 @@ def update(
                 log_y=True,
             )
 
-            fig.update_xaxes(title_text=y.name)
+            fig.update_xaxes(title_text=y.name, matches=None)
             fig.update_yaxes(
                 title_text="Percentage" if normalize else "Count",
                 minor=dict(showgrid=True),
