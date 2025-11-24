@@ -1,3 +1,5 @@
+use core::ops::ControlFlow;
+
 use crate::Index;
 use crate::index;
 
@@ -70,11 +72,20 @@ where
     fn scan(
         &mut self,
         key: <K as arctic::raw::Key>::Borrow<'static>,
-        count: usize,
+        mut count: usize,
         buffer: &mut Vec<u64>,
     ) {
         let prefix = arctic::concurrent::MapRef::scan(self, key);
-        buffer.extend(prefix.values::<arctic::iter::Sorted>().take(count));
+
+        prefix.values::<arctic::iter::Sorted>().for_each(|value| {
+            if count == 0 {
+                ControlFlow::Break(())
+            } else {
+                buffer.push(value);
+                count -= 1;
+                ControlFlow::Continue(())
+            }
+        })
     }
 
     #[cfg(feature = "stat")]
