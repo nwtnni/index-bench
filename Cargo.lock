@@ -29,7 +29,7 @@ checksum = "c858caffa49edfc4ecc45a4bec37abd3e88041a2903816f10f990b7b41abc281"
 [[package]]
 name = "arctic"
 version = "0.1.0"
-source = "git+ssh://github.com/nwtnni/arctic#b7da130885fb26f0430442934b5d8f65dbc5b53e"
+source = "git+ssh://github.com/nwtnni/arctic#94e125f5a65ea3f340a1a7f34a8db4a16e7fd166"
 dependencies = [
  "base64 0.22.1",
  "crossbeam-epoch 0.9.18",
