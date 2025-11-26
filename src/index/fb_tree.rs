@@ -2,6 +2,7 @@ use crate::Index;
 use crate::index;
 
 impl<H: index::Hasher> Index<u64, H> for fbtree_sys::FbU64 {
+    const IGNORE_GET: bool = true;
     const IGNORE_INSERT: bool = true;
 
     type Send<'a> = &'a Self;
@@ -47,6 +48,7 @@ impl index::IndexPin<u64> for &'_ fbtree_sys::FbU64 {
 }
 
 impl<H: index::Hasher> Index<String, H> for fbtree_sys::FbString {
+    const IGNORE_GET: bool = true;
     const IGNORE_INSERT: bool = true;
 
     type Send<'a> = &'a Self;

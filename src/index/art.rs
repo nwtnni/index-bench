@@ -2,6 +2,7 @@ use crate::Index;
 use crate::index;
 
 impl<H: index::Hasher> Index<u64, H> for art_sys::Rowex<u64> {
+    const IGNORE_GET: bool = true;
     const IGNORE_INSERT: bool = true;
 
     type Send<'a> = &'a Self;

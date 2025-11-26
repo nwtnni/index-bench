@@ -17,7 +17,7 @@ fn main() -> anyhow::Result<()> {
         .open("result.ndjson")
         .map(BufWriter::new)?;
 
-    for config in configs.into_iter_cartesian() {
+    for mut config in configs.into_iter_cartesian() {
         if (config.workload.ycsb.read_proportion
             + config.workload.ycsb.update_proportion
             + config.workload.ycsb.insert_proportion
@@ -39,6 +39,20 @@ fn main() -> anyhow::Result<()> {
         ) && matches!(config.workload.ycsb.insert_order, ycsb::InsertOrder::Hashed)
         {
             continue;
+        }
+
+        if matches!(
+            config.workload.key,
+            index_bench::workload::Key::Url | index_bench::workload::Key::Email
+        ) && matches!(
+            config.workload.ycsb.insert_order,
+            ycsb::InsertOrder::Ordered
+        ) {
+            continue;
+        }
+
+        if matches!(config.workload.key, index_bench::workload::Key::Url) {
+            config.workload.ycsb.record_count = 33_600_000;
         }
 
         // HACK: congee doesn't support string keys
