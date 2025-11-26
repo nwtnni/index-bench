@@ -136,6 +136,8 @@ impl Key for String {
 }
 
 pub trait IndexPin<K: Key> {
+    fn enable_membarrier(&self) {}
+
     fn get(&mut self, key: <K as ::arctic::raw::Key>::Borrow<'static>) -> Option<u64>;
 
     fn insert(

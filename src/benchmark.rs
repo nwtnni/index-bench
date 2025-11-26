@@ -119,6 +119,10 @@ pub fn run<K: KeyDistribution, I: Index<K::Key, H>, H: index::Hasher>(
                     // Setup complete
                     let _ = barrier.wait();
 
+                    if !workload.load && thread_id == 0 {
+                        map.enable_membarrier();
+                    }
+
                     // External perf enabled
                     let _ = barrier.wait();
 

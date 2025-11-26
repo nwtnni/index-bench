@@ -45,6 +45,10 @@ impl<'a, K> index::IndexPin<K> for arctic::concurrent::MapRef<'a, K, u64>
 where
     K: index::Key + ::arctic::Key,
 {
+    fn enable_membarrier(&self) {
+        arctic::concurrent::MapRef::enable_membarrier(self)
+    }
+
     fn get(&mut self, key: <K as ::arctic::raw::Key>::Borrow<'static>) -> Option<u64> {
         arctic::concurrent::MapRef::get(self, key)
     }
