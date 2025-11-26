@@ -12,15 +12,7 @@ name = "art"
 
 [[index]]
 hash = "rapid_hash"
-name = "concurrent_map"
-
-[[index]]
-hash = "rapid_hash"
-name = "congee"
-
-[[index]]
-hash = "rapid_hash"
-name = "crossbeam_skiplist"
+name = "dash_map"
 
 [[index]]
 hash = "rapid_hash"
@@ -28,21 +20,17 @@ name = "fb_tree"
 
 [[index]]
 hash = "rapid_hash"
-name = "scc_tree_index"
-
-[[index]]
-hash = "rapid_hash"
 name = "wormhole"
 
 [workload]
 load = [false]
-key = ["u64", "url", "email"]
+key = ["u64", "kmer", "url", "email"]
 insert_order = ["ordered", "hashed"]
 record_count = [100800000]
 operation_count = [1000000]
 read_proportion = [0.95]
 update_proportion = [0.0]
-insert_proportion = [0.5]
+insert_proportion = [0.05]
 delete_proportion = [0.0]
 scan_proportion = [0.0]
 read_modify_write_proportion = [0.0]
