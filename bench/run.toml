@@ -10,32 +10,6 @@ name = "arctic"
 hash = "rapid_hash"
 name = "art"
 
-# Note: too slow for 200M elements
-# [[index]]
-# hash = "rapid_hash"
-# name = "bonsai"
-
-# Note: assertion failures
-# [[index]]
-# hash = "rapid_hash"
-# name = "bz_tree"
-
-[[index]]
-hash = "rapid_hash"
-name = "concurrent_map"
-
-[[index]]
-hash = "rapid_hash"
-name = "congee"
-
-# [[index]]
-# hash = "rapid_hash"
-# name = "contrie"
-
-[[index]]
-hash = "rapid_hash"
-name = "crossbeam_skiplist"
-
 [[index]]
 hash = "rapid_hash"
 name = "dash_map"
@@ -46,23 +20,11 @@ name = "fb_tree"
 
 [[index]]
 hash = "rapid_hash"
-name = "papaya"
-
-[[index]]
-hash = "rapid_hash"
-name = "scc_hash_map"
-
-[[index]]
-hash = "rapid_hash"
-name = "scc_tree_index"
-
-[[index]]
-hash = "rapid_hash"
 name = "wormhole"
 
 [workload]
 load = [false]
-key = ["u64", "url", "email"]
+key = ["u64", "kmer", "url", "email"]
 insert_order = ["ordered", "hashed"]
 record_count = [100800000]
 operation_count = [1000000]
@@ -72,4 +34,4 @@ insert_proportion = [0.0]
 delete_proportion = [0.0]
 scan_proportion = [0.0]
 read_modify_write_proportion = [0.0]
-request_distribution = ["uniform", { "zipfian" = 0.99 }]
+request_distribution = [{ "zipfian" = 0.99 }]
