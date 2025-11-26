@@ -5,15 +5,15 @@ mod arctic;
 mod art;
 // mod b_plus_tree;
 // mod bz_tree;
-mod concurrent_map;
-mod congee;
+// mod concurrent_map;
+// mod congee;
 // mod contrie;
-mod crossbeam_skiplist;
+// mod crossbeam_skiplist;
 mod dash_map;
 mod fb_tree;
 // pub mod kaist;
-mod papaya;
-mod scc;
+// mod papaya;
+// mod scc;
 mod wormhole;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -65,15 +65,15 @@ pub enum Name {
     // Bonsai,
     // BPlusTree,
     // BzTree,
-    ConcurrentMap,
-    Congee,
+    // ConcurrentMap,
+    // Congee,
     // Contrie,
-    CrossbeamSkiplist,
+    // CrossbeamSkiplist,
     DashMap,
     FbTree,
-    Papaya,
-    SccHashMap,
-    SccTreeIndex,
+    // Papaya,
+    // SccHashMap,
+    // SccTreeIndex,
     Wormhole,
 }
 

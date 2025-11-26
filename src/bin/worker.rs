@@ -56,28 +56,10 @@ fn specialize_index_u64<
         index_bench::index::Name::Arctic => {
             index_bench::run::<K, arctic::concurrent::Map<K::Key, u64>, H>(config)
         }
-        index_bench::index::Name::ConcurrentMap => {
-            index_bench::run::<K, concurrent_map::ConcurrentMap<K::Key, u64>, H>(config)
-        }
-        index_bench::index::Name::Congee => {
-            index_bench::run::<K, congee::Congee<usize, usize>, H>(config)
-        }
-        index_bench::index::Name::CrossbeamSkiplist => {
-            index_bench::run::<K, crossbeam_skiplist::SkipMap<K::Key, u64>, H>(config)
-        }
         index_bench::index::Name::DashMap => {
             index_bench::run::<K, dashmap::DashMap<K::Key, u64, H>, H>(config)
         }
         index_bench::index::Name::FbTree => index_bench::run::<K, fbtree_sys::FbU64, H>(config),
-        index_bench::index::Name::Papaya => {
-            index_bench::run::<K, papaya::HashMap<K::Key, u64, H>, H>(config)
-        }
-        index_bench::index::Name::SccHashMap => {
-            index_bench::run::<K, scc::HashMap<K::Key, u64, H>, H>(config)
-        }
-        index_bench::index::Name::SccTreeIndex => {
-            index_bench::run::<K, scc::TreeIndex<K::Key, u64>, H>(config)
-        }
         index_bench::index::Name::Wormhole => {
             index_bench::run::<K, wormhole_sys::Wormhole, H>(config)
         }
@@ -96,28 +78,10 @@ fn specialize_index_str<
         index_bench::index::Name::Arctic => {
             index_bench::run::<K, arctic::concurrent::Map<String, u64>, H>(config)
         }
-        index_bench::index::Name::ConcurrentMap => {
-            index_bench::run::<K, concurrent_map::ConcurrentMap<&'static str, u64>, H>(config)
-        }
-        index_bench::index::Name::Congee => {
-            unimplemented!("Congee does not support string keys")
-        }
-        index_bench::index::Name::CrossbeamSkiplist => {
-            index_bench::run::<K, crossbeam_skiplist::SkipMap<&'static str, u64>, H>(config)
-        }
         index_bench::index::Name::DashMap => {
             index_bench::run::<K, dashmap::DashMap<&'static str, u64, H>, H>(config)
         }
         index_bench::index::Name::FbTree => index_bench::run::<K, fbtree_sys::FbString, H>(config),
-        index_bench::index::Name::Papaya => {
-            index_bench::run::<K, papaya::HashMap<&'static str, u64, H>, H>(config)
-        }
-        index_bench::index::Name::SccHashMap => {
-            index_bench::run::<K, scc::HashMap<&'static str, u64, H>, H>(config)
-        }
-        index_bench::index::Name::SccTreeIndex => {
-            index_bench::run::<K, scc::TreeIndex<&'static str, u64>, H>(config)
-        }
         index_bench::index::Name::Wormhole => {
             index_bench::run::<K, wormhole_sys::Wormhole, H>(config)
         }
@@ -136,28 +100,10 @@ fn specialize_index_string<
         index_bench::index::Name::Arctic => {
             index_bench::run::<K, arctic::concurrent::Map<String, u64>, H>(config)
         }
-        index_bench::index::Name::ConcurrentMap => {
-            index_bench::run::<K, concurrent_map::ConcurrentMap<String, u64>, H>(config)
-        }
-        index_bench::index::Name::Congee => {
-            unimplemented!("Congee does not support string keys")
-        }
-        index_bench::index::Name::CrossbeamSkiplist => {
-            index_bench::run::<K, crossbeam_skiplist::SkipMap<String, u64>, H>(config)
-        }
         index_bench::index::Name::DashMap => {
             index_bench::run::<K, dashmap::DashMap<String, u64, H>, H>(config)
         }
         index_bench::index::Name::FbTree => index_bench::run::<K, fbtree_sys::FbString, H>(config),
-        index_bench::index::Name::Papaya => {
-            index_bench::run::<K, papaya::HashMap<String, u64, H>, H>(config)
-        }
-        index_bench::index::Name::SccHashMap => {
-            index_bench::run::<K, scc::HashMap<String, u64, H>, H>(config)
-        }
-        index_bench::index::Name::SccTreeIndex => {
-            index_bench::run::<K, scc::TreeIndex<String, u64>, H>(config)
-        }
         index_bench::index::Name::Wormhole => {
             index_bench::run::<K, wormhole_sys::Wormhole, H>(config)
         }
