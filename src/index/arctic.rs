@@ -81,7 +81,7 @@ where
     ) {
         let prefix = arctic::concurrent::MapRef::scan(self, key);
 
-        prefix.values::<arctic::iter::Sorted>().for_each(|value| {
+        prefix.values::<false>().for_each(|value| {
             if count == 0 {
                 ControlFlow::Break(())
             } else {
