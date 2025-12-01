@@ -20,6 +20,7 @@ pub struct Global {
 pub struct Process {
     pub index: serde_json::Value,
     pub mimalloc: Mimalloc,
+    pub memory_key_value: u64,
     pub thread: Vec<Thread>,
 }
 

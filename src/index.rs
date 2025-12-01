@@ -106,6 +106,11 @@ pub trait Index<K: Key, H> {
     fn report(&mut self) -> serde_json::Value {
         serde_json::Value::Null
     }
+
+    // Report the total size of the keys and values in this map
+    fn memory_key_value(&mut self) -> u64 {
+        0
+    }
 }
 
 pub trait IndexSend<K: Key, H> {

@@ -25,6 +25,16 @@ where
     fn report(&mut self) -> serde_json::Value {
         serde_json::to_value(arctic::stat::process(self)).unwrap()
     }
+
+    #[cfg(feature = "stat")]
+    fn memory_key_value(&mut self) -> u64 {
+        let mut iter = self.as_sequential().iter::<false>();
+        let mut total = 0;
+        while let Some((key, _)) = iter.lend() {
+            total += <K as ::arctic::raw::Key>::len(key) + 8;
+        }
+        total as u64
+    }
 }
 
 impl<K, H> index::IndexSend<K, H> for &'_ arctic::concurrent::Map<K, u64>

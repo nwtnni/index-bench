@@ -210,12 +210,16 @@ pub fn run<K: KeyDistribution, I: Index<K::Key, H>, H: index::Hasher>(
         Ok(threads)
     })?;
 
+    let mimalloc = crate::measure::Mimalloc::new();
+    let memory_key_value = map.memory_key_value();
+
     Ok(measure::Global {
         date,
         config,
         output: measure::Process {
             index: map.report(),
-            mimalloc: crate::measure::Mimalloc::new(),
+            mimalloc,
+            memory_key_value,
             thread: threads,
         },
     })
