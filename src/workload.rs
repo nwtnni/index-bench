@@ -1,4 +1,5 @@
 use std::sync::LazyLock;
+use std::time::Instant;
 
 use cartesian::Cartesian;
 use serde::Deserialize;
@@ -284,9 +285,15 @@ impl KeyDistribution for Ts {
         Self
     }
 
-    fn get(&self, _: u64) -> Self::Key {
-        let ts = unsafe { core::arch::x86_64::_rdtsc() };
+    fn get(&self, seq: u64) -> Self::Key {
+        static EPOCH: LazyLock<Instant> = LazyLock::new(|| Instant::now());
+
+        let ts = Instant::now();
+
+        // https://en.wikipedia.org/wiki/Snowflake_ID
+        let ms = ts.duration_since(*EPOCH).as_millis() as u64;
         let id = crate::THREAD_ID.get() as u64;
-        (ts & !(u8::MAX as u64)) | id
+
+        ms << 22 | id << 12 | seq
     }
 }
