@@ -153,14 +153,14 @@ static EMAIL_INDEX: LazyLock<Vec<&'static str>> =
 pub struct Email(&'static [&'static str]);
 
 impl KeyDistribution for Email {
-    type Key = String;
+    type Key = Vec<u8>;
 
     fn new(_: &Key) -> Self {
         Self(LazyLock::force(&EMAIL_INDEX).as_slice())
     }
 
-    fn get(&self, index: u64) -> &'static str {
-        self.0[index as usize % self.0.len()]
+    fn get(&self, index: u64) -> &'static [u8] {
+        self.0[index as usize % self.0.len()].as_bytes()
     }
 }
 
@@ -173,14 +173,14 @@ static URL_INDEX: LazyLock<Vec<&'static str>> =
 pub struct Url(&'static [&'static str]);
 
 impl KeyDistribution for Url {
-    type Key = String;
+    type Key = Vec<u8>;
 
     fn new(_: &Key) -> Self {
         Self(LazyLock::force(&URL_INDEX).as_slice())
     }
 
-    fn get(&self, index: u64) -> &'static str {
-        self.0[index as usize % self.0.len()]
+    fn get(&self, index: u64) -> &'static [u8] {
+        self.0[index as usize % self.0.len()].as_bytes()
     }
 }
 
@@ -286,7 +286,7 @@ impl KeyDistribution for Ts {
     }
 
     fn get(&self, seq: u64) -> Self::Key {
-        static EPOCH: LazyLock<Instant> = LazyLock::new(|| Instant::now());
+        static EPOCH: LazyLock<Instant> = LazyLock::new(Instant::now);
 
         let ts = Instant::now();
 

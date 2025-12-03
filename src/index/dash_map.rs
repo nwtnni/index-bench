@@ -44,34 +44,34 @@ impl<H: index::Hasher> index::IndexPin<u64> for &'_ dashmap::DashMap<u64, u64, H
     }
 }
 
-impl_index!(String, &'static str);
+impl_index!(Vec<u8>, &'static [u8]);
 
-impl<H: index::Hasher> index::IndexPin<String> for &'_ dashmap::DashMap<&'static str, u64, H> {
-    fn get(&mut self, key: &'static str) -> Option<u64> {
+impl<H: index::Hasher> index::IndexPin<Vec<u8>> for &'_ dashmap::DashMap<&'static [u8], u64, H> {
+    fn get(&mut self, key: &'static [u8]) -> Option<u64> {
         dashmap::DashMap::get(self, &key).map(|value| *value)
     }
 
-    fn insert(&mut self, key: &'static str, value: u64) -> Option<u64> {
+    fn insert(&mut self, key: &'static [u8], value: u64) -> Option<u64> {
         dashmap::DashMap::insert(self, key, value)
     }
 
-    fn remove(&mut self, key: &'static str) -> Option<u64> {
+    fn remove(&mut self, key: &'static [u8]) -> Option<u64> {
         dashmap::DashMap::remove(self, &key).map(|(_, value)| value)
     }
 }
 
-impl_index!(String, String);
+impl_index!(Vec<u8>, Vec<u8>);
 
-impl<H: index::Hasher> index::IndexPin<String> for &'_ dashmap::DashMap<String, u64, H> {
-    fn get(&mut self, key: &'static str) -> Option<u64> {
+impl<H: index::Hasher> index::IndexPin<Vec<u8>> for &'_ dashmap::DashMap<Vec<u8>, u64, H> {
+    fn get(&mut self, key: &'static [u8]) -> Option<u64> {
         dashmap::DashMap::get(self, key).map(|value| *value)
     }
 
-    fn insert(&mut self, key: &'static str, value: u64) -> Option<u64> {
+    fn insert(&mut self, key: &'static [u8], value: u64) -> Option<u64> {
         dashmap::DashMap::insert(self, key.to_owned(), value)
     }
 
-    fn remove(&mut self, key: &'static str) -> Option<u64> {
+    fn remove(&mut self, key: &'static [u8]) -> Option<u64> {
         dashmap::DashMap::remove(self, key).map(|(_, value)| value)
     }
 }

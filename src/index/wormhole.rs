@@ -64,7 +64,7 @@ impl index::IndexPin<u64> for wormhole_sys::WormRef<'_> {
     }
 }
 
-impl<H: index::Hasher> Index<String, H> for wormhole_sys::Wormhole {
+impl<H: index::Hasher> Index<Vec<u8>, H> for wormhole_sys::Wormhole {
     const IGNORE_INSERT: bool = true;
 
     type Send<'a> = &'a Self;
@@ -78,7 +78,7 @@ impl<H: index::Hasher> Index<String, H> for wormhole_sys::Wormhole {
     }
 }
 
-impl<H: index::Hasher> index::IndexSend<String, H> for &'_ wormhole_sys::Wormhole {
+impl<H: index::Hasher> index::IndexSend<Vec<u8>, H> for &'_ wormhole_sys::Wormhole {
     type Handle<'a>
         = wormhole_sys::WormRef<'a>
     where
@@ -89,27 +89,27 @@ impl<H: index::Hasher> index::IndexSend<String, H> for &'_ wormhole_sys::Wormhol
     }
 }
 
-impl index::IndexPin<String> for wormhole_sys::WormRef<'_> {
-    fn get(&mut self, key: &'static str) -> Option<u64> {
+impl index::IndexPin<Vec<u8>> for wormhole_sys::WormRef<'_> {
+    fn get(&mut self, key: &'static [u8]) -> Option<u64> {
         unsafe { wormhole_sys::WormRef::get(self, key.as_ptr().cast(), key.len()) }
     }
 
-    fn insert(&mut self, key: &'static str, value: u64) -> Option<u64> {
+    fn insert(&mut self, key: &'static [u8], value: u64) -> Option<u64> {
         unsafe { wormhole_sys::WormRef::put(self, key.as_ptr().cast(), key.len(), value) }
         None
     }
 
-    fn update(&mut self, key: &'static str, value: u64) -> Option<u64> {
-        <Self as index::IndexPin<String>>::insert(self, key, value);
+    fn update(&mut self, key: &'static [u8], value: u64) -> Option<u64> {
+        <Self as index::IndexPin<Vec<u8>>>::insert(self, key, value);
         None
     }
 
-    fn remove(&mut self, key: &'static str) -> Option<u64> {
+    fn remove(&mut self, key: &'static [u8]) -> Option<u64> {
         unsafe { wormhole_sys::WormRef::del(self, key.as_ptr().cast(), key.len()) };
         None
     }
 
-    fn scan(&mut self, key: &'static str, count: usize, buffer: &mut Vec<u64>) {
+    fn scan(&mut self, key: &'static [u8], count: usize, buffer: &mut Vec<u64>) {
         buffer.extend(
             unsafe { wormhole_sys::WormRef::iter(self, key.as_ptr().cast(), key.len()) }
                 .take(count),

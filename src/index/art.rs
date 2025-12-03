@@ -49,7 +49,7 @@ impl index::IndexPin<u64> for art_sys::RowexRef<'_, u64> {
     }
 }
 
-impl<H: index::Hasher> Index<String, H> for art_sys::Rowex<String> {
+impl<H: index::Hasher> Index<Vec<u8>, H> for art_sys::Rowex<Vec<u8>> {
     const IGNORE_GET: bool = true;
     const IGNORE_INSERT: bool = true;
 
@@ -64,9 +64,9 @@ impl<H: index::Hasher> Index<String, H> for art_sys::Rowex<String> {
     }
 }
 
-impl<H: index::Hasher> index::IndexSend<String, H> for &'_ art_sys::Rowex<String> {
+impl<H: index::Hasher> index::IndexSend<Vec<u8>, H> for &'_ art_sys::Rowex<Vec<u8>> {
     type Handle<'a>
-        = art_sys::RowexRef<'a, String>
+        = art_sys::RowexRef<'a, Vec<u8>>
     where
         Self: 'a;
 
@@ -75,24 +75,24 @@ impl<H: index::Hasher> index::IndexSend<String, H> for &'_ art_sys::Rowex<String
     }
 }
 
-impl index::IndexPin<String> for art_sys::RowexRef<'_, String> {
-    fn get(&mut self, key: &'static str) -> Option<u64> {
+impl index::IndexPin<Vec<u8>> for art_sys::RowexRef<'_, Vec<u8>> {
+    fn get(&mut self, key: &'static [u8]) -> Option<u64> {
         art_sys::RowexRef::get_string(self, key)
     }
 
-    fn insert(&mut self, key: &'static str, value: u64) -> Option<u64> {
+    fn insert(&mut self, key: &'static [u8], value: u64) -> Option<u64> {
         art_sys::RowexRef::insert_string(self, key, value);
         None
     }
 
-    fn update(&mut self, key: &'static str, value: u64) -> Option<u64> {
+    fn update(&mut self, key: &'static [u8], value: u64) -> Option<u64> {
         self.insert(key, value);
         None
     }
 
-    fn scan(&mut self, key: &'static str, count: usize, buffer: &mut Vec<u64>) {
+    fn scan(&mut self, key: &'static [u8], count: usize, buffer: &mut Vec<u64>) {
         buffer.resize(count, 0);
         // HACK: input data is a subset of ASCII and shouldn't contain any bytes >= 0x7F
-        self.get_range_string(key, "\x7F", buffer);
+        self.get_range_string(key, b"\x7F", buffer);
     }
 }

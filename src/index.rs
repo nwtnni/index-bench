@@ -134,7 +134,7 @@ impl Key for u64 {
     }
 }
 
-impl Key for String {
+impl Key for Vec<u8> {
     fn checksum(key: Self::Borrow<'_>) -> u64 {
         key.len() as u64
     }

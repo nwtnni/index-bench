@@ -47,7 +47,7 @@ impl index::IndexPin<u64> for &'_ fbtree_sys::FbU64 {
     }
 }
 
-impl<H: index::Hasher> Index<String, H> for fbtree_sys::FbString {
+impl<H: index::Hasher> Index<Vec<u8>, H> for fbtree_sys::FbString {
     const IGNORE_GET: bool = true;
     const IGNORE_INSERT: bool = true;
 
@@ -62,7 +62,7 @@ impl<H: index::Hasher> Index<String, H> for fbtree_sys::FbString {
     }
 }
 
-impl<H: index::Hasher> index::IndexSend<String, H> for &'_ fbtree_sys::FbString {
+impl<H: index::Hasher> index::IndexSend<Vec<u8>, H> for &'_ fbtree_sys::FbString {
     type Handle<'a>
         = &'a fbtree_sys::FbString
     where
@@ -73,22 +73,22 @@ impl<H: index::Hasher> index::IndexSend<String, H> for &'_ fbtree_sys::FbString 
     }
 }
 
-impl index::IndexPin<String> for &'_ fbtree_sys::FbString {
-    fn get(&mut self, key: &'static str) -> Option<u64> {
+impl index::IndexPin<Vec<u8>> for &'_ fbtree_sys::FbString {
+    fn get(&mut self, key: &'static [u8]) -> Option<u64> {
         fbtree_sys::FbString::lookup(self, key)
     }
 
-    fn insert(&mut self, key: &'static str, value: u64) -> Option<u64> {
+    fn insert(&mut self, key: &'static [u8], value: u64) -> Option<u64> {
         fbtree_sys::FbString::upsert(self, key, value);
         None
     }
 
-    fn update(&mut self, key: &'static str, value: u64) -> Option<u64> {
+    fn update(&mut self, key: &'static [u8], value: u64) -> Option<u64> {
         fbtree_sys::FbString::update(self, key, value);
         None
     }
 
-    fn scan(&mut self, key: &'static str, count: usize, buffer: &mut Vec<u64>) {
+    fn scan(&mut self, key: &'static [u8], count: usize, buffer: &mut Vec<u64>) {
         buffer.extend(self.iter(key).take(count));
     }
 }

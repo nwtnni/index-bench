@@ -69,17 +69,17 @@ fn specialize_index_u64<
 #[allow(unused)]
 fn specialize_index_str<
     H: index_bench::index::Hasher,
-    K: index_bench::workload::KeyDistribution<Key = String>,
+    K: index_bench::workload::KeyDistribution<Key = Vec<u8>>,
 >(
     config: index_bench::Config,
 ) -> anyhow::Result<index_bench::measure::Global> {
     match config.index.name {
-        index_bench::index::Name::Art => index_bench::run::<K, art_sys::Rowex<String>, H>(config),
+        index_bench::index::Name::Art => index_bench::run::<K, art_sys::Rowex<Vec<u8>>, H>(config),
         index_bench::index::Name::Arctic => {
-            index_bench::run::<K, arctic::concurrent::Map<String, u64>, H>(config)
+            index_bench::run::<K, arctic::concurrent::Map<Vec<u8>, u64>, H>(config)
         }
         index_bench::index::Name::DashMap => {
-            index_bench::run::<K, dashmap::DashMap<&'static str, u64, H>, H>(config)
+            index_bench::run::<K, dashmap::DashMap<&'static [u8], u64, H>, H>(config)
         }
         index_bench::index::Name::FbTree => index_bench::run::<K, fbtree_sys::FbString, H>(config),
         index_bench::index::Name::Wormhole => {
@@ -91,17 +91,17 @@ fn specialize_index_str<
 #[allow(unused)]
 fn specialize_index_string<
     H: index_bench::index::Hasher,
-    K: index_bench::workload::KeyDistribution<Key = String>,
+    K: index_bench::workload::KeyDistribution<Key = Vec<u8>>,
 >(
     config: index_bench::Config,
 ) -> anyhow::Result<index_bench::measure::Global> {
     match config.index.name {
-        index_bench::index::Name::Art => index_bench::run::<K, art_sys::Rowex<String>, H>(config),
+        index_bench::index::Name::Art => index_bench::run::<K, art_sys::Rowex<Vec<u8>>, H>(config),
         index_bench::index::Name::Arctic => {
-            index_bench::run::<K, arctic::concurrent::Map<String, u64>, H>(config)
+            index_bench::run::<K, arctic::concurrent::Map<Vec<u8>, u64>, H>(config)
         }
         index_bench::index::Name::DashMap => {
-            index_bench::run::<K, dashmap::DashMap<String, u64, H>, H>(config)
+            index_bench::run::<K, dashmap::DashMap<Vec<u8>, u64, H>, H>(config)
         }
         index_bench::index::Name::FbTree => index_bench::run::<K, fbtree_sys::FbString, H>(config),
         index_bench::index::Name::Wormhole => {
