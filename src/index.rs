@@ -69,6 +69,7 @@ pub enum Name {
     // Congee,
     // Contrie,
     // CrossbeamSkiplist,
+    Hot,
     DashMap,
     FbTree,
     // Papaya,
