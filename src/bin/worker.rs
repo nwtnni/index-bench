@@ -31,7 +31,7 @@ fn specialize_key<H: index_bench::index::Hasher>(
         index_bench::workload::Key::Kmer => {
             specialize_index_u64::<H, index_bench::workload::Kmer>(config)
         }
-        index_bench::workload::Key::Ts => {
+        index_bench::workload::Key::Ts(_) => {
             specialize_index_u64::<H, index_bench::workload::Ts>(config)
         }
         index_bench::workload::Key::Email => {

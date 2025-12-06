@@ -30,7 +30,7 @@ pub enum Key {
     // Prefix(usize),
     Sparse(f64),
     Kmer,
-    Ts,
+    Ts(u64),
 }
 
 static ACKNOWLEDGED: Acknowledged = Acknowledged::new();
@@ -276,13 +276,18 @@ impl KeyDistribution for Kmer {
     }
 }
 
-pub struct Ts;
+pub struct Ts(u64);
 
 impl KeyDistribution for Ts {
     type Key = u64;
 
-    fn new(_: &Key) -> Self {
-        Self
+    fn new(config: &Key) -> Self {
+        let resolution = match config {
+            Key::Ts(resolution) => resolution,
+            _ => unreachable!(),
+        };
+
+        Self(*resolution)
     }
 
     fn get(&self, seq: u64) -> Self::Key {
@@ -290,10 +295,12 @@ impl KeyDistribution for Ts {
 
         let ts = Instant::now();
 
-        // https://en.wikipedia.org/wiki/Snowflake_ID
-        let ms = ts.duration_since(*EPOCH).as_millis() as u64;
+        let ts = ts.duration_since(*EPOCH).as_nanos() as u64;
+        let ts = ts / self.0;
+
         let id = crate::THREAD_ID.get() as u64;
 
-        ms << 22 | id << 12 | seq
+        // https://en.wikipedia.org/wiki/Snowflake_ID
+        ts << 22 | id << 12 | seq
     }
 }
