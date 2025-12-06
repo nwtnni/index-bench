@@ -1,0 +1,37 @@
+[global]
+thread_count = [80]
+numa = [{ policy = "bind", node = 0 }]
+
+[[index]]
+hash = "rapid_hash"
+name = "arctic"
+
+[[index]]
+hash = "rapid_hash"
+name = "art"
+
+[[index]]
+hash = "rapid_hash"
+name = "dash_map"
+
+[[index]]
+hash = "rapid_hash"
+name = "fb_tree"
+
+[[index]]
+hash = "rapid_hash"
+name = "wormhole"
+
+[workload]
+load = [true]
+key = [{ "ts" = 1 }, { "ts" = 10 }, { "ts" = 100 }, { "ts" = 1000 }, { "ts" = 10000 }, { "ts" = 100000 }, { "ts" = 1000000 }]
+insert_order = ["ordered"]
+record_count = [100800000]
+operation_count = [0]
+update_proportion = [1.0]
+read_proportion = [0.0]
+insert_proportion = [0.0]
+delete_proportion = [0.0]
+scan_proportion = [0.0]
+read_modify_write_proportion = [0.0]
+request_distribution = ["uniform"]
