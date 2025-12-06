@@ -12,8 +12,8 @@ fn main() -> anyhow::Result<()> {
     let configs = toml::from_str::<cartesian::IntoIter<index_bench::Config>>(&data)?;
 
     let mut out = File::options()
-        .create_new(true)
-        .write(true)
+        .create(true)
+        .append(true)
         .open("result.ndjson")
         .map(BufWriter::new)?;
 
