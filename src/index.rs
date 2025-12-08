@@ -15,6 +15,7 @@ mod fb_tree;
 // mod papaya;
 // mod scc;
 mod wormhole;
+mod hot;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case")]

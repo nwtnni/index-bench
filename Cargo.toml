@@ -37,6 +37,7 @@ crossbeam-epoch = "0.9.18"
 bitflags = "2.9.4"
 # congee = "0.4.1"
 # contrie = "0.1.4"
+hot-sys = { path = "extern/IndexResearch/hot-sys" }
 dashmap = "6.1.0"
 # bplustree = "0.1.0"
 mimalloc = { path = "extern/mimalloc_rust", features = ["v3"] }
