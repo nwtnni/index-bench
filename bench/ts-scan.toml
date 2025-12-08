@@ -12,10 +12,6 @@ name = "art"
 
 [[index]]
 hash = "rapid_hash"
-name = "dash_map"
-
-[[index]]
-hash = "rapid_hash"
 name = "fb_tree"
 
 [[index]]
@@ -24,10 +20,10 @@ name = "wormhole"
 
 [workload]
 load = [false]
-key = [{ "ts" = 1 }, { "ts" = 10 }, { "ts" = 100 }, { "ts" == 1000 }, { "ts" == 10000 }, { "ts" == 100000 }, { "ts" == 1000000 }]
+key = [{ "ts" = 1 }, { "ts" = 10 }, { "ts" = 100 }, { "ts" = 1000 }, { "ts" = 10000 }, { "ts" = 100000 }, { "ts" = 1000000 }]
 insert_order = ["ordered"]
 record_count = [100800000]
-operation_count = [0]
+operation_count = [1000000]
 update_proportion = [0.0]
 read_proportion = [0.0]
 insert_proportion = [0.05]
