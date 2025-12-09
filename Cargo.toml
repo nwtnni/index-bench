@@ -6,12 +6,15 @@ default-run = "coordinator"
 
 [features]
 stat = ["arctic/stat"]
-opt-node3-get = ["arctic/opt-node3-get"]
-opt-node15-get = ["arctic/opt-node15-get"]
-opt = ["opt-node3-get", "opt-node15-get"]
 
 smr-disable = ["arctic/smr-disable"]
 smr-epoch = ["arctic/smr-epoch"]
+
+opt-0 = ["arctic/opt-no-node3-get", "arctic/opt-no-node3-iter", "arctic/opt-no-node15-get", "arctic/opt-no-node15-iter", "arctic/opt-no-node47-iter", "arctic/opt-no-int", "arctic/opt-no-expand", "arctic/opt-no-path"]
+opt-1 = ["arctic/opt-no-node3-get", "arctic/opt-no-node3-iter", "arctic/opt-no-node15-get", "arctic/opt-no-node15-iter", "arctic/opt-no-node47-iter", "arctic/opt-no-int", "arctic/opt-no-expand"]
+opt-2 = ["arctic/opt-no-node3-get", "arctic/opt-no-node3-iter", "arctic/opt-no-node15-get", "arctic/opt-no-node15-iter", "arctic/opt-no-node47-iter"]
+opt-3 = []
+opt-4 = ["arctic/opt-membarrier"]
 
 [dependencies]
 anyhow = "1.0.99"
