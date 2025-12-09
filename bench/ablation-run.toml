@@ -1,0 +1,22 @@
+[global]
+thread_count = [80]
+numa = [{ policy = "bind", node = 0 }]
+
+[[index]]
+hash = "rapid_hash"
+name = "arctic"
+
+[workload]
+load = [false]
+key = ["u64", "kmer", "url", "email"]
+insert_order = ["ordered", "hashed"]
+record_count = [100800000]
+operation_count = [1000000]
+read_proportion = [1.0, 0.0]
+update_proportion = [0.0]
+insert_proportion = [0.0]
+delete_proportion = [0.0]
+scan_proportion = [0.0, 1.0]
+max_scan_length = [100]
+read_modify_write_proportion = [0.0]
+request_distribution = [{ "zipfian" = 0.99 }]
