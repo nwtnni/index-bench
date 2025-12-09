@@ -12,10 +12,6 @@ name = "art"
 
 [[index]]
 hash = "rapid_hash"
-name = "dash_map"
-
-[[index]]
-hash = "rapid_hash"
 name = "fb_tree"
 
 [[index]]
