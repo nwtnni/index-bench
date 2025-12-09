@@ -5,6 +5,7 @@ edition = "2024"
 default-run = "coordinator"
 
 [features]
+default = ["opt-4"]
 stat = ["arctic/stat"]
 
 smr-disable = ["arctic/smr-disable"]
@@ -28,7 +29,7 @@ perf-event2 = "0.7.4"
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.143"
 ycsb = { git = "https://github.com/nwtnni/ycsb.git", features = ["cartesian", "serde"] }
-arctic = { git = "ssh://github.com/nwtnni/arctic" }
+arctic = { git = "ssh://github.com/nwtnni/arctic", default-features = false }
 cartesian = { git = "https://github.com/nwtnni/cartesian.git" }
 toml = "0.9.5"
 # scc = "3.0.2"
