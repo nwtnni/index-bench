@@ -1,5 +1,5 @@
 [global]
-thread_count = [80]
+thread_count = [1, 10, 20, 30, 40, 50, 60, 70, 80]
 numa = [{ policy = "bind", node = 0 }]
 
 [[index]]
@@ -8,10 +8,10 @@ name = "arctic"
 
 [workload]
 load = [true]
-key = ["u64"]
+key = ["u64", "kmer", "ipv4", "snowflake", "email", "url"]
 insert_order = ["ordered", "hashed"]
-record_count = [2016000, 20160000, 201600000]
-operation_count = [1000000]
+record_count = [100800000]
+operation_count = [0]
 update_proportion = [1.0]
 read_proportion = [0.0]
 insert_proportion = [0.0]
