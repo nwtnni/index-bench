@@ -43,7 +43,9 @@ fn main() -> anyhow::Result<()> {
 
         if matches!(
             config.workload.key,
-            index_bench::workload::Key::Url | index_bench::workload::Key::Email
+            index_bench::workload::Key::Url
+                | index_bench::workload::Key::Email
+                | index_bench::workload::Key::Ipv4
         ) && matches!(
             config.workload.ycsb.insert_order,
             ycsb::InsertOrder::Ordered
@@ -53,6 +55,8 @@ fn main() -> anyhow::Result<()> {
 
         if matches!(config.workload.key, index_bench::workload::Key::Url) {
             config.workload.ycsb.record_count = 33_600_000;
+        } else if matches!(config.workload.key, index_bench::workload::Key::Ipv4) {
+            config.workload.ycsb.record_count = 2_520_000;
         }
 
         // // HACK: congee doesn't support string keys

@@ -31,6 +31,7 @@ pub enum Key {
     Sparse(f64),
     Kmer,
     Ts(u64),
+    Ipv4,
 }
 
 static ACKNOWLEDGED: Acknowledged = Acknowledged::new();
@@ -226,7 +227,7 @@ impl KeyDistribution for Sparse {
 }
 
 static KMER_BUFFER: LazyLock<Vec<u8>> = LazyLock::new(|| {
-    std::fs::read("data/SRR31218470.bin").expect("Failed to find data/SRR31218470.bin.txt")
+    std::fs::read("data/SRR31218470.bin").expect("Failed to find data/SRR31218470.bin")
 });
 
 pub struct Kmer(&'static [u8]);
@@ -304,3 +305,37 @@ impl KeyDistribution for Ts {
         ts << 22 | id << 12 | seq
     }
 }
+
+static IP_BUFFER: LazyLock<Vec<u8>> =
+    LazyLock::new(|| std::fs::read("data/ipv4.bin").expect("Failed to find data/ipv4.bin"));
+
+pub struct Ipv4;
+
+impl KeyDistribution for Ipv4 {
+    type Key = u64;
+
+    fn new(_: &Key) -> Self {
+        LazyLock::force(&IP_BUFFER);
+        Self
+    }
+
+    fn get(&self, index: u64) -> u64 {
+        let index = index as usize % (IP_BUFFER.len() / 4);
+        let data = IP_BUFFER[index..].first_chunk::<4>().unwrap();
+        u32::from_le_bytes(*data) as u64
+    }
+}
+
+// pub struct Uuid;
+//
+// impl KeyDistribution for Uuid {
+//     type Key = u128;
+//
+//     fn new(_: &Key) -> Self {
+//         Self
+//     }
+//
+//     fn get(&self, _: u64) -> Self::Key {
+//         uuid::Uuid::new_v7
+//     }
+// }
