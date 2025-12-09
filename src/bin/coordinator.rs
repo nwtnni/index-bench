@@ -35,7 +35,9 @@ fn main() -> anyhow::Result<()> {
         // don't want to duplicate the configuration file to avoid one case
         if matches!(
             config.workload.key,
-            index_bench::workload::Key::Kmer | index_bench::workload::Key::Ts(_)
+            index_bench::workload::Key::Kmer
+                | index_bench::workload::Key::Ts(_)
+                | index_bench::workload::Key::Snowflake
         ) && matches!(config.workload.ycsb.insert_order, ycsb::InsertOrder::Hashed)
         {
             continue;

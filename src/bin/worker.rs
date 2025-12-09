@@ -37,6 +37,9 @@ fn specialize_key<H: index_bench::index::Hasher>(
         index_bench::workload::Key::Ipv4 => {
             specialize_index_u64::<H, index_bench::workload::Ipv4>(config)
         }
+        index_bench::workload::Key::Snowflake => {
+            specialize_index_u64::<H, index_bench::workload::Snowflake>(config)
+        }
         index_bench::workload::Key::Email => {
             // specialize_index_str::<H, index_bench::workload::Email>(config)
             specialize_index_str::<H, index_bench::workload::Email>(config)

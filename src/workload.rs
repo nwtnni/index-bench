@@ -32,6 +32,7 @@ pub enum Key {
     Kmer,
     Ts(u64),
     Ipv4,
+    Snowflake,
 }
 
 static ACKNOWLEDGED: Acknowledged = Acknowledged::new();
@@ -326,16 +327,23 @@ impl KeyDistribution for Ipv4 {
     }
 }
 
-// pub struct Uuid;
-//
-// impl KeyDistribution for Uuid {
-//     type Key = u128;
-//
-//     fn new(_: &Key) -> Self {
-//         Self
-//     }
-//
-//     fn get(&self, _: u64) -> Self::Key {
-//         uuid::Uuid::new_v7
-//     }
-// }
+static SNOWFLAKE_BUFFER: LazyLock<Vec<u8>> = LazyLock::new(|| {
+    std::fs::read("data/snowflake.bin").expect("Failed to find data/snowflake.bin")
+});
+
+pub struct Snowflake;
+
+impl KeyDistribution for Snowflake {
+    type Key = u64;
+
+    fn new(_: &Key) -> Self {
+        LazyLock::force(&SNOWFLAKE_BUFFER);
+        Self
+    }
+
+    fn get(&self, index: u64) -> u64 {
+        let index = index as usize % (SNOWFLAKE_BUFFER.len() / 8);
+        let data = SNOWFLAKE_BUFFER[index..].first_chunk::<8>().unwrap();
+        u64::from_le_bytes(*data)
+    }
+}
