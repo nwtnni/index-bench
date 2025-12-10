@@ -3,13 +3,13 @@ use core::ops::ControlFlow;
 use crate::Index;
 use crate::index;
 
-impl<K, H> Index<K, H> for arctic::concurrent::Map<K, u64>
+impl<K, H> Index<K, H> for arctic::concurrent::Map<K, Box<u64>>
 where
     K: index::Key + ::arctic::Key,
     H: index::Hasher,
 {
     type Send<'a>
-        = &'a arctic::concurrent::Map<K, u64>
+        = &'a arctic::concurrent::Map<K, Box<u64>>
     where
         K: 'a;
 
@@ -37,12 +37,12 @@ where
     }
 }
 
-impl<K, H> index::IndexSend<K, H> for &'_ arctic::concurrent::Map<K, u64>
+impl<K, H> index::IndexSend<K, H> for &'_ arctic::concurrent::Map<K, Box<u64>>
 where
     K: index::Key + ::arctic::Key,
 {
     type Handle<'a>
-        = arctic::concurrent::MapRef<'a, K, u64>
+        = arctic::concurrent::MapRef<'a, K, Box<u64>>
     where
         Self: 'a;
 
@@ -51,7 +51,7 @@ where
     }
 }
 
-impl<'a, K> index::IndexPin<K> for arctic::concurrent::MapRef<'a, K, u64>
+impl<'a, K> index::IndexPin<K> for arctic::concurrent::MapRef<'a, K, Box<u64>>
 where
     K: index::Key + ::arctic::Key,
 {
@@ -61,6 +61,9 @@ where
 
     fn get(&mut self, key: <K as ::arctic::raw::Key>::Borrow<'static>) -> Option<u64> {
         arctic::concurrent::MapRef::get(self, key)
+            .as_deref()
+            .copied()
+            .copied()
     }
 
     fn insert(
@@ -68,7 +71,10 @@ where
         key: <K as ::arctic::raw::Key>::Borrow<'static>,
         value: u64,
     ) -> Option<u64> {
-        arctic::concurrent::MapRef::upsert(self, key, value)
+        arctic::concurrent::MapRef::upsert(self, key, Box::new(value))
+            .as_deref()
+            .copied()
+            .copied()
     }
 
     fn update(
@@ -76,11 +82,18 @@ where
         key: <K as ::arctic::raw::Key>::Borrow<'static>,
         value: u64,
     ) -> Option<u64> {
-        arctic::concurrent::MapRef::update(self, key, value).ok()
+        arctic::concurrent::MapRef::update(self, key, Box::new(value))
+            .ok()
+            .as_deref()
+            .copied()
+            .copied()
     }
 
     fn remove(&mut self, key: <K as ::arctic::raw::Key>::Borrow<'static>) -> Option<u64> {
         arctic::concurrent::MapRef::remove(self, key)
+            .as_deref()
+            .copied()
+            .copied()
     }
 
     fn scan(
@@ -95,7 +108,7 @@ where
             if count == 0 {
                 ControlFlow::Break(())
             } else {
-                buffer.push(value);
+                buffer.push(*value);
                 count -= 1;
                 ControlFlow::Continue(())
             }

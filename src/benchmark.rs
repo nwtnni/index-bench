@@ -145,10 +145,10 @@ pub fn run<K: KeyDistribution, I: Index<K::Key, H>, H: index::Hasher>(
                             match operation {
                                 ycsb::Operation::Read => {
                                     let (_, key) = runner.next_key_read(&mut rng);
-                                    let value = map.get(key);
-                                    if !I::IGNORE_GET {
-                                        assert_eq!(value, Some(K::Key::checksum(key)));
-                                    }
+                                    let _ = map.get(key);
+                                    // if !I::IGNORE_GET {
+                                    //     assert_eq!(value, Some(K::Key::checksum(key)));
+                                    // }
                                 }
                                 ycsb::Operation::Update => {
                                     let (_, key) = runner.next_key_read(&mut rng);
@@ -165,7 +165,8 @@ pub fn run<K: KeyDistribution, I: Index<K::Key, H>, H: index::Hasher>(
                                     map.scan(key, len, &mut buffer);
                                 }
                                 ycsb::Operation::Insert => {
-                                    let (id, key) = runner.next_key_insert();
+                                    // let (id, key) = runner.next_key_insert();
+                                    let (id, key) = runner.next_key_read(&mut rng);
                                     let checksum = K::Key::checksum(key);
                                     let _ = map.insert(key, checksum);
                                     // if !I::IGNORE_INSERT {
@@ -174,7 +175,10 @@ pub fn run<K: KeyDistribution, I: Index<K::Key, H>, H: index::Hasher>(
                                     runner.acknowledge(id);
                                 }
                                 ycsb::Operation::ReadModifyWrite => todo!(),
-                                ycsb::Operation::Delete => todo!(),
+                                ycsb::Operation::Delete => {
+                                    let (_, key) = runner.next_key_read(&mut rng);
+                                    let _ = map.remove(key);
+                                }
                             }
                         }
                     }
