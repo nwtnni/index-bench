@@ -8,7 +8,7 @@ name = "arctic"
 
 [workload]
 load = [true]
-key = ["u64", "kmer", "ipv4", "snowflake", "email", "url"]
+key = ["u64", "ipv4", "snowflake", "email", "url"]
 insert_order = ["ordered", "hashed"]
 record_count = [100800000]
 operation_count = [0]

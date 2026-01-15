@@ -8,7 +8,7 @@ name = "arctic"
 
 [workload]
 load = [false]
-key = ["u64", "kmer", "url", "email"]
+key = ["u64", "url", "email"]
 insert_order = ["ordered", "hashed"]
 record_count = [100800000]
 operation_count = [1000000]
