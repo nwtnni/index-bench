@@ -5,11 +5,11 @@ use std::process::Command;
 use std::process::Stdio;
 
 use anyhow::Context as _;
-use cartesian::IntoIterCartesian as _;
+use cartesian::IterCartesian as _;
 
 fn main() -> anyhow::Result<()> {
     let data = std::fs::read_to_string(std::env::args().nth(1).expect("Expected config file"))?;
-    let configs = toml::from_str::<cartesian::IntoIter<index_bench::Config>>(&data)?;
+    let configs = toml::from_str::<cartesian::Iter<index_bench::Config>>(&data)?;
 
     let mut out = File::options()
         .create(true)
@@ -17,7 +17,7 @@ fn main() -> anyhow::Result<()> {
         .open("result.ndjson")
         .map(BufWriter::new)?;
 
-    for mut config in configs.into_iter_cartesian() {
+    for mut config in configs.iter_cartesian() {
         if (config.workload.ycsb.read_proportion
             + config.workload.ycsb.update_proportion
             + config.workload.ycsb.insert_proportion

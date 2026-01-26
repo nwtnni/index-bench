@@ -95,7 +95,7 @@ checksum = "cd17eb909a8c6a894926bfcc3400a4bb0e732f5a57d37b1f14e8b29e329bace8"
 [[package]]
 name = "cartesian"
 version = "0.1.0"
-source = "git+https://github.com/nwtnni/cartesian.git#947d6d45e8e0c694f034c40c7ef95cc097b204e3"
+source = "git+https://github.com/nwtnni/cartesian.git#da21d3121f6fa22200c3d9da52a2177054f30ed8"
 dependencies = [
  "cartesian-derive",
 ]
@@ -103,7 +103,7 @@ dependencies = [
 [[package]]
 name = "cartesian-derive"
 version = "0.1.0"
-source = "git+https://github.com/nwtnni/cartesian.git#947d6d45e8e0c694f034c40c7ef95cc097b204e3"
+source = "git+https://github.com/nwtnni/cartesian.git#da21d3121f6fa22200c3d9da52a2177054f30ed8"
 dependencies = [
  "proc-macro-error",
  "proc-macro2",
@@ -1279,7 +1279,7 @@ dependencies = [
 [[package]]
 name = "ycsb"
 version = "0.1.0"
-source = "git+https://github.com/nwtnni/ycsb.git#c10518c8449abfa6d33eba3e39073e2d6e626dc8"
+source = "git+https://github.com/nwtnni/ycsb.git#540ef21b247278629c37321a5eb2805fcdcb2eb4"
 dependencies = [
  "cartesian",
  "rand",
