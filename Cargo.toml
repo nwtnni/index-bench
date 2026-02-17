@@ -10,6 +10,7 @@ stat = ["arctic/stat"]
 
 smr-disable = ["arctic/smr-disable"]
 smr-epoch = ["arctic/smr-epoch"]
+smr-seize = ["arctic/smr-epoch"]
 
 opt-0 = ["arctic/opt-no-node3-get", "arctic/opt-no-node3-iter", "arctic/opt-no-node15-get", "arctic/opt-no-node15-iter", "arctic/opt-no-node47-iter", "arctic/opt-no-int", "arctic/opt-no-expand", "arctic/opt-no-path"]
 opt-1 = ["arctic/opt-no-node3-get", "arctic/opt-no-node3-iter", "arctic/opt-no-node15-get", "arctic/opt-no-node15-iter", "arctic/opt-no-node47-iter", "arctic/opt-no-int", "arctic/opt-no-expand"]
@@ -29,7 +30,8 @@ perf-event2 = "0.7.4"
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.143"
 ycsb = { git = "https://github.com/nwtnni/ycsb.git", features = ["cartesian", "serde"] }
-arctic = { git = "ssh://github.com/nwtnni/arctic", default-features = false }
+# arctic = { git = "ssh://github.com/nwtnni/arctic", default-features = false }
+arctic = { path = "../arctic", default-features = false }
 cartesian = { git = "https://github.com/nwtnni/cartesian.git" }
 toml = "0.9.5"
 # scc = "3.0.2"

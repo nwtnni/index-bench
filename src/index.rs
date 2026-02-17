@@ -38,6 +38,8 @@ fn smr() -> Smr {
         Smr::Disable
     } else if cfg!(feature = "smr-epoch") {
         Smr::Epoch
+    } else if cfg!(feature = "smr-seize") {
+        Smr::Seize
     } else {
         Smr::Hazard
     }
@@ -54,6 +56,7 @@ pub enum Hash {
 pub enum Smr {
     Disable,
     Epoch,
+    Seize,
     Hazard,
 }
 

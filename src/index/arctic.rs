@@ -13,11 +13,8 @@ where
     where
         K: 'a;
 
-    fn new(config: &index::Config) -> Self {
-        arctic::concurrent::Map::with_smr(
-            arctic::concurrent::smr::Hazard::default()
-                .with_reclaim_threshold(config.reclaim_threshold),
-        )
+    fn new(_config: &index::Config) -> Self {
+        arctic::concurrent::Map::with_smr(arctic::concurrent::smr::Seize::default())
     }
 
     fn send<'a>(&'a self) -> Self::Send<'a> {
@@ -58,9 +55,9 @@ impl<'a, K> index::IndexPin<K> for arctic::concurrent::MapRef<'a, K, u64>
 where
     K: index::Key + ::arctic::Key,
 {
-    fn enable_membarrier(&self) {
-        self.smr().enable_membarrier();
-    }
+    // fn enable_membarrier(&self) {
+    //     self.smr().enable_membarrier();
+    // }
 
     fn get(&mut self, key: <K as ::arctic::raw::Key>::Borrow<'static>) -> Option<u64> {
         arctic::concurrent::MapRef::get(self, key)
