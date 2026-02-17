@@ -14,7 +14,10 @@ where
         K: 'a;
 
     fn new(config: &index::Config) -> Self {
-        arctic::concurrent::Map::with_reclaim_threshold(config.reclaim_threshold)
+        arctic::concurrent::Map::with_smr(
+            arctic::concurrent::smr::Hazard::default()
+                .with_reclaim_threshold(config.reclaim_threshold),
+        )
     }
 
     fn send<'a>(&'a self) -> Self::Send<'a> {
@@ -56,11 +59,13 @@ where
     K: index::Key + ::arctic::Key,
 {
     fn enable_membarrier(&self) {
-        arctic::concurrent::MapRef::enable_membarrier(self)
+        self.smr().enable_membarrier();
     }
 
     fn get(&mut self, key: <K as ::arctic::raw::Key>::Borrow<'static>) -> Option<u64> {
         arctic::concurrent::MapRef::get(self, key)
+            .as_deref()
+            .copied()
     }
 
     fn insert(
@@ -69,6 +74,8 @@ where
         value: u64,
     ) -> Option<u64> {
         arctic::concurrent::MapRef::upsert(self, key, value)
+            .as_deref()
+            .copied()
     }
 
     fn update(
@@ -76,11 +83,16 @@ where
         key: <K as ::arctic::raw::Key>::Borrow<'static>,
         value: u64,
     ) -> Option<u64> {
-        arctic::concurrent::MapRef::update(self, key, value).ok()
+        arctic::concurrent::MapRef::update(self, key, value)
+            .ok()
+            .as_deref()
+            .copied()
     }
 
     fn remove(&mut self, key: <K as ::arctic::raw::Key>::Borrow<'static>) -> Option<u64> {
         arctic::concurrent::MapRef::remove(self, key)
+            .as_deref()
+            .copied()
     }
 
     fn scan(
@@ -89,17 +101,21 @@ where
         mut count: usize,
         buffer: &mut Vec<u64>,
     ) {
-        let prefix = arctic::concurrent::MapRef::scan(self, key);
+        let Some(prefix) = arctic::concurrent::MapRef::range(self, key..) else {
+            return;
+        };
 
-        prefix.values::<false>().for_each(|value| {
-            if count == 0 {
-                ControlFlow::Break(())
-            } else {
-                buffer.push(value);
-                count -= 1;
-                ControlFlow::Continue(())
-            }
-        })
+        prefix
+            .values::<arctic::Ascend>()
+            .for_each_internal(|value| {
+                if count == 0 {
+                    ControlFlow::Break(())
+                } else {
+                    buffer.push(value);
+                    count -= 1;
+                    ControlFlow::Continue(())
+                }
+            })
     }
 
     #[cfg(feature = "stat")]
