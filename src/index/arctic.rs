@@ -3,18 +3,42 @@ use core::ops::ControlFlow;
 use crate::Index;
 use crate::index;
 
-impl<K, H> Index<K, H> for arctic::concurrent::Map<K, u64>
+#[cfg(feature = "smr-disable")]
+pub type DefaultSmr<K> = arctic::concurrent::smr::NoOp;
+
+#[cfg(feature = "smr-epoch")]
+pub type DefaultSmr<K> = arctic::concurrent::smr::Epoch;
+
+#[cfg(feature = "smr-seize")]
+pub type DefaultSmr<K> = arctic::concurrent::smr::Seize;
+
+#[cfg(not(any(feature = "smr-disable", feature = "smr-epoch", feature = "smr-seize")))]
+pub type DefaultSmr<K> = arctic::concurrent::smr::Hazard<<K as arctic::Key>::Prefix, u64>;
+
+fn resolve_smr<K>(config: &index::Config) -> DefaultSmr<K>
+where
+    K: index::Key + arctic::Key,
+{
+    let mut smr = DefaultSmr::<K>::default();
+    #[cfg(not(any(feature = "smr-disable", feature = "smr-epoch", feature = "smr-seize")))]
+    {
+        smr = smr.with_reclaim_threshold(config.reclaim_threshold);
+    }
+    smr
+}
+
+impl<K, H> Index<K, H> for arctic::concurrent::Map<K, u64, DefaultSmr<K>>
 where
     K: index::Key + ::arctic::Key,
     H: index::Hasher,
 {
     type Send<'a>
-        = &'a arctic::concurrent::Map<K, u64>
+        = &'a arctic::concurrent::Map<K, u64, DefaultSmr<K>>
     where
         K: 'a;
 
-    fn new(_config: &index::Config) -> Self {
-        arctic::concurrent::Map::with_smr(arctic::concurrent::smr::Seize::default())
+    fn new(config: &index::Config) -> Self {
+        arctic::concurrent::Map::with_smr(resolve_smr::<K>(config))
     }
 
     fn send<'a>(&'a self) -> Self::Send<'a> {
@@ -37,12 +61,12 @@ where
     }
 }
 
-impl<K, H> index::IndexSend<K, H> for &'_ arctic::concurrent::Map<K, u64>
+impl<K, H> index::IndexSend<K, H> for &'_ arctic::concurrent::Map<K, u64, DefaultSmr<K>>
 where
     K: index::Key + ::arctic::Key,
 {
     type Handle<'a>
-        = arctic::concurrent::MapRef<'a, K, u64>
+        = arctic::concurrent::MapRef<'a, K, u64, DefaultSmr<K>>
     where
         Self: 'a;
 
@@ -51,7 +75,7 @@ where
     }
 }
 
-impl<'a, K> index::IndexPin<K> for arctic::concurrent::MapRef<'a, K, u64>
+impl<'a, K> index::IndexPin<K> for arctic::concurrent::MapRef<'a, K, u64, DefaultSmr<K>>
 where
     K: index::Key + ::arctic::Key,
 {
