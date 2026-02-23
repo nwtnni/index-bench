@@ -10,7 +10,7 @@ stat = ["arctic/stat"]
 
 smr-disable = ["arctic/smr-disable"]
 smr-epoch = ["arctic/smr-epoch"]
-smr-seize = ["arctic/smr-epoch"]
+smr-seize = ["arctic/smr-seize"]
 
 opt-0 = ["arctic/opt-no-node3-get", "arctic/opt-no-node3-iter", "arctic/opt-no-node15-get", "arctic/opt-no-node15-iter", "arctic/opt-no-node47-iter", "arctic/opt-no-int", "arctic/opt-no-expand", "arctic/opt-no-path"]
 opt-1 = ["arctic/opt-no-node3-get", "arctic/opt-no-node3-iter", "arctic/opt-no-node15-get", "arctic/opt-no-node15-iter", "arctic/opt-no-node47-iter", "arctic/opt-no-int", "arctic/opt-no-expand"]

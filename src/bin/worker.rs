@@ -59,11 +59,9 @@ fn specialize_index_u64<
 ) -> anyhow::Result<index_bench::measure::Global> {
     match config.index.name {
         index_bench::index::Name::Art => index_bench::run::<K, art_sys::Rowex<K::Key>, H>(config),
-        index_bench::index::Name::Arctic => index_bench::run::<
-            K,
-            arctic::concurrent::Map<K::Key, u64, index_bench::index::DefaultSmr<u64>>,
-            H,
-        >(config),
+        index_bench::index::Name::Arctic => {
+            index_bench::run::<K, arctic::concurrent::Map<K::Key, u64>, H>(config)
+        }
         index_bench::index::Name::DashMap => {
             index_bench::run::<K, dashmap::DashMap<K::Key, u64, H>, H>(config)
         }
@@ -83,11 +81,9 @@ fn specialize_index_str<
 ) -> anyhow::Result<index_bench::measure::Global> {
     match config.index.name {
         index_bench::index::Name::Art => index_bench::run::<K, art_sys::Rowex<Vec<u8>>, H>(config),
-        index_bench::index::Name::Arctic => index_bench::run::<
-            K,
-            arctic::concurrent::Map<Vec<u8>, u64, index_bench::index::DefaultSmr<Vec<u8>>>,
-            H,
-        >(config),
+        index_bench::index::Name::Arctic => {
+            index_bench::run::<K, arctic::concurrent::Map<Vec<u8>, u64>, H>(config)
+        }
         index_bench::index::Name::DashMap => {
             index_bench::run::<K, dashmap::DashMap<&'static [u8], u64, H>, H>(config)
         }
@@ -107,11 +103,9 @@ fn specialize_index_string<
 ) -> anyhow::Result<index_bench::measure::Global> {
     match config.index.name {
         index_bench::index::Name::Art => index_bench::run::<K, art_sys::Rowex<Vec<u8>>, H>(config),
-        index_bench::index::Name::Arctic => index_bench::run::<
-            K,
-            arctic::concurrent::Map<Vec<u8>, u64, index_bench::index::DefaultSmr<Vec<u8>>>,
-            H,
-        >(config),
+        index_bench::index::Name::Arctic => {
+            index_bench::run::<K, arctic::concurrent::Map<Vec<u8>, u64>, H>(config)
+        }
         index_bench::index::Name::DashMap => {
             index_bench::run::<K, dashmap::DashMap<Vec<u8>, u64, H>, H>(config)
         }

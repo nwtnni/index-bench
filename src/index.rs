@@ -16,9 +16,6 @@ mod fb_tree;
 // mod scc;
 mod wormhole;
 
-// HACK: Re-export default SMR from `arctic`.
-pub type DefaultSmr<K> = arctic::DefaultSmr<K>;
-
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub struct Config {
