@@ -16,6 +16,9 @@ mod fb_tree;
 // mod scc;
 mod wormhole;
 
+// HACK: Re-export the enum wrapper for SMR configuration.
+pub use arctic::Map as ArcticMap;
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub struct Config {
