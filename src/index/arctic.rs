@@ -3,29 +3,31 @@ use core::ops::ControlFlow;
 use crate::Index;
 use crate::index;
 
-pub enum Map<K: arctic::concurrent::Key> {
-    Disable(arctic::concurrent::Map<K, u64, arctic::concurrent::smr::NoOp>),
-    Epoch(arctic::concurrent::Map<K, u64, arctic::concurrent::smr::Epoch>),
-    Seize(arctic::concurrent::Map<K, u64, arctic::concurrent::smr::Seize>),
-    Hazard(arctic::concurrent::Map<K, u64, arctic::concurrent::smr::Hazard<K::Prefix, u64>>),
+pub enum Map<K: index::Key, V: index::Value> {
+    Disable(arctic::concurrent::Map<K, V, arctic::concurrent::smr::NoOp>),
+    Epoch(arctic::concurrent::Map<K, V, arctic::concurrent::smr::Epoch>),
+    Seize(arctic::concurrent::Map<K, V, arctic::concurrent::smr::Seize>),
+    Hazard(arctic::concurrent::Map<K, V, arctic::concurrent::smr::Hazard<K::Prefix, V>>),
 }
 
-pub enum MapRef<'a, K: arctic::concurrent::Key> {
-    Disable(arctic::concurrent::MapRef<'a, K, u64, arctic::concurrent::smr::NoOp>),
-    Epoch(arctic::concurrent::MapRef<'a, K, u64, arctic::concurrent::smr::Epoch>),
-    Seize(arctic::concurrent::MapRef<'a, K, u64, arctic::concurrent::smr::Seize>),
-    Hazard(arctic::concurrent::MapRef<'a, K, u64, arctic::concurrent::smr::Hazard<K::Prefix, u64>>),
+pub enum MapRef<'a, K: index::Key, V: index::Value> {
+    Disable(arctic::concurrent::MapRef<'a, K, V, arctic::concurrent::smr::NoOp>),
+    Epoch(arctic::concurrent::MapRef<'a, K, V, arctic::concurrent::smr::Epoch>),
+    Seize(arctic::concurrent::MapRef<'a, K, V, arctic::concurrent::smr::Seize>),
+    Hazard(arctic::concurrent::MapRef<'a, K, V, arctic::concurrent::smr::Hazard<K::Prefix, V>>),
 }
 
-impl<K, H> Index<K, H> for Map<K>
+impl<K, V, H> Index<K, V, H> for Map<K, V>
 where
     K: index::Key + ::arctic::Key,
+    V: index::Value + ::arctic::Value + Send + Sync,
     H: index::Hasher,
 {
     type Send<'a>
-        = &'a Map<K>
+        = &'a Map<K, V>
     where
-        K: 'a;
+        K: 'a,
+        V: 'a;
 
     fn new(config: &index::Config) -> Self {
         match config.smr {
@@ -98,12 +100,13 @@ where
     }
 }
 
-impl<K, H> index::IndexSend<K, H> for &'_ Map<K>
+impl<K, V, H> index::IndexSend<K, V, H> for &'_ Map<K, V>
 where
     K: index::Key + ::arctic::Key,
+    V: index::Value + ::arctic::Value + Send + Sync,
 {
     type Handle<'a>
-        = MapRef<'a, K>
+        = MapRef<'a, K, V>
     where
         Self: 'a;
 
@@ -117,9 +120,10 @@ where
     }
 }
 
-impl<'a, K> index::IndexPin<K> for MapRef<'a, K>
+impl<'a, K, V> index::IndexPin<K, V> for MapRef<'a, K, V>
 where
     K: index::Key + ::arctic::Key,
+    V: index::Value + ::arctic::Value + Send + Sync,
 {
     fn enable_membarrier(&self) {
         if let MapRef::Hazard(m) = self {
@@ -127,75 +131,67 @@ where
         }
     }
 
-    fn get(&mut self, key: <K as ::arctic::raw::Key>::Borrow<'static>) -> Option<u64> {
+    fn get(&mut self, key: <K as ::arctic::raw::Key>::Borrow<'static>) -> Option<V> {
         match self {
-            MapRef::Disable(r) => arctic::concurrent::MapRef::get(r, key).as_deref().copied(),
-            MapRef::Epoch(r) => arctic::concurrent::MapRef::get(r, key).as_deref().copied(),
-            MapRef::Seize(r) => arctic::concurrent::MapRef::get(r, key).as_deref().copied(),
-            MapRef::Hazard(r) => arctic::concurrent::MapRef::get(r, key).as_deref().copied(),
+            MapRef::Disable(r) => {
+                arctic::concurrent::MapRef::get(r, key).map(|s| V::from_borrow(*s))
+            }
+            MapRef::Epoch(r) => arctic::concurrent::MapRef::get(r, key).map(|s| V::from_borrow(*s)),
+            MapRef::Seize(r) => arctic::concurrent::MapRef::get(r, key).map(|s| V::from_borrow(*s)),
+            MapRef::Hazard(r) => {
+                arctic::concurrent::MapRef::get(r, key).map(|s| V::from_borrow(*s))
+            }
         }
     }
 
-    fn insert(
-        &mut self,
-        key: <K as ::arctic::raw::Key>::Borrow<'static>,
-        value: u64,
-    ) -> Option<u64> {
+    fn insert(&mut self, key: <K as ::arctic::raw::Key>::Borrow<'static>, value: V) -> Option<V> {
         match self {
-            MapRef::Disable(r) => arctic::concurrent::MapRef::upsert(r, key, value)
-                .as_deref()
-                .copied(),
-            MapRef::Epoch(r) => arctic::concurrent::MapRef::upsert(r, key, value)
-                .as_deref()
-                .copied(),
-            MapRef::Seize(r) => arctic::concurrent::MapRef::upsert(r, key, value)
-                .as_deref()
-                .copied(),
-            MapRef::Hazard(r) => arctic::concurrent::MapRef::upsert(r, key, value)
-                .as_deref()
-                .copied(),
+            MapRef::Disable(r) => {
+                arctic::concurrent::MapRef::upsert(r, key, value).map(|s| V::from_borrow(*s))
+            }
+            MapRef::Epoch(r) => {
+                arctic::concurrent::MapRef::upsert(r, key, value).map(|s| V::from_borrow(*s))
+            }
+            MapRef::Seize(r) => {
+                arctic::concurrent::MapRef::upsert(r, key, value).map(|s| V::from_borrow(*s))
+            }
+            MapRef::Hazard(r) => {
+                arctic::concurrent::MapRef::upsert(r, key, value).map(|s| V::from_borrow(*s))
+            }
         }
     }
 
-    fn update(
-        &mut self,
-        key: <K as ::arctic::raw::Key>::Borrow<'static>,
-        value: u64,
-    ) -> Option<u64> {
+    fn update(&mut self, key: <K as ::arctic::raw::Key>::Borrow<'static>, value: V) -> Option<V> {
         match self {
             MapRef::Disable(r) => arctic::concurrent::MapRef::update(r, key, value)
                 .ok()
-                .as_deref()
-                .copied(),
+                .map(|s| V::from_borrow(*s)),
             MapRef::Epoch(r) => arctic::concurrent::MapRef::update(r, key, value)
                 .ok()
-                .as_deref()
-                .copied(),
+                .map(|s| V::from_borrow(*s)),
             MapRef::Seize(r) => arctic::concurrent::MapRef::update(r, key, value)
                 .ok()
-                .as_deref()
-                .copied(),
+                .map(|s| V::from_borrow(*s)),
             MapRef::Hazard(r) => arctic::concurrent::MapRef::update(r, key, value)
                 .ok()
-                .as_deref()
-                .copied(),
+                .map(|s| V::from_borrow(*s)),
         }
     }
 
-    fn remove(&mut self, key: <K as ::arctic::raw::Key>::Borrow<'static>) -> Option<u64> {
+    fn remove(&mut self, key: <K as ::arctic::raw::Key>::Borrow<'static>) -> Option<V> {
         match self {
-            MapRef::Disable(r) => arctic::concurrent::MapRef::remove(r, key)
-                .as_deref()
-                .copied(),
-            MapRef::Epoch(r) => arctic::concurrent::MapRef::remove(r, key)
-                .as_deref()
-                .copied(),
-            MapRef::Seize(r) => arctic::concurrent::MapRef::remove(r, key)
-                .as_deref()
-                .copied(),
-            MapRef::Hazard(r) => arctic::concurrent::MapRef::remove(r, key)
-                .as_deref()
-                .copied(),
+            MapRef::Disable(r) => {
+                arctic::concurrent::MapRef::remove(r, key).map(|s| V::from_borrow(*s))
+            }
+            MapRef::Epoch(r) => {
+                arctic::concurrent::MapRef::remove(r, key).map(|s| V::from_borrow(*s))
+            }
+            MapRef::Seize(r) => {
+                arctic::concurrent::MapRef::remove(r, key).map(|s| V::from_borrow(*s))
+            }
+            MapRef::Hazard(r) => {
+                arctic::concurrent::MapRef::remove(r, key).map(|s| V::from_borrow(*s))
+            }
         }
     }
 
@@ -203,7 +199,7 @@ where
         &mut self,
         key: <K as arctic::raw::Key>::Borrow<'static>,
         mut count: usize,
-        buffer: &mut Vec<u64>,
+        buffer: &mut Vec<V>,
     ) {
         match self {
             MapRef::Disable(r) => {
@@ -216,7 +212,7 @@ where
                         if count == 0 {
                             ControlFlow::Break(())
                         } else {
-                            buffer.push(value);
+                            buffer.push(V::from_borrow(value));
                             count -= 1;
                             ControlFlow::Continue(())
                         }
@@ -232,7 +228,7 @@ where
                         if count == 0 {
                             ControlFlow::Break(())
                         } else {
-                            buffer.push(value);
+                            buffer.push(V::from_borrow(value));
                             count -= 1;
                             ControlFlow::Continue(())
                         }
@@ -248,7 +244,7 @@ where
                         if count == 0 {
                             ControlFlow::Break(())
                         } else {
-                            buffer.push(value);
+                            buffer.push(V::from_borrow(value));
                             count -= 1;
                             ControlFlow::Continue(())
                         }
@@ -264,7 +260,7 @@ where
                         if count == 0 {
                             ControlFlow::Break(())
                         } else {
-                            buffer.push(value);
+                            buffer.push(V::from_borrow(value));
                             count -= 1;
                             ControlFlow::Continue(())
                         }

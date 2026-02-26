@@ -21,6 +21,7 @@ name = "wormhole"
 [workload]
 load = [false]
 key = ["u64", "ipv4", "snowflake", "url", "email"]
+value = ["u64"]
 insert_order = ["ordered", "hashed"]
 record_count = [100800000]
 operation_count = [1000000]

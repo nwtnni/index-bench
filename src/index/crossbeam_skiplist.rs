@@ -3,7 +3,7 @@ use crate::index;
 
 macro_rules! impl_index {
     ($index:ty, $map:ty) => {
-        impl<H: index::Hasher> Index<$index, H> for crossbeam_skiplist::SkipMap<$map, u64> {
+        impl<H: index::Hasher> Index<$index, u64, H> for crossbeam_skiplist::SkipMap<$map, u64> {
             type Send<'a> = &'a Self;
 
             const IGNORE_INSERT: bool = true;
@@ -18,7 +18,7 @@ macro_rules! impl_index {
             }
         }
 
-        impl<H: index::Hasher> index::IndexSend<$index, H>
+        impl<H: index::Hasher> index::IndexSend<$index, u64, H>
             for &crossbeam_skiplist::SkipMap<$map, u64>
         {
             type Handle<'a>
@@ -35,7 +35,7 @@ macro_rules! impl_index {
 
 impl_index!(u64, u64);
 
-impl index::IndexPin<u64> for &'_ crossbeam_skiplist::SkipMap<u64, u64> {
+impl index::IndexPin<u64, u64> for &'_ crossbeam_skiplist::SkipMap<u64, u64> {
     fn get(&mut self, key: u64) -> Option<u64> {
         Some(*crossbeam_skiplist::SkipMap::get(self, &key)?.value())
     }
@@ -55,7 +55,7 @@ impl index::IndexPin<u64> for &'_ crossbeam_skiplist::SkipMap<u64, u64> {
 
 impl_index!(String, &'static str);
 
-impl index::IndexPin<String> for &'_ crossbeam_skiplist::SkipMap<&'static str, u64> {
+impl index::IndexPin<String, u64> for &'_ crossbeam_skiplist::SkipMap<&'static str, u64> {
     fn get(&mut self, key: &'static str) -> Option<u64> {
         Some(*crossbeam_skiplist::SkipMap::get(self, &key)?.value())
     }
@@ -75,7 +75,7 @@ impl index::IndexPin<String> for &'_ crossbeam_skiplist::SkipMap<&'static str, u
 
 impl_index!(String, String);
 
-impl index::IndexPin<String> for &'_ crossbeam_skiplist::SkipMap<String, u64> {
+impl index::IndexPin<String, u64> for &'_ crossbeam_skiplist::SkipMap<String, u64> {
     fn get(&mut self, key: &'static str) -> Option<u64> {
         Some(*crossbeam_skiplist::SkipMap::get(self, key)?.value())
     }

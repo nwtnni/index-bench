@@ -1,7 +1,7 @@
 use crate::Index;
 use crate::index;
 
-impl<H: index::Hasher> Index<u64, H> for art_sys::Rowex<u64> {
+impl<H: index::Hasher> Index<u64, u64, H> for art_sys::Rowex<u64> {
     const IGNORE_GET: bool = true;
     const IGNORE_INSERT: bool = true;
 
@@ -16,7 +16,7 @@ impl<H: index::Hasher> Index<u64, H> for art_sys::Rowex<u64> {
     }
 }
 
-impl<H: index::Hasher> index::IndexSend<u64, H> for &'_ art_sys::Rowex<u64> {
+impl<H: index::Hasher> index::IndexSend<u64, u64, H> for &'_ art_sys::Rowex<u64> {
     type Handle<'a>
         = art_sys::RowexRef<'a, u64>
     where
@@ -27,7 +27,7 @@ impl<H: index::Hasher> index::IndexSend<u64, H> for &'_ art_sys::Rowex<u64> {
     }
 }
 
-impl index::IndexPin<u64> for art_sys::RowexRef<'_, u64> {
+impl index::IndexPin<u64, u64> for art_sys::RowexRef<'_, u64> {
     fn get(&mut self, key: u64) -> Option<u64> {
         art_sys::RowexRef::get_u64(self, key);
         None
@@ -49,7 +49,7 @@ impl index::IndexPin<u64> for art_sys::RowexRef<'_, u64> {
     }
 }
 
-impl<H: index::Hasher> Index<Vec<u8>, H> for art_sys::Rowex<Vec<u8>> {
+impl<H: index::Hasher> Index<Vec<u8>, u64, H> for art_sys::Rowex<Vec<u8>> {
     const IGNORE_GET: bool = true;
     const IGNORE_INSERT: bool = true;
 
@@ -64,7 +64,7 @@ impl<H: index::Hasher> Index<Vec<u8>, H> for art_sys::Rowex<Vec<u8>> {
     }
 }
 
-impl<H: index::Hasher> index::IndexSend<Vec<u8>, H> for &'_ art_sys::Rowex<Vec<u8>> {
+impl<H: index::Hasher> index::IndexSend<Vec<u8>, u64, H> for &'_ art_sys::Rowex<Vec<u8>> {
     type Handle<'a>
         = art_sys::RowexRef<'a, Vec<u8>>
     where
@@ -75,7 +75,7 @@ impl<H: index::Hasher> index::IndexSend<Vec<u8>, H> for &'_ art_sys::Rowex<Vec<u
     }
 }
 
-impl index::IndexPin<Vec<u8>> for art_sys::RowexRef<'_, Vec<u8>> {
+impl index::IndexPin<Vec<u8>, u64> for art_sys::RowexRef<'_, Vec<u8>> {
     fn get(&mut self, key: &'static [u8]) -> Option<u64> {
         art_sys::RowexRef::get_string(self, key)
     }

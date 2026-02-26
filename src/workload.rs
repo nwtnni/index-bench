@@ -16,6 +16,8 @@ pub struct Config {
 
     pub key: Key,
 
+    pub value: Value,
+
     #[cartesian(flatten)]
     #[serde(flatten)]
     pub ycsb: ycsb::Workload,
@@ -33,6 +35,13 @@ pub enum Key {
     Ts(u64),
     Ipv4,
     Snowflake,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Value {
+    U64,
+    Box,
 }
 
 static ACKNOWLEDGED: Acknowledged = Acknowledged::new();

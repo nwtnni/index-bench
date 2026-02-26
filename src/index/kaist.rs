@@ -11,7 +11,7 @@ use crate::index;
 
 pub use bonsai::BonsaiTreeMap;
 
-impl<K: index::Key, H: index::Hasher> Index<K, H> for bonsai::BonsaiTreeMap<K, u64> {
+impl<K: index::Key, H: index::Hasher> Index<K, u64, H> for bonsai::BonsaiTreeMap<K, u64> {
     type Send<'a> = &'a Self;
     const IGNORE_INSERT: bool = true;
 
@@ -24,7 +24,9 @@ impl<K: index::Key, H: index::Hasher> Index<K, H> for bonsai::BonsaiTreeMap<K, u
     }
 }
 
-impl<K: index::Key, H: index::Hasher> index::IndexSend<K, H> for &'_ bonsai::BonsaiTreeMap<K, u64> {
+impl<K: index::Key, H: index::Hasher> index::IndexSend<K, u64, H>
+    for &'_ bonsai::BonsaiTreeMap<K, u64>
+{
     type Handle<'a>
         = Self
     where
@@ -35,7 +37,7 @@ impl<K: index::Key, H: index::Hasher> index::IndexSend<K, H> for &'_ bonsai::Bon
     }
 }
 
-impl<K: index::Key> index::IndexPin<K> for &'_ bonsai::BonsaiTreeMap<K, u64> {
+impl<K: index::Key> index::IndexPin<K, u64> for &'_ bonsai::BonsaiTreeMap<K, u64> {
     fn get(&mut self, key: &K) -> Option<u64> {
         let guard = &crossbeam_ebr::pin();
         bonsai::BonsaiTreeMap::get(self, key, guard).copied()

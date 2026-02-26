@@ -40,6 +40,7 @@ reclaim_threshold = 1024
 [workload]
 load = [true]
 key = ["u64"]
+value = ["u64"]
 insert_order = ["ordered", "hashed"]
 record_count = [2016000, 20160000, 201600000]
 operation_count = [1000000]

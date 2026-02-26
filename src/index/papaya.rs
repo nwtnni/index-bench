@@ -3,7 +3,7 @@ use crate::index;
 
 macro_rules! impl_index {
     ($index:ty, $map:ty) => {
-        impl<H: index::Hasher> Index<$index, H> for papaya::HashMap<$map, u64, H> {
+        impl<H: index::Hasher> Index<$index, u64, H> for papaya::HashMap<$map, u64, H> {
             type Send<'a> = &'a Self;
 
             fn new(_: &index::Config) -> Self {
@@ -15,7 +15,9 @@ macro_rules! impl_index {
             }
         }
 
-        impl<H: index::Hasher> index::IndexSend<$index, H> for &'_ papaya::HashMap<$map, u64, H> {
+        impl<H: index::Hasher> index::IndexSend<$index, u64, H>
+            for &'_ papaya::HashMap<$map, u64, H>
+        {
             type Handle<'a>
                 = Self
             where
@@ -30,7 +32,7 @@ macro_rules! impl_index {
 
 impl_index!(u64, u64);
 
-impl<H: index::Hasher> index::IndexPin<u64> for &'_ papaya::HashMap<u64, u64, H> {
+impl<H: index::Hasher> index::IndexPin<u64, u64> for &'_ papaya::HashMap<u64, u64, H> {
     fn get(&mut self, key: u64) -> Option<u64> {
         let map = self.pin();
         map.get(&key).copied()
@@ -54,7 +56,7 @@ impl<H: index::Hasher> index::IndexPin<u64> for &'_ papaya::HashMap<u64, u64, H>
 
 impl_index!(String, &'static str);
 
-impl<H: index::Hasher> index::IndexPin<String> for &'_ papaya::HashMap<&'static str, u64, H> {
+impl<H: index::Hasher> index::IndexPin<String, u64> for &'_ papaya::HashMap<&'static str, u64, H> {
     fn get(&mut self, key: &'static str) -> Option<u64> {
         let map = self.pin();
         map.get(&key).copied()
@@ -78,7 +80,7 @@ impl<H: index::Hasher> index::IndexPin<String> for &'_ papaya::HashMap<&'static 
 
 impl_index!(String, String);
 
-impl<H: index::Hasher> index::IndexPin<String> for &'_ papaya::HashMap<String, u64, H> {
+impl<H: index::Hasher> index::IndexPin<String, u64> for &'_ papaya::HashMap<String, u64, H> {
     fn get(&mut self, key: &'static str) -> Option<u64> {
         let map = self.pin();
         map.get(key).copied()
