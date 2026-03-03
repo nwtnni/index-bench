@@ -38,7 +38,7 @@ where
                 arctic::concurrent::smr::Epoch::default(),
             )),
             index::Smr::Seize => Map::Seize(arctic::concurrent::Map::with_smr(
-                arctic::concurrent::smr::Seize::default(),
+                arctic::concurrent::smr::Seize::with_batch_size(config.reclaim_threshold),
             )),
             index::Smr::Hazard => Map::Hazard(arctic::concurrent::Map::with_smr(
                 arctic::concurrent::smr::Hazard::default()

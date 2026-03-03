@@ -5,6 +5,37 @@ numa = [{ policy = "bind", node = 0 }]
 [[index]]
 hash = "rapid_hash"
 name = "arctic"
+reclaim_threshold = 0
+
+[[index]]
+hash = "rapid_hash"
+name = "arctic"
+reclaim_threshold = 1
+
+[[index]]
+hash = "rapid_hash"
+name = "arctic"
+reclaim_threshold = 4
+
+[[index]]
+hash = "rapid_hash"
+name = "arctic"
+reclaim_threshold = 16
+
+[[index]]
+hash = "rapid_hash"
+name = "arctic"
+reclaim_threshold = 64
+
+[[index]]
+hash = "rapid_hash"
+name = "arctic"
+reclaim_threshold = 256
+
+[[index]]
+hash = "rapid_hash"
+name = "arctic"
+reclaim_threshold = 1024
 
 [workload]
 load = [false]
