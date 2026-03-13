@@ -1,0 +1,63 @@
+[global]
+thread_count = [1, 40, 80]
+numa = [{ policy = "bind", node = 0 }]
+
+[[index]]
+hash = "rapid_hash"
+name = "arctic"
+reclaim_threshold = 32
+
+[[index]]
+hash = "rapid_hash"
+name = "arctic"
+reclaim_threshold = 64
+
+[[index]]
+hash = "rapid_hash"
+name = "arctic"
+reclaim_threshold = 256
+
+[[index]]
+hash = "rapid_hash"
+name = "arctic"
+reclaim_threshold = 512
+
+[[index]]
+hash = "rapid_hash"
+name = "arctic"
+reclaim_threshold = 1024
+
+[[index]]
+hash = "rapid_hash"
+name = "arctic"
+reclaim_threshold = 2048
+
+[[index]]
+hash = "rapid_hash"
+name = "arctic"
+reclaim_threshold = 4096
+
+[[index]]
+hash = "rapid_hash"
+name = "arctic"
+reclaim_threshold = 8192
+
+[[index]]
+hash = "rapid_hash"
+name = "arctic"
+reclaim_threshold = 16384
+
+[workload]
+load = [false]
+key = ["u64", "ipv4", "snowflake", "email", "url"]
+value = ["box"]
+insert_order = ["ordered", "hashed"]
+record_count = [100800000]
+operation_count = [10000000]
+update_proportion = [1.0]
+read_proportion = [0.0]
+insert_proportion = [0.0]
+delete_proportion = [0.0]
+scan_proportion = [0.0]
+read_modify_write_proportion = [0.0]
+request_distribution = ["uniform"]

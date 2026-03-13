@@ -35,7 +35,7 @@ where
                 arctic::concurrent::smr::NoOp,
             )),
             index::Smr::Epoch => Map::Epoch(arctic::concurrent::Map::with_smr(
-                arctic::concurrent::smr::Epoch::default(),
+                arctic::concurrent::smr::Epoch::with_bag_capacity(config.reclaim_threshold),
             )),
             index::Smr::Seize => Map::Seize(arctic::concurrent::Map::with_smr(
                 arctic::concurrent::smr::Seize::with_batch_size(config.reclaim_threshold),
