@@ -30,6 +30,8 @@ pub struct Config {
     pub reclaim_threshold: usize,
     #[serde(default = "smr")]
     pub smr: Smr,
+    #[serde(default = "membarrier")]
+    pub membarrier: bool,
 }
 
 fn reclaim_threshold() -> usize {
@@ -46,6 +48,10 @@ fn smr() -> Smr {
     } else {
         Smr::Hazard
     }
+}
+
+fn membarrier() -> bool {
+    cfg!(feature = "membarrier")
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

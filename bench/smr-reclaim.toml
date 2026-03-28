@@ -1,5 +1,5 @@
 [global]
-thread_count = [1, 40, 80]
+thread_count = [1, 20, 40, 60, 80]
 numa = [{ policy = "bind", node = 0 }]
 
 [[index]]
@@ -47,17 +47,22 @@ hash = "rapid_hash"
 name = "arctic"
 reclaim_threshold = 16384
 
+[[index]]
+hash = "rapid_hash"
+name = "arctic"
+reclaim_threshold = 32768
+
 [workload]
-load = [false]
+load = [true]
 key = ["u64", "ipv4", "snowflake", "email", "url"]
 value = ["box"]
 insert_order = ["ordered", "hashed"]
-record_count = [100800000]
-operation_count = [10000000]
-update_proportion = [1.0]
+record_count = [10000000]
+operation_count = [100000000]
+update_proportion = [0.0]
 read_proportion = [0.0]
-insert_proportion = [0.0]
-delete_proportion = [0.0]
+insert_proportion = [0.5]
+delete_proportion = [0.5]
 scan_proportion = [0.0]
 read_modify_write_proportion = [0.0]
 request_distribution = ["uniform"]

@@ -14,8 +14,9 @@ perf record \
     --delay -1 \
     --control fifo:${PERF_CTL_FIFO},${PERF_ACK_FIFO} \
     --call-graph dwarf,16384 \
-    -F 9997 \
+    -F 99 \
     --strict-freq \
     $@
 
-perf script --input perf.data | ~/.cargo/bin/inferno-collapse-perf | ~/.cargo/bin/inferno-flamegraph > out.svg
+perf script --input perf.data | ~/.cargo/bin/inferno-collapse-perf > out.folded
+cat out.folded | ~/.cargo/bin/inferno-flamegraph > out.svg

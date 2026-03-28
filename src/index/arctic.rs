@@ -54,9 +54,7 @@ where
     #[cfg(feature = "stat")]
     fn report(&mut self) -> serde_json::Value {
         match self {
-            Map::Disable(m) => serde_json::to_value(arctic::stat::process(m)).unwrap(),
-            Map::Epoch(m) => serde_json::to_value(arctic::stat::process(m)).unwrap(),
-            Map::Seize(m) => serde_json::to_value(arctic::stat::process(m)).unwrap(),
+            Map::Disable(_) | Map::Epoch(_) | Map::Seize(_) => serde_json::Value::Null,
             Map::Hazard(m) => serde_json::to_value(arctic::stat::process(m)).unwrap(),
         }
     }
@@ -64,32 +62,11 @@ where
     #[cfg(feature = "stat")]
     fn memory_key_value(&mut self) -> u64 {
         match self {
-            Map::Disable(m) => {
-                let mut iter = m.as_sequential().iter::<false>();
-                let mut total = 0;
-                while let Some((key, _)) = iter.lend() {
-                    total += <K as ::arctic::raw::Key>::len(key) + 8;
-                }
-                total as u64
-            }
-            Map::Epoch(m) => {
-                let mut iter = m.as_sequential().iter::<false>();
-                let mut total = 0;
-                while let Some((key, _)) = iter.lend() {
-                    total += <K as ::arctic::raw::Key>::len(key) + 8;
-                }
-                total as u64
-            }
-            Map::Seize(m) => {
-                let mut iter = m.as_sequential().iter::<false>();
-                let mut total = 0;
-                while let Some((key, _)) = iter.lend() {
-                    total += <K as ::arctic::raw::Key>::len(key) + 8;
-                }
-                total as u64
-            }
+            Map::Disable(_) | Map::Epoch(_) | Map::Seize(_) => 0,
             Map::Hazard(m) => {
-                let mut iter = m.as_sequential().iter::<false>();
+                // `iter::<false>` corresponds to `arctic::Descend` in legacy code, I think.
+                // https://github.com/nwtnni/arctic/blob/4416d06259a086088c31e1ee332fc3e11e846859/src/sequential.rs#L132
+                let mut iter = m.as_sequential().all().entries::<arctic::Descend>();
                 let mut total = 0;
                 while let Some((key, _)) = iter.lend() {
                     total += <K as ::arctic::raw::Key>::len(key) + 8;

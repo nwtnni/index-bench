@@ -5,12 +5,15 @@ edition = "2024"
 default-run = "coordinator"
 
 [features]
-default = ["opt-4"]
+# default = ["opt-4"]
+default = []
 stat = ["arctic/stat"]
 
 smr-disable = ["arctic/smr-disable"]
 smr-epoch = ["arctic/smr-epoch"]
 smr-seize = ["arctic/smr-seize"]
+
+membarrier = ["arctic/opt-membarrier", "arctic/opt-seize-fastbarrier"]
 
 opt-0 = ["arctic/opt-no-node3-get", "arctic/opt-no-node3-iter", "arctic/opt-no-node15-get", "arctic/opt-no-node15-iter", "arctic/opt-no-node47-iter", "arctic/opt-no-int", "arctic/opt-no-expand", "arctic/opt-no-path"]
 opt-1 = ["arctic/opt-no-node3-get", "arctic/opt-no-node3-iter", "arctic/opt-no-node15-get", "arctic/opt-no-node15-iter", "arctic/opt-no-node47-iter", "arctic/opt-no-int", "arctic/opt-no-expand"]
@@ -62,4 +65,4 @@ branch = "smr-benchmark"
 [profile.release]
 codegen-units = 1
 lto = "fat"
-# debug = true
+debug = true
