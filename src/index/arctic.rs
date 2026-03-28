@@ -111,19 +111,19 @@ where
     fn get(&mut self, key: <K as ::arctic::raw::Key>::Borrow<'static>) -> Option<V> {
         match self {
             MapRef::Disable(r) => {
-                std::hint::black_box(arctic::concurrent::MapRef::get(r, key));
+                let _ = std::hint::black_box(arctic::concurrent::MapRef::get(r, key));
                 None
             }
             MapRef::Epoch(r) => {
-                std::hint::black_box(arctic::concurrent::MapRef::get(r, key));
+                let _ = std::hint::black_box(arctic::concurrent::MapRef::get(r, key));
                 None
             }
             MapRef::Seize(r) => {
-                std::hint::black_box(arctic::concurrent::MapRef::get(r, key));
+                let _ = std::hint::black_box(arctic::concurrent::MapRef::get(r, key));
                 None
             }
             MapRef::Hazard(r) => {
-                std::hint::black_box(arctic::concurrent::MapRef::get(r, key));
+                let _ = std::hint::black_box(arctic::concurrent::MapRef::get(r, key));
                 None
             }
         }
@@ -132,19 +132,19 @@ where
     fn insert(&mut self, key: <K as ::arctic::raw::Key>::Borrow<'static>, value: V) -> Option<V> {
         match self {
             MapRef::Disable(r) => {
-                std::hint::black_box(arctic::concurrent::MapRef::upsert(r, key, value));
+                let _ = std::hint::black_box(arctic::concurrent::MapRef::upsert(r, key, value));
                 None
             }
             MapRef::Epoch(r) => {
-                std::hint::black_box(arctic::concurrent::MapRef::upsert(r, key, value));
+                let _ = std::hint::black_box(arctic::concurrent::MapRef::upsert(r, key, value));
                 None
             }
             MapRef::Seize(r) => {
-                std::hint::black_box(arctic::concurrent::MapRef::upsert(r, key, value));
+                let _ = std::hint::black_box(arctic::concurrent::MapRef::upsert(r, key, value));
                 None
             }
             MapRef::Hazard(r) => {
-                std::hint::black_box(arctic::concurrent::MapRef::upsert(r, key, value));
+                let _ = std::hint::black_box(arctic::concurrent::MapRef::upsert(r, key, value));
                 None
             }
         }
@@ -153,19 +153,19 @@ where
     fn update(&mut self, key: <K as ::arctic::raw::Key>::Borrow<'static>, value: V) -> Option<V> {
         match self {
             MapRef::Disable(r) => {
-                std::hint::black_box(arctic::concurrent::MapRef::update(r, key, value));
+                let _ = std::hint::black_box(arctic::concurrent::MapRef::update(r, key, value));
                 None
             }
             MapRef::Epoch(r) => {
-                std::hint::black_box(arctic::concurrent::MapRef::update(r, key, value));
+                let _ = std::hint::black_box(arctic::concurrent::MapRef::update(r, key, value));
                 None
             }
             MapRef::Seize(r) => {
-                std::hint::black_box(arctic::concurrent::MapRef::update(r, key, value));
+                let _ = std::hint::black_box(arctic::concurrent::MapRef::update(r, key, value));
                 None
             }
             MapRef::Hazard(r) => {
-                std::hint::black_box(arctic::concurrent::MapRef::update(r, key, value));
+                let _ = std::hint::black_box(arctic::concurrent::MapRef::update(r, key, value));
                 None
             }
         }
@@ -174,19 +174,19 @@ where
     fn remove(&mut self, key: <K as ::arctic::raw::Key>::Borrow<'static>) -> Option<V> {
         match self {
             MapRef::Disable(r) => {
-                std::hint::black_box(arctic::concurrent::MapRef::remove(r, key));
+                let _ = std::hint::black_box(arctic::concurrent::MapRef::remove(r, key));
                 None
             }
             MapRef::Epoch(r) => {
-                std::hint::black_box(arctic::concurrent::MapRef::remove(r, key));
+                let _ = std::hint::black_box(arctic::concurrent::MapRef::remove(r, key));
                 None
             }
             MapRef::Seize(r) => {
-                std::hint::black_box(arctic::concurrent::MapRef::remove(r, key));
+                let _ = std::hint::black_box(arctic::concurrent::MapRef::remove(r, key));
                 None
             }
             MapRef::Hazard(r) => {
-                std::hint::black_box(arctic::concurrent::MapRef::remove(r, key));
+                let _ = std::hint::black_box(arctic::concurrent::MapRef::remove(r, key));
                 None
             }
         }
