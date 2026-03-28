@@ -111,12 +111,20 @@ where
     fn get(&mut self, key: <K as ::arctic::raw::Key>::Borrow<'static>) -> Option<V> {
         match self {
             MapRef::Disable(r) => {
-                arctic::concurrent::MapRef::get(r, key).map(|s| V::from_borrow(*s))
+                std::hint::black_box(arctic::concurrent::MapRef::get(r, key));
+                None
             }
-            MapRef::Epoch(r) => arctic::concurrent::MapRef::get(r, key).map(|s| V::from_borrow(*s)),
-            MapRef::Seize(r) => arctic::concurrent::MapRef::get(r, key).map(|s| V::from_borrow(*s)),
+            MapRef::Epoch(r) => {
+                std::hint::black_box(arctic::concurrent::MapRef::get(r, key));
+                None
+            }
+            MapRef::Seize(r) => {
+                std::hint::black_box(arctic::concurrent::MapRef::get(r, key));
+                None
+            }
             MapRef::Hazard(r) => {
-                arctic::concurrent::MapRef::get(r, key).map(|s| V::from_borrow(*s))
+                std::hint::black_box(arctic::concurrent::MapRef::get(r, key));
+                None
             }
         }
     }
@@ -124,50 +132,62 @@ where
     fn insert(&mut self, key: <K as ::arctic::raw::Key>::Borrow<'static>, value: V) -> Option<V> {
         match self {
             MapRef::Disable(r) => {
-                arctic::concurrent::MapRef::upsert(r, key, value).map(|s| V::from_borrow(*s))
+                std::hint::black_box(arctic::concurrent::MapRef::upsert(r, key, value));
+                None
             }
             MapRef::Epoch(r) => {
-                arctic::concurrent::MapRef::upsert(r, key, value).map(|s| V::from_borrow(*s))
+                std::hint::black_box(arctic::concurrent::MapRef::upsert(r, key, value));
+                None
             }
             MapRef::Seize(r) => {
-                arctic::concurrent::MapRef::upsert(r, key, value).map(|s| V::from_borrow(*s))
+                std::hint::black_box(arctic::concurrent::MapRef::upsert(r, key, value));
+                None
             }
             MapRef::Hazard(r) => {
-                arctic::concurrent::MapRef::upsert(r, key, value).map(|s| V::from_borrow(*s))
+                std::hint::black_box(arctic::concurrent::MapRef::upsert(r, key, value));
+                None
             }
         }
     }
 
     fn update(&mut self, key: <K as ::arctic::raw::Key>::Borrow<'static>, value: V) -> Option<V> {
         match self {
-            MapRef::Disable(r) => arctic::concurrent::MapRef::update(r, key, value)
-                .ok()
-                .map(|s| V::from_borrow(*s)),
-            MapRef::Epoch(r) => arctic::concurrent::MapRef::update(r, key, value)
-                .ok()
-                .map(|s| V::from_borrow(*s)),
-            MapRef::Seize(r) => arctic::concurrent::MapRef::update(r, key, value)
-                .ok()
-                .map(|s| V::from_borrow(*s)),
-            MapRef::Hazard(r) => arctic::concurrent::MapRef::update(r, key, value)
-                .ok()
-                .map(|s| V::from_borrow(*s)),
+            MapRef::Disable(r) => {
+                std::hint::black_box(arctic::concurrent::MapRef::update(r, key, value));
+                None
+            }
+            MapRef::Epoch(r) => {
+                std::hint::black_box(arctic::concurrent::MapRef::update(r, key, value));
+                None
+            }
+            MapRef::Seize(r) => {
+                std::hint::black_box(arctic::concurrent::MapRef::update(r, key, value));
+                None
+            }
+            MapRef::Hazard(r) => {
+                std::hint::black_box(arctic::concurrent::MapRef::update(r, key, value));
+                None
+            }
         }
     }
 
     fn remove(&mut self, key: <K as ::arctic::raw::Key>::Borrow<'static>) -> Option<V> {
         match self {
             MapRef::Disable(r) => {
-                arctic::concurrent::MapRef::remove(r, key).map(|s| V::from_borrow(*s))
+                std::hint::black_box(arctic::concurrent::MapRef::remove(r, key));
+                None
             }
             MapRef::Epoch(r) => {
-                arctic::concurrent::MapRef::remove(r, key).map(|s| V::from_borrow(*s))
+                std::hint::black_box(arctic::concurrent::MapRef::remove(r, key));
+                None
             }
             MapRef::Seize(r) => {
-                arctic::concurrent::MapRef::remove(r, key).map(|s| V::from_borrow(*s))
+                std::hint::black_box(arctic::concurrent::MapRef::remove(r, key));
+                None
             }
             MapRef::Hazard(r) => {
-                arctic::concurrent::MapRef::remove(r, key).map(|s| V::from_borrow(*s))
+                std::hint::black_box(arctic::concurrent::MapRef::remove(r, key));
+                None
             }
         }
     }
