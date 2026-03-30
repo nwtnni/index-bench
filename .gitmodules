@@ -17,5 +17,5 @@
 	path = extern/IndexResearch
 	url = https://github.com/nwtnni/IndexResearch.git
 [submodule "extern/mimalloc_rust"]
-    path = extern/mimalloc_rust
-	url = https://github.com/nwtnni/mimalloc_rust.git
+	path = extern/mimalloc_rust
+	url = https://github.com/migopp/mimalloc_rust.git
