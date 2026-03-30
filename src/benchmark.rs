@@ -31,9 +31,6 @@ pub fn run<K: KeyDistribution, V: index::Value, I: Index<K::Key, V, H>, H: index
     let operation_count_per_thread = config
         .workload
         .operation_count_per_thread(config.global.thread_count);
-    let load_count_per_thread = config
-        .workload
-        .load_count_per_thread(config.global.thread_count);
 
     let topology = &Topology::new().context("Initialize hwloc topology")?;
     let depth = topology
@@ -138,55 +135,53 @@ pub fn run<K: KeyDistribution, V: index::Value, I: Index<K::Key, V, H>, H: index
 
                     let start = Instant::now();
 
-                    // Do load phase.
-                    //
-                    // Implicitly calculates `load_count_per_thread` in `Loader`.
-                    while let Some(key) = loader.next_key() {
-                        let checksum = K::Key::checksum(key);
-                        let value = V::from_checksum(checksum);
-                        map.insert(key, value);
-                    }
-
-                    // Do operations phase.
-                    for _ in 0..operation_count_per_thread {
-                        let operation = runner.next_operation(&mut rng);
-                        match operation {
-                            ycsb::Operation::Read => {
-                                let (_, key) = runner.next_key_read(&mut rng);
-                                let _value = map.get(key);
-                                // if !I::IGNORE_GET {
-                                //     assert_eq!(value, Some(K::Key::checksum(key)));
-                                // }
-                            }
-                            ycsb::Operation::Update => {
-                                let (_, key) = runner.next_key_read(&mut rng);
-                                let checksum = K::Key::checksum(key);
-                                let value = V::from_checksum(checksum);
-                                let _old = map.update(key, value);
-                                // if !I::IGNORE_UPDATE {
-                                //     assert_eq!(old, Some(checksum));
-                                // }
-                            }
-                            ycsb::Operation::Scan => {
-                                let (_, key) = runner.next_key_read(&mut rng);
-                                let len = runner.next_scan_length(&mut rng);
-                                buffer.clear();
-                                map.scan(key, len, &mut buffer);
-                            }
-                            ycsb::Operation::Insert => {
-                                let (id, key) = runner.next_key_insert();
-                                let checksum = K::Key::checksum(key);
-                                let value = V::from_checksum(checksum);
-                                let _old = map.insert(key, value);
-                                // if !I::IGNORE_INSERT {
-                                //     assert_eq!(old, None);
-                                // }
-                                runner.acknowledge(id);
-                            }
-                            ycsb::Operation::ReadModifyWrite => todo!(),
-                            ycsb::Operation::Delete => {
-                                let (_, key) = runner.next_key_read(&mut rng);
-                                let _ = map.remove(key);
+                    if config.workload.load {
+                        while let Some(key) = loader.next_key() {
+                            let checksum = K::Key::checksum(key);
+                            let value = V::from_checksum(checksum);
+                            map.insert(key, value);
+                        }
+                    } else {
+                        for _ in 0..operation_count_per_thread {
+                            let operation = runner.next_operation(&mut rng);
+                            match operation {
+                                ycsb::Operation::Read => {
+                                    let (_, key) = runner.next_key_read(&mut rng);
+                                    let _value = map.get(key);
+                                    // if !I::IGNORE_GET {
+                                    //     assert_eq!(value, Some(K::Key::checksum(key)));
+                                    // }
+                                }
+                                ycsb::Operation::Update => {
+                                    let (_, key) = runner.next_key_read(&mut rng);
+                                    let checksum = K::Key::checksum(key);
+                                    let value = V::from_checksum(checksum);
+                                    let _old = map.update(key, value);
+                                    // if !I::IGNORE_UPDATE {
+                                    //     assert_eq!(old, Some(checksum));
+                                    // }
+                                }
+                                ycsb::Operation::Scan => {
+                                    let (_, key) = runner.next_key_read(&mut rng);
+                                    let len = runner.next_scan_length(&mut rng);
+                                    buffer.clear();
+                                    map.scan(key, len, &mut buffer);
+                                }
+                                ycsb::Operation::Insert => {
+                                    let (id, key) = runner.next_key_insert();
+                                    let checksum = K::Key::checksum(key);
+                                    let value = V::from_checksum(checksum);
+                                    let _old = map.insert(key, value);
+                                    // if !I::IGNORE_INSERT {
+                                    //     assert_eq!(old, None);
+                                    // }
+                                    runner.acknowledge(id);
+                                }
+                                ycsb::Operation::ReadModifyWrite => todo!(),
+                                ycsb::Operation::Delete => {
+                                    let (_, key) = runner.next_key_read(&mut rng);
+                                    let _ = map.remove(key);
+                                }
                             }
                         }
                     }
@@ -206,7 +201,6 @@ pub fn run<K: KeyDistribution, V: index::Value, I: Index<K::Key, V, H>, H: index
                         id: thread_id,
                         core: core_id,
                         time: time.as_nanos(),
-                        load_count: load_count_per_thread as u64,
                         operation_count: operation_count_per_thread as u64,
                         perf: perf_report,
                         index: index_report,

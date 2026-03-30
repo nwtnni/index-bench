@@ -29,7 +29,6 @@ pub struct Thread {
     pub id: usize,
     pub core: usize,
     pub time: u128,
-    pub load_count: u64,
     pub operation_count: u64,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub perf: Option<perf::Report>,

@@ -178,6 +178,8 @@ impl Value for Box<u64> {
         Box::new(checksum)
     }
 
+    // Uhhh. This sucks. Needed for scans on dynamically allocated values,
+    // but using `Arc` in that case would certainly be much better...
     fn from_borrow<'a>(borrow: &'a u64) -> Self
     where
         Self: 'a,
