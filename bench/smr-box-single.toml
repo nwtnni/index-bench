@@ -5,18 +5,18 @@ numa = [{ policy = "bind", node = 0 }]
 [[index]]
 hash = "rapid_hash"
 name = "arctic"
-reclaim_threshold = 64
+reclaim_threshold = 256
 
 [workload]
-load = [true]
+load = [false]
 key = ["u64"]
 value = ["box"]
-insert_order = ["ordered"]
-record_count = [10000000]
-operation_count = [100000000]
-update_proportion = [0.0]
+insert_order = ["hashed"]
+record_count = [100800000]
+operation_count = [10000000]
+update_proportion = [0.5]
 read_proportion = [0.0]
-insert_proportion = [0.5]
+insert_proportion = [0.0]
 delete_proportion = [0.5]
 scan_proportion = [0.0]
 read_modify_write_proportion = [0.0]

@@ -5,11 +5,6 @@ numa = [{ policy = "bind", node = 0 }]
 [[index]]
 hash = "rapid_hash"
 name = "arctic"
-reclaim_threshold = 32
-
-[[index]]
-hash = "rapid_hash"
-name = "arctic"
 reclaim_threshold = 64
 
 [[index]]
@@ -32,23 +27,12 @@ hash = "rapid_hash"
 name = "arctic"
 reclaim_threshold = 1024
 
-[[index]]
-hash = "rapid_hash"
-name = "arctic"
-reclaim_threshold = 2048
-
-[[index]]
-hash = "rapid_hash"
-name = "arctic"
-reclaim_threshold = 4096
-
 [workload]
 load = [false]
-# key = ["u64", "ipv4", "snowflake", "email", "url"]
 key = ["u64"]
 value = ["box"]
-insert_order = ["ordered", "hashed"]
-record_count = [100800000]
+insert_order = ["hashed"]
+record_count = [100080000]
 operation_count = [100000000]
 update_proportion = [0.5]
 read_proportion = [0.0]
