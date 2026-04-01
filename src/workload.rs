@@ -47,10 +47,6 @@ pub enum Value {
 static ACKNOWLEDGED: Acknowledged = Acknowledged::new();
 
 impl Config {
-    pub(crate) fn load_count_per_thread(&self, thread_count: usize) -> usize {
-        self.ycsb.record_count / thread_count
-    }
-
     pub(crate) fn operation_count_per_thread(&self, thread_count: usize) -> usize {
         self.ycsb.operation_count / thread_count
     }
