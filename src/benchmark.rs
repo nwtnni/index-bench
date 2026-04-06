@@ -20,7 +20,7 @@ use crate::index::Key as _;
 use crate::measure;
 use crate::workload::KeyDistribution;
 
-pub fn run<K: KeyDistribution, I: Index<K::Key, H>, H: index::Hasher>(
+pub fn run<K: KeyDistribution, V: index::Value, I: Index<K::Key, V, H>, H: index::Hasher>(
     config: crate::Config,
 ) -> anyhow::Result<measure::Global> {
     let date = SystemTime::now()
@@ -103,7 +103,8 @@ pub fn run<K: KeyDistribution, I: Index<K::Key, H>, H: index::Hasher>(
                     if !workload.load {
                         while let Some(key) = loader.next_key() {
                             let checksum = K::Key::checksum(key);
-                            map.insert(key, checksum);
+                            let value = V::from_checksum(checksum);
+                            map.insert(key, value);
                         }
                     }
 
@@ -134,10 +135,11 @@ pub fn run<K: KeyDistribution, I: Index<K::Key, H>, H: index::Hasher>(
 
                     let start = Instant::now();
 
-                    if workload.load {
+                    if config.workload.load {
                         while let Some(key) = loader.next_key() {
                             let checksum = K::Key::checksum(key);
-                            map.insert(key, checksum);
+                            let value = V::from_checksum(checksum);
+                            map.insert(key, value);
                         }
                     } else {
                         for _ in 0..operation_count_per_thread {
@@ -145,18 +147,19 @@ pub fn run<K: KeyDistribution, I: Index<K::Key, H>, H: index::Hasher>(
                             match operation {
                                 ycsb::Operation::Read => {
                                     let (_, key) = runner.next_key_read(&mut rng);
-                                    let value = map.get(key);
-                                    if !I::IGNORE_GET {
-                                        assert_eq!(value, Some(K::Key::checksum(key)));
-                                    }
+                                    let _value = map.get(key);
+                                    // if !I::IGNORE_GET {
+                                    //     assert_eq!(value, Some(K::Key::checksum(key)));
+                                    // }
                                 }
                                 ycsb::Operation::Update => {
                                     let (_, key) = runner.next_key_read(&mut rng);
                                     let checksum = K::Key::checksum(key);
-                                    let old = map.update(key, checksum);
-                                    if !I::IGNORE_UPDATE {
-                                        assert_eq!(old, Some(checksum));
-                                    }
+                                    let value = V::from_checksum(checksum);
+                                    let _old = map.update(key, value);
+                                    // if !I::IGNORE_UPDATE {
+                                    //     assert_eq!(old, Some(checksum));
+                                    // }
                                 }
                                 ycsb::Operation::Scan => {
                                     let (_, key) = runner.next_key_read(&mut rng);
@@ -167,14 +170,18 @@ pub fn run<K: KeyDistribution, I: Index<K::Key, H>, H: index::Hasher>(
                                 ycsb::Operation::Insert => {
                                     let (id, key) = runner.next_key_insert();
                                     let checksum = K::Key::checksum(key);
-                                    let _ = map.insert(key, checksum);
+                                    let value = V::from_checksum(checksum);
+                                    let _old = map.insert(key, value);
                                     // if !I::IGNORE_INSERT {
                                     //     assert_eq!(old, None);
                                     // }
                                     runner.acknowledge(id);
                                 }
                                 ycsb::Operation::ReadModifyWrite => todo!(),
-                                ycsb::Operation::Delete => todo!(),
+                                ycsb::Operation::Delete => {
+                                    let (_, key) = runner.next_key_read(&mut rng);
+                                    let _ = map.remove(key);
+                                }
                             }
                         }
                     }

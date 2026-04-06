@@ -3,7 +3,7 @@ use crate::index;
 
 macro_rules! impl_index {
     ($index:ty, $map:ty) => {
-        impl<H: index::Hasher> Index<$index, H> for concurrent_map::ConcurrentMap<$map, u64> {
+        impl<H: index::Hasher> Index<$index, u64, H> for concurrent_map::ConcurrentMap<$map, u64> {
             type Send<'a> = Self;
 
             fn new(_: &index::Config) -> Self {
@@ -15,7 +15,7 @@ macro_rules! impl_index {
             }
         }
 
-        impl<H: index::Hasher> index::IndexSend<$index, H>
+        impl<H: index::Hasher> index::IndexSend<$index, u64, H>
             for concurrent_map::ConcurrentMap<$map, u64>
         {
             type Handle<'a> = &'a Self;
@@ -29,7 +29,7 @@ macro_rules! impl_index {
 
 impl_index!(u64, u64);
 
-impl index::IndexPin<u64> for &'_ concurrent_map::ConcurrentMap<u64, u64> {
+impl index::IndexPin<u64, u64> for &'_ concurrent_map::ConcurrentMap<u64, u64> {
     fn get(&mut self, key: u64) -> Option<u64> {
         concurrent_map::ConcurrentMap::get(self, &key)
     }
@@ -49,7 +49,7 @@ impl index::IndexPin<u64> for &'_ concurrent_map::ConcurrentMap<u64, u64> {
 
 impl_index!(String, &'static str);
 
-impl index::IndexPin<String> for &'_ concurrent_map::ConcurrentMap<&'static str, u64> {
+impl index::IndexPin<String, u64> for &'_ concurrent_map::ConcurrentMap<&'static str, u64> {
     fn get(&mut self, key: &'static str) -> Option<u64> {
         concurrent_map::ConcurrentMap::get(self, &key)
     }
@@ -69,7 +69,7 @@ impl index::IndexPin<String> for &'_ concurrent_map::ConcurrentMap<&'static str,
 
 impl_index!(String, String);
 
-impl index::IndexPin<String> for &'_ concurrent_map::ConcurrentMap<String, u64> {
+impl index::IndexPin<String, u64> for &'_ concurrent_map::ConcurrentMap<String, u64> {
     fn get(&mut self, key: &'static str) -> Option<u64> {
         concurrent_map::ConcurrentMap::get(self, key)
     }

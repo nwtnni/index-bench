@@ -1,7 +1,7 @@
 use crate::Index;
 use crate::index;
 
-impl<K: index::Key, H: index::Hasher> Index<K, H> for contrie::CloneConMap<K, u64> {
+impl<K: index::Key, H: index::Hasher> Index<K, u64, H> for contrie::CloneConMap<K, u64> {
     type Send<'a> = &'a Self;
 
     fn new(_: &index::Config) -> Self {
@@ -13,7 +13,9 @@ impl<K: index::Key, H: index::Hasher> Index<K, H> for contrie::CloneConMap<K, u6
     }
 }
 
-impl<K: index::Key, H: index::Hasher> index::IndexSend<K, H> for &'_ contrie::CloneConMap<K, u64> {
+impl<K: index::Key, H: index::Hasher> index::IndexSend<K, u64, H>
+    for &'_ contrie::CloneConMap<K, u64>
+{
     type Handle<'a>
         = Self
     where
@@ -24,7 +26,7 @@ impl<K: index::Key, H: index::Hasher> index::IndexSend<K, H> for &'_ contrie::Cl
     }
 }
 
-impl<K: index::Key> index::IndexPin<K> for &'_ contrie::CloneConMap<K, u64> {
+impl<K: index::Key> index::IndexPin<K, u64> for &'_ contrie::CloneConMap<K, u64> {
     fn get(&mut self, key: &K) -> Option<u64> {
         contrie::CloneConMap::get(self, key).map(|(_, value)| value)
     }

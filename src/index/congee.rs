@@ -1,7 +1,7 @@
 use crate::Index;
 use crate::index;
 
-impl<H: index::Hasher> Index<u64, H> for congee::Congee<usize, usize> {
+impl<H: index::Hasher> Index<u64, u64, H> for congee::Congee<usize, usize> {
     type Send<'a> = &'a Self;
 
     fn new(_: &index::Config) -> Self {
@@ -13,7 +13,7 @@ impl<H: index::Hasher> Index<u64, H> for congee::Congee<usize, usize> {
     }
 }
 
-impl<H: index::Hasher> index::IndexSend<u64, H> for &'_ congee::Congee<usize, usize> {
+impl<H: index::Hasher> index::IndexSend<u64, u64, H> for &'_ congee::Congee<usize, usize> {
     type Handle<'a>
         = Self
     where
@@ -24,7 +24,7 @@ impl<H: index::Hasher> index::IndexSend<u64, H> for &'_ congee::Congee<usize, us
     }
 }
 
-impl index::IndexPin<u64> for &'_ congee::Congee<usize, usize> {
+impl index::IndexPin<u64, u64> for &'_ congee::Congee<usize, usize> {
     fn get(&mut self, key: u64) -> Option<u64> {
         let guard = self.pin();
         congee::Congee::get(self, &(key as usize), &guard).map(|value| value as u64)

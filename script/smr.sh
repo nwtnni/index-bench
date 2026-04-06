@@ -5,9 +5,9 @@ set -o pipefail
 set -o nounset
 set -o xtrace
 
-for feature in "default" "smr-disable" "smr-epoch"; do
+for feature in "default" "smr-disable" "smr-seize" "smr-epoch"; do
     cargo build --release --features "$feature"
-    cargo run --release  --features "$feature" -- bench/smr.toml
+    cargo run --release  --features "$feature" -- bench/smr-box.toml
     mv result.ndjson "arctic-$feature.ndjson"
 done
 

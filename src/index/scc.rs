@@ -3,7 +3,7 @@ use crate::index;
 
 macro_rules! impl_index {
     ($index:ty, $map:ty) => {
-        impl<H: index::Hasher> Index<$index, H> for scc::HashMap<$map, u64, H> {
+        impl<H: index::Hasher> Index<$index, u64, H> for scc::HashMap<$map, u64, H> {
             type Send<'a> = &'a Self;
 
             fn new(_: &index::Config) -> Self {
@@ -15,7 +15,7 @@ macro_rules! impl_index {
             }
         }
 
-        impl<H: index::Hasher> index::IndexSend<$index, H> for &'_ scc::HashMap<$map, u64, H> {
+        impl<H: index::Hasher> index::IndexSend<$index, u64, H> for &'_ scc::HashMap<$map, u64, H> {
             type Handle<'a>
                 = Self
             where
@@ -26,7 +26,7 @@ macro_rules! impl_index {
             }
         }
 
-        impl<H: index::Hasher> Index<$index, H> for scc::TreeIndex<$map, u64> {
+        impl<H: index::Hasher> Index<$index, u64, H> for scc::TreeIndex<$map, u64> {
             type Send<'a> = &'a Self;
 
             const IGNORE_INSERT: bool = true;
@@ -40,7 +40,7 @@ macro_rules! impl_index {
             }
         }
 
-        impl<H: index::Hasher> index::IndexSend<$index, H> for &'_ scc::TreeIndex<$map, u64> {
+        impl<H: index::Hasher> index::IndexSend<$index, u64, H> for &'_ scc::TreeIndex<$map, u64> {
             type Handle<'a>
                 = Self
             where
@@ -55,7 +55,7 @@ macro_rules! impl_index {
 
 impl_index!(u64, u64);
 
-impl<H: index::Hasher> index::IndexPin<u64> for &'_ scc::HashMap<u64, u64, H> {
+impl<H: index::Hasher> index::IndexPin<u64, u64> for &'_ scc::HashMap<u64, u64, H> {
     fn get(&mut self, key: u64) -> Option<u64> {
         self.read_sync(&key, |_, value| *value)
     }
@@ -77,7 +77,7 @@ impl<H: index::Hasher> index::IndexPin<u64> for &'_ scc::HashMap<u64, u64, H> {
     }
 }
 
-impl index::IndexPin<u64> for &'_ scc::TreeIndex<u64, u64> {
+impl index::IndexPin<u64, u64> for &'_ scc::TreeIndex<u64, u64> {
     fn get(&mut self, key: u64) -> Option<u64> {
         let guard = scc::Guard::new();
         self.peek(&key, &guard).copied()
@@ -104,7 +104,7 @@ impl index::IndexPin<u64> for &'_ scc::TreeIndex<u64, u64> {
 
 impl_index!(String, &'static str);
 
-impl<H: index::Hasher> index::IndexPin<String> for &'_ scc::HashMap<&'static str, u64, H> {
+impl<H: index::Hasher> index::IndexPin<String, u64> for &'_ scc::HashMap<&'static str, u64, H> {
     fn get(&mut self, key: &'static str) -> Option<u64> {
         self.read_sync(&key, |_, value| *value)
     }
@@ -126,7 +126,7 @@ impl<H: index::Hasher> index::IndexPin<String> for &'_ scc::HashMap<&'static str
     }
 }
 
-impl index::IndexPin<String> for &'_ scc::TreeIndex<&'static str, u64> {
+impl index::IndexPin<String, u64> for &'_ scc::TreeIndex<&'static str, u64> {
     fn get(&mut self, key: &'static str) -> Option<u64> {
         let guard = scc::Guard::new();
         self.peek(&key, &guard).copied()
@@ -153,7 +153,7 @@ impl index::IndexPin<String> for &'_ scc::TreeIndex<&'static str, u64> {
 
 impl_index!(String, String);
 
-impl<H: index::Hasher> index::IndexPin<String> for &'_ scc::HashMap<String, u64, H> {
+impl<H: index::Hasher> index::IndexPin<String, u64> for &'_ scc::HashMap<String, u64, H> {
     fn get(&mut self, key: &'static str) -> Option<u64> {
         self.read_sync(key, |_, value| *value)
     }
@@ -175,7 +175,7 @@ impl<H: index::Hasher> index::IndexPin<String> for &'_ scc::HashMap<String, u64,
     }
 }
 
-impl index::IndexPin<String> for &'_ scc::TreeIndex<String, u64> {
+impl index::IndexPin<String, u64> for &'_ scc::TreeIndex<String, u64> {
     fn get(&mut self, key: &'static str) -> Option<u64> {
         let guard = scc::Guard::new();
         self.peek(key, &guard).copied()

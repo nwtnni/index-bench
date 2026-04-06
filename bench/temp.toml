@@ -1,26 +1,6 @@
 [global]
-thread_count = [80]
+thread_count = [40, 80, 120]
 numa = [{ policy = "bind", node = 0 }]
-
-[[index]]
-hash = "rapid_hash"
-name = "arctic"
-reclaim_threshold = 0
-
-[[index]]
-hash = "rapid_hash"
-name = "arctic"
-reclaim_threshold = 1
-
-[[index]]
-hash = "rapid_hash"
-name = "arctic"
-reclaim_threshold = 4
-
-[[index]]
-hash = "rapid_hash"
-name = "arctic"
-reclaim_threshold = 16
 
 [[index]]
 hash = "rapid_hash"
@@ -30,7 +10,17 @@ reclaim_threshold = 64
 [[index]]
 hash = "rapid_hash"
 name = "arctic"
+reclaim_threshold = 128
+
+[[index]]
+hash = "rapid_hash"
+name = "arctic"
 reclaim_threshold = 256
+
+[[index]]
+hash = "rapid_hash"
+name = "arctic"
+reclaim_threshold = 512
 
 [[index]]
 hash = "rapid_hash"
@@ -38,16 +28,16 @@ name = "arctic"
 reclaim_threshold = 1024
 
 [workload]
-load = [true]
+load = [false]
 key = ["u64"]
-value = ["u64"]
-insert_order = ["ordered", "hashed"]
-record_count = [2016000, 20160000, 201600000]
-operation_count = [1000000]
-update_proportion = [1.0]
+value = ["box"]
+insert_order = ["hashed"]
+record_count = [100080000]
+operation_count = [100000000]
+update_proportion = [0.5]
 read_proportion = [0.0]
 insert_proportion = [0.0]
-delete_proportion = [0.0]
+delete_proportion = [0.5]
 scan_proportion = [0.0]
 read_modify_write_proportion = [0.0]
 request_distribution = ["uniform"]

@@ -16,6 +16,9 @@ mod fb_tree;
 // mod scc;
 mod wormhole;
 
+// HACK: Re-export the enum wrapper for SMR configuration.
+pub use arctic::Map as ArcticMap;
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub struct Config {
@@ -27,6 +30,8 @@ pub struct Config {
     pub reclaim_threshold: usize,
     #[serde(default = "smr")]
     pub smr: Smr,
+    #[serde(default = "membarrier")]
+    pub membarrier: bool,
 }
 
 fn reclaim_threshold() -> usize {
@@ -38,9 +43,15 @@ fn smr() -> Smr {
         Smr::Disable
     } else if cfg!(feature = "smr-epoch") {
         Smr::Epoch
+    } else if cfg!(feature = "smr-seize") {
+        Smr::Seize
     } else {
         Smr::Hazard
     }
+}
+
+fn membarrier() -> bool {
+    cfg!(feature = "membarrier")
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -54,6 +65,7 @@ pub enum Hash {
 pub enum Smr {
     Disable,
     Epoch,
+    Seize,
     Hazard,
 }
 
@@ -83,7 +95,7 @@ pub enum Insert {
     OldExists,
 }
 
-pub trait Index<K: Key, H> {
+pub trait Index<K: Key, V: Value, H> {
     /// HACK
     ///
     /// - `crossbeam-skiplist` returns the new value instead of the old
@@ -95,7 +107,7 @@ pub trait Index<K: Key, H> {
     /// - `crossbeam-skiplist` can see a removal during insertion: https://github.com/crossbeam-rs/crossbeam/issues/1023
     const IGNORE_GET: bool = false;
 
-    type Send<'a>: IndexSend<K, H> + Send
+    type Send<'a>: IndexSend<K, V, H> + Send
     where
         Self: 'a;
 
@@ -113,8 +125,8 @@ pub trait Index<K: Key, H> {
     }
 }
 
-pub trait IndexSend<K: Key, H> {
-    type Handle<'a>: IndexPin<K>
+pub trait IndexSend<K: Key, V: Value, H> {
+    type Handle<'a>: IndexPin<K, V>
     where
         Self: 'a;
 
@@ -140,26 +152,54 @@ impl Key for Vec<u8> {
     }
 }
 
-pub trait IndexPin<K: Key> {
+pub trait Value: ::arctic::Value {
+    fn from_checksum(checksum: u64) -> Self;
+
+    fn from_borrow<'a>(borrow: <Self as ::arctic::sequential::Value>::Borrow<'a>) -> Self
+    where
+        Self: 'a;
+}
+
+impl Value for u64 {
+    fn from_checksum(checksum: u64) -> Self {
+        checksum
+    }
+
+    fn from_borrow<'a>(borrow: u64) -> Self
+    where
+        Self: 'a,
+    {
+        borrow
+    }
+}
+
+impl Value for Box<u64> {
+    fn from_checksum(checksum: u64) -> Self {
+        Box::new(checksum)
+    }
+
+    // Uhhh. This sucks. Needed for scans on dynamically allocated values,
+    // but using `Arc` in that case would certainly be much better...
+    fn from_borrow<'a>(borrow: &'a u64) -> Self
+    where
+        Self: 'a,
+    {
+        Box::new(*borrow)
+    }
+}
+
+pub trait IndexPin<K: Key, V: Value> {
     fn enable_membarrier(&self) {}
 
-    fn get(&mut self, key: <K as ::arctic::raw::Key>::Borrow<'static>) -> Option<u64>;
+    fn get(&mut self, key: <K as ::arctic::raw::Key>::Borrow<'static>) -> Option<V>;
 
-    fn insert(
-        &mut self,
-        key: <K as ::arctic::raw::Key>::Borrow<'static>,
-        value: u64,
-    ) -> Option<u64>;
+    fn insert(&mut self, key: <K as ::arctic::raw::Key>::Borrow<'static>, value: V) -> Option<V>;
 
-    fn update(
-        &mut self,
-        key: <K as ::arctic::raw::Key>::Borrow<'static>,
-        value: u64,
-    ) -> Option<u64> {
+    fn update(&mut self, key: <K as ::arctic::raw::Key>::Borrow<'static>, value: V) -> Option<V> {
         self.insert(key, value)
     }
 
-    fn remove(&mut self, _key: <K as ::arctic::raw::Key>::Borrow<'static>) -> Option<u64> {
+    fn remove(&mut self, _key: <K as ::arctic::raw::Key>::Borrow<'static>) -> Option<V> {
         unimplemented!(
             "TODO: implement remove for {}",
             std::any::type_name::<Self>()
@@ -170,7 +210,7 @@ pub trait IndexPin<K: Key> {
         &mut self,
         _key: <K as ::arctic::raw::Key>::Borrow<'static>,
         _count: usize,
-        _buffer: &mut Vec<u64>,
+        _buffer: &mut Vec<V>,
     ) {
         unimplemented!("TODO: implement scan for {}", std::any::type_name::<Self>())
     }

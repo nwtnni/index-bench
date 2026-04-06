@@ -3,7 +3,7 @@ use crate::index;
 
 macro_rules! impl_index {
     ($index:ty, $map:ty) => {
-        impl<H: index::Hasher> Index<$index, H> for dashmap::DashMap<$map, u64, H> {
+        impl<H: index::Hasher> Index<$index, u64, H> for dashmap::DashMap<$map, u64, H> {
             type Send<'a> = &'a Self;
 
             fn new(_: &index::Config) -> Self {
@@ -15,7 +15,9 @@ macro_rules! impl_index {
             }
         }
 
-        impl<H: index::Hasher> index::IndexSend<$index, H> for &'_ dashmap::DashMap<$map, u64, H> {
+        impl<H: index::Hasher> index::IndexSend<$index, u64, H>
+            for &'_ dashmap::DashMap<$map, u64, H>
+        {
             type Handle<'a>
                 = Self
             where
@@ -30,7 +32,7 @@ macro_rules! impl_index {
 
 impl_index!(u64, u64);
 
-impl<H: index::Hasher> index::IndexPin<u64> for &'_ dashmap::DashMap<u64, u64, H> {
+impl<H: index::Hasher> index::IndexPin<u64, u64> for &'_ dashmap::DashMap<u64, u64, H> {
     fn get(&mut self, key: u64) -> Option<u64> {
         dashmap::DashMap::get(self, &key).map(|value| *value)
     }
@@ -46,7 +48,9 @@ impl<H: index::Hasher> index::IndexPin<u64> for &'_ dashmap::DashMap<u64, u64, H
 
 impl_index!(Vec<u8>, &'static [u8]);
 
-impl<H: index::Hasher> index::IndexPin<Vec<u8>> for &'_ dashmap::DashMap<&'static [u8], u64, H> {
+impl<H: index::Hasher> index::IndexPin<Vec<u8>, u64>
+    for &'_ dashmap::DashMap<&'static [u8], u64, H>
+{
     fn get(&mut self, key: &'static [u8]) -> Option<u64> {
         dashmap::DashMap::get(self, &key).map(|value| *value)
     }
@@ -62,7 +66,7 @@ impl<H: index::Hasher> index::IndexPin<Vec<u8>> for &'_ dashmap::DashMap<&'stati
 
 impl_index!(Vec<u8>, Vec<u8>);
 
-impl<H: index::Hasher> index::IndexPin<Vec<u8>> for &'_ dashmap::DashMap<Vec<u8>, u64, H> {
+impl<H: index::Hasher> index::IndexPin<Vec<u8>, u64> for &'_ dashmap::DashMap<Vec<u8>, u64, H> {
     fn get(&mut self, key: &'static [u8]) -> Option<u64> {
         dashmap::DashMap::get(self, key).map(|value| *value)
     }

@@ -16,6 +16,8 @@ pub struct Config {
 
     pub key: Key,
 
+    pub value: Value,
+
     #[cartesian(flatten)]
     #[serde(flatten)]
     pub ycsb: ycsb::Workload,
@@ -35,14 +37,18 @@ pub enum Key {
     Snowflake,
 }
 
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Value {
+    U64,
+    Box,
+}
+
 static ACKNOWLEDGED: Acknowledged = Acknowledged::new();
 
 impl Config {
     pub(crate) fn operation_count_per_thread(&self, thread_count: usize) -> usize {
-        (match self.load {
-            true => self.ycsb.record_count,
-            false => self.ycsb.operation_count,
-        }) / thread_count
+        self.ycsb.operation_count / thread_count
     }
 
     pub(crate) fn loader<K: KeyDistribution>(

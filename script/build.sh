@@ -12,7 +12,7 @@ git submodule update --init --recursive
 
 cd "$ROOT/../extern/mimalloc_rust/libmimalloc-sys/c_src/mimalloc/v3/"
 mkdir -p build && cd build
-cmake ..
+cmake .. -DCMAKE_C_FLAGS="-DMI_STAT=2"
 make -j mimalloc-static
 
 cd "$ROOT/../extern/IndexResearch/util/"

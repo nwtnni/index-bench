@@ -25,6 +25,7 @@ name = "wormhole"
 [workload]
 load = [true]
 key = [{ "ts" = 1 }, { "ts" = 10 }, { "ts" = 100 }, { "ts" = 1000 }, { "ts" = 10000 }, { "ts" = 100000 }, { "ts" = 1000000 }]
+value = ["u64"]
 insert_order = ["ordered"]
 record_count = [100800000]
 operation_count = [0]

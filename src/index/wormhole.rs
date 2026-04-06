@@ -1,7 +1,7 @@
 use crate::Index;
 use crate::index;
 
-impl<H: index::Hasher> Index<u64, H> for wormhole_sys::Wormhole {
+impl<H: index::Hasher> Index<u64, u64, H> for wormhole_sys::Wormhole {
     const IGNORE_INSERT: bool = true;
 
     type Send<'a> = &'a Self;
@@ -15,7 +15,7 @@ impl<H: index::Hasher> Index<u64, H> for wormhole_sys::Wormhole {
     }
 }
 
-impl<H: index::Hasher> index::IndexSend<u64, H> for &'_ wormhole_sys::Wormhole {
+impl<H: index::Hasher> index::IndexSend<u64, u64, H> for &'_ wormhole_sys::Wormhole {
     type Handle<'a>
         = wormhole_sys::WormRef<'a>
     where
@@ -26,7 +26,7 @@ impl<H: index::Hasher> index::IndexSend<u64, H> for &'_ wormhole_sys::Wormhole {
     }
 }
 
-impl index::IndexPin<u64> for wormhole_sys::WormRef<'_> {
+impl index::IndexPin<u64, u64> for wormhole_sys::WormRef<'_> {
     fn get(&mut self, key: u64) -> Option<u64> {
         let key = key.to_be_bytes();
         let ptr = key.as_ptr().cast();
@@ -41,7 +41,7 @@ impl index::IndexPin<u64> for wormhole_sys::WormRef<'_> {
     }
 
     fn update(&mut self, key: u64, value: u64) -> Option<u64> {
-        <Self as index::IndexPin<u64>>::insert(self, key, value);
+        <Self as index::IndexPin<u64, u64>>::insert(self, key, value);
         None
     }
 
@@ -64,7 +64,7 @@ impl index::IndexPin<u64> for wormhole_sys::WormRef<'_> {
     }
 }
 
-impl<H: index::Hasher> Index<Vec<u8>, H> for wormhole_sys::Wormhole {
+impl<H: index::Hasher> Index<Vec<u8>, u64, H> for wormhole_sys::Wormhole {
     const IGNORE_INSERT: bool = true;
 
     type Send<'a> = &'a Self;
@@ -78,7 +78,7 @@ impl<H: index::Hasher> Index<Vec<u8>, H> for wormhole_sys::Wormhole {
     }
 }
 
-impl<H: index::Hasher> index::IndexSend<Vec<u8>, H> for &'_ wormhole_sys::Wormhole {
+impl<H: index::Hasher> index::IndexSend<Vec<u8>, u64, H> for &'_ wormhole_sys::Wormhole {
     type Handle<'a>
         = wormhole_sys::WormRef<'a>
     where
@@ -89,7 +89,7 @@ impl<H: index::Hasher> index::IndexSend<Vec<u8>, H> for &'_ wormhole_sys::Wormho
     }
 }
 
-impl index::IndexPin<Vec<u8>> for wormhole_sys::WormRef<'_> {
+impl index::IndexPin<Vec<u8>, u64> for wormhole_sys::WormRef<'_> {
     fn get(&mut self, key: &'static [u8]) -> Option<u64> {
         unsafe { wormhole_sys::WormRef::get(self, key.as_ptr().cast(), key.len()) }
     }
@@ -100,7 +100,7 @@ impl index::IndexPin<Vec<u8>> for wormhole_sys::WormRef<'_> {
     }
 
     fn update(&mut self, key: &'static [u8], value: u64) -> Option<u64> {
-        <Self as index::IndexPin<Vec<u8>>>::insert(self, key, value);
+        <Self as index::IndexPin<Vec<u8>, u64>>::insert(self, key, value);
         None
     }
 
