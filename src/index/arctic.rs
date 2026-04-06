@@ -124,7 +124,9 @@ where
     }
 
     fn remove(&mut self, key: <K as ::arctic::raw::Key>::Borrow<'static>) -> Option<V> {
-        let _ = std::hint::black_box(Map::remove(self, key));
+        let _ = std::hint::black_box(Map::update_with(self, key, None, |_, _| {
+            ControlFlow::<core::convert::Infallible, _>::Continue(None)
+        }));
         None
     }
 
