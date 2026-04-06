@@ -12,13 +12,13 @@ smr-disable = ["arctic/smr-disable"]
 smr-epoch = ["arctic/smr-epoch"]
 smr-seize = ["arctic/smr-seize"]
 
-membarrier = ["arctic/opt-membarrier", "arctic/opt-seize-fastbarrier"]
+membarrier = ["arctic/opt-membarrier"]
 
-opt-0 = ["arctic/opt-no-node3-get", "arctic/opt-no-node3-iter", "arctic/opt-no-node15-get", "arctic/opt-no-node15-iter", "arctic/opt-no-node47-iter", "arctic/opt-no-int", "arctic/opt-no-expand", "arctic/opt-no-path"]
-opt-1 = ["arctic/opt-no-node3-get", "arctic/opt-no-node3-iter", "arctic/opt-no-node15-get", "arctic/opt-no-node15-iter", "arctic/opt-no-node47-iter", "arctic/opt-no-int", "arctic/opt-no-expand"]
+opt-0 = ["opt-1", "arctic/opt-no-path"]
+opt-1 = ["opt-2", "arctic/opt-no-int", "arctic/opt-no-expand"]
 opt-2 = ["arctic/opt-no-node3-get", "arctic/opt-no-node3-iter", "arctic/opt-no-node15-get", "arctic/opt-no-node15-iter", "arctic/opt-no-node47-iter"]
 opt-3 = []
-opt-4 = ["arctic/opt-membarrier"]
+opt-4 = ["membarrier"]
 
 [dependencies]
 anyhow = "1.0.99"

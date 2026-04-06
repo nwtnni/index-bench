@@ -1,7 +1,7 @@
 use serde::Deserialize;
 use serde::Serialize;
 
-mod arctic;
+pub mod arctic;
 mod art;
 // mod b_plus_tree;
 // mod bz_tree;
@@ -15,9 +15,6 @@ mod fb_tree;
 // mod papaya;
 // mod scc;
 mod wormhole;
-
-// HACK: Re-export the enum wrapper for SMR configuration.
-pub use arctic::Map as ArcticMap;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case")]

@@ -78,7 +78,7 @@ fn specialize_index_u64<
             index_bench::run::<K, u64, art_sys::Rowex<K::Key>, H>(config)
         }
         index_bench::index::Name::Arctic => {
-            index_bench::run::<K, V, index_bench::index::ArcticMap<K::Key, V>, H>(config)
+            index_bench::run::<K, V, index_bench::index::arctic::Map<K::Key, V>, H>(config)
         }
         index_bench::index::Name::DashMap => {
             index_bench::run::<K, u64, dashmap::DashMap<K::Key, u64, H>, H>(config)
@@ -105,7 +105,7 @@ fn specialize_index_str<
             index_bench::run::<K, u64, art_sys::Rowex<Vec<u8>>, H>(config)
         }
         index_bench::index::Name::Arctic => {
-            index_bench::run::<K, V, index_bench::index::ArcticMap<Vec<u8>, V>, H>(config)
+            index_bench::run::<K, V, index_bench::index::arctic::Map<Vec<u8>, V>, H>(config)
         }
         index_bench::index::Name::DashMap => {
             index_bench::run::<K, u64, dashmap::DashMap<&'static [u8], u64, H>, H>(config)
@@ -132,7 +132,7 @@ fn specialize_index_string<
             index_bench::run::<K, u64, art_sys::Rowex<Vec<u8>>, H>(config)
         }
         index_bench::index::Name::Arctic => {
-            index_bench::run::<K, V, index_bench::index::ArcticMap<Vec<u8>, V>, H>(config)
+            index_bench::run::<K, V, index_bench::index::arctic::Map<Vec<u8>, V>, H>(config)
         }
         index_bench::index::Name::DashMap => {
             index_bench::run::<K, u64, dashmap::DashMap<Vec<u8>, u64, H>, H>(config)
