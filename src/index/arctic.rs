@@ -13,7 +13,7 @@ type Smr = arctic::concurrent::smr::NoOp;
 type Smr = arctic::concurrent::smr::Epoch;
 
 #[cfg(feature = "smr-seize")]
-type Smr = arctic::concurrent::smr::Hazard;
+type Smr = arctic::concurrent::smr::Seize;
 
 pub type Map<K, V> = arctic::concurrent::Map<K, V, Smr>;
 
@@ -45,14 +45,14 @@ where
 
         #[cfg(feature = "smr-epoch")]
         {
-            Map::with_smr(arctic::concurrent::smr::Epoch::with_bag_capacity(
-                config.reclaim_threshold,
+            Map::with_smr(Box::new(
+                arctic::concurrent::smr::epoch::Global::with_bag_capacity(config.reclaim_threshold),
             ))
         }
 
         #[cfg(feature = "smr-seize")]
         {
-            Map::with_smr(arctic::concurrent::smr::Seize::with_batch_size(
+            Map::with_smr(arctic::concurrent::smr::seize::Global::with_batch_size(
                 config.reclaim_threshold,
             ))
         }
@@ -64,17 +64,12 @@ where
 
     #[cfg(feature = "stat")]
     fn report(&mut self) -> serde_json::Value {
-        match self {
-            Map::Disable(_) | Map::Epoch(_) | Map::Seize(_) => serde_json::Value::Null,
-            Map::Hazard(m) => serde_json::to_value(arctic::stat::process(m)).unwrap(),
-        }
+        serde_json::to_value(arctic::stat::process(self)).unwrap()
     }
 
     #[cfg(feature = "stat")]
     fn memory_key_value(&mut self) -> u64 {
-        // `iter::<false>` corresponds to `arctic::Descend` in legacy code, I think.
-        // https://github.com/nwtnni/arctic/blob/4416d06259a086088c31e1ee332fc3e11e846859/src/sequential.rs#L132
-        let mut iter = m.as_sequential().all().entries::<arctic::Descend>();
+        let mut iter = self.as_sequential().all().entries::<arctic::Ascend>();
         let mut total = 0;
         while let Some((key, _)) = iter.lend() {
             total += <K as ::arctic::raw::Key>::len(key) + 8;
@@ -124,9 +119,12 @@ where
     }
 
     fn remove(&mut self, key: <K as ::arctic::raw::Key>::Borrow<'static>) -> Option<V> {
-        let _ = std::hint::black_box(Map::update_with(self, key, None, |_, _| {
-            ControlFlow::<core::convert::Infallible, _>::Continue(None)
-        }));
+        let _ = std::hint::black_box(Map::update_with::<_, core::convert::Infallible>(
+            self,
+            key,
+            None,
+            |_, _| core::ops::ControlFlow::Continue(None),
+        ));
         None
     }
 
