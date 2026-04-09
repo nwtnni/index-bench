@@ -42,8 +42,15 @@ CHOICES_INDEPENDENT = [
 
 class Col:
     def __init__(
-        self, name: str, selector, output=False, aggregate=False, distribution=False
+        self,
+        persist: str,
+        name: str,
+        selector,
+        output=False,
+        aggregate=False,
+        distribution=False,
     ):
+        self.persist = persist
         self.name = name
         self.selector = selector
         self.output = output
@@ -52,14 +59,17 @@ class Col:
 
     def store(self):
         return dcc.Store(
-            id={"type": TYPE_STORE, "index": self.name},
+            id={"type": TYPE_STORE, "index": self.index()},
             storage_type="local",
         )
 
     # ID used in pattern matching callback
     # https://dash.plotly.com/pattern-matching-callbacks
     def id(self):
-        return {"type": TYPE_COL, "index": self.name}
+        return {"type": TYPE_COL, "index": self.index()}
+
+    def index(self):
+        return f"{self.persist}-{self.name}"
 
     def choices(self):
         if self.distribution:
@@ -107,6 +117,7 @@ class Col:
 )
 def main(vary, paths):
     df = pl.concat([load(vary, path) for path in paths])
+    persist = "+".join(sorted([path.name for path in paths]))
 
     ui_control = [html.H2("Control")]
     ui_independent = [html.H2("Independent")]
@@ -114,7 +125,7 @@ def main(vary, paths):
     ui_process = [html.H2("Process")]
     ui_thread = [html.H2("Thread")]
 
-    for col in flatten(df):
+    for col in flatten(persist, df):
         if col.output:
             COLS.append(col)
             choices = col.choices()
@@ -214,7 +225,7 @@ def main(vary, paths):
     app.run(debug=True)
 
 
-def flatten(df: pl.LazyFrame):
+def flatten(persist: str, df: pl.LazyFrame):
     def recurse(
         name: str, dtype: pl.DataType, namespace: list[str], selector, aggregate: bool
     ):
@@ -225,6 +236,7 @@ def flatten(df: pl.LazyFrame):
             # FIXME: more robust distribution detection
             case pl.String if output:
                 yield Col(
+                    persist,
                     "/".join(namespace),
                     selector(name),
                     distribution=True,
@@ -254,6 +266,7 @@ def flatten(df: pl.LazyFrame):
                     )
             case _:
                 yield Col(
+                    persist,
                     "/".join(namespace),
                     selector(name),
                     aggregate=aggregate,
