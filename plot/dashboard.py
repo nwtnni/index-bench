@@ -402,11 +402,7 @@ def update(
         ]
 
         if op == "mean":
-            explode = pl.col(y.name).explode()
-            aggregate_global_y = [
-                explode.mean(),
-                explode.std().alias(f"{y.name}_std"),
-            ]
+            aggregate_global_y = [pl.col(y.name).explode()]
         elif op == "sum":
             aggregate_local_y = aggregate_local_y.sum()
         elif y.distribution:
@@ -442,18 +438,33 @@ def update(
         fig = px.scatter()
 
         if not y.distribution:
-            fig = px.line(
-                df,
-                x=x.name,
-                y=y.name,
-                error_y=f"{y.name}_std",
-                facet_row=facet_row.name if facet_row is not None else None,
-                facet_col=facet_column.name if facet_column is not None else None,
-                color=facet_color.name if facet_color is not None else None,
-                markers=True,
-                color_discrete_sequence=px.colors.qualitative.Light24,
-                # log_y=True,
-            )
+            fig = None
+            if op == "mean":
+                fig = px.violin(
+                    df.explode(y.name),
+                    x=x.name,
+                    y=y.name,
+                    color=facet_color.name if facet_color is not None else None,
+                    facet_row=facet_row.name if facet_row is not None else None,
+                    facet_col=facet_column.name if facet_column is not None else None,
+                    box=True,
+                    points="all",
+                    color_discrete_sequence=px.colors.qualitative.Light24,
+                )
+                fig.update_xaxes(type="category")
+            else:
+                fig = px.line(
+                    df,
+                    x=x.name,
+                    y=y.name,
+                    error_y=f"{y.name}_std",
+                    facet_row=facet_row.name if facet_row is not None else None,
+                    facet_col=facet_column.name if facet_column is not None else None,
+                    color=facet_color.name if facet_color is not None else None,
+                    markers=True,
+                    color_discrete_sequence=px.colors.qualitative.Light24,
+                    # log_y=True,
+                )
 
             # https://community.plotly.com/t/changing-label-of-plotly-express-facet-categories/28066/4
             fig.for_each_annotation(
