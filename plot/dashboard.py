@@ -478,7 +478,12 @@ def update(
             table = []
 
             columns = [
-                dict(id="group", name="group"),
+                dict(id="x", name=x.name),
+                *(
+                    []
+                    if facet_column is None
+                    else [dict(id="col", name=facet_column.name)]
+                ),
                 column_int("count"),
                 column_float("avg"),
                 column_float("std"),
@@ -491,7 +496,7 @@ def update(
                 ]
             )
 
-            for name, data in df.group_by(
+            for group, data in df.group_by(
                 x.name,
                 *([facet_column.name] if facet_column is not None else []),
                 maintain_order=True,
@@ -506,7 +511,9 @@ def update(
                     histogram.add(h)
 
                 row = summarize_histogram(histogram)
-                row["group"] = "-".join(name)
+                row["x"] = group[0]
+                if facet_column is not None:
+                    row["col"] = group[1]
                 table.append(row)
 
             children.append(DataTable(table, columns))
