@@ -319,7 +319,7 @@ def load(vary: Optional[str], path: PurePath):
     State({"type": TYPE_STORE, "index": dash.ALL}, "data"),
 )
 def init_store(_, store):
-    return store
+    return [value if value is not None else "ignore" for value in store]
 
 
 @callback(
