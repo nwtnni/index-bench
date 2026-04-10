@@ -15,12 +15,12 @@ use serde::Serialize;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Report {
-    cache_access: u64,
-    cache_miss_rate: f64,
     branch: u64,
     branch_miss_rate: f64,
     lock_load: u64,
-    l3_hitm: u64,
+    l3: u64,
+    l3_hitm_rate: f64,
+    l3_miss_rate: f64,
 }
 
 pub(crate) struct Perf {
@@ -36,19 +36,18 @@ impl Perf {
         let mut template = Builder::new(Software::DUMMY);
         let template = template.one_cpu(cpu);
 
-        for event in [
-            Hardware::CACHE_REFERENCES,
-            Hardware::CACHE_MISSES,
-            Hardware::BRANCH_INSTRUCTIONS,
-            Hardware::BRANCH_MISSES,
-        ] {
+        for event in [Hardware::BRANCH_INSTRUCTIONS, Hardware::BRANCH_MISSES] {
             counters.push(template.event(event).build_with_group(&mut group).unwrap());
         }
 
         // From Intel SDM Vol. 3B Table 22-37
+        // https://perfmon-events.intel.com/platforms/icelakex/core-events/core/#core-events
         for config in [
-            0x21D0, // mem_inst_retired.lock_loads
-            0x04D2, // mem_load_l3_hit_retired.xsnp_hitm
+            0x21D0, // MEM_INST_RETIRED.LOCK_LOADS
+            0x04D1, // MEM_LOAD_RETIRED.L3_HIT
+            0x20D1, // MEM_LOAD_RETIRED.L3_MISS
+            0x04D2, // MEM_LOAD_L3_HIT_RETIRED.XSNP_FWD
+            0x04D3, // MEM_LOAD_L3_MISS_RETIRED.REMOTE_HITM
         ] {
             counters.push(
                 template
@@ -75,16 +74,16 @@ impl Perf {
 
         let get = |index: usize| (data[&self.counters[index]] as f64 * scale) as u64;
 
-        let cache_access = get(0);
-        let branch = get(2);
+        let branch = get(0);
+        let l3 = get(3) + get(4);
 
         Report {
-            cache_access,
-            cache_miss_rate: get(1) as f64 / cache_access as f64,
             branch,
-            branch_miss_rate: get(3) as f64 / branch as f64,
-            lock_load: get(4),
-            l3_hitm: get(5),
+            branch_miss_rate: get(1) as f64 / branch as f64,
+            lock_load: get(2),
+            l3,
+            l3_miss_rate: get(4) as f64 / l3 as f64,
+            l3_hitm_rate: (get(5) + get(6)) as f64 / l3 as f64,
         }
     }
 }
