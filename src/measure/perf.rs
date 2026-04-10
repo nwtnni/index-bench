@@ -7,10 +7,7 @@ use anyhow::Context as _;
 use anyhow::anyhow;
 use perf_event::Builder;
 use perf_event::Counter;
-// use perf_event::events::Cache;
-// use perf_event::events::CacheId;
-// use perf_event::events::CacheOp;
-// use perf_event::events::CacheResult;
+use perf_event::Group;
 use perf_event::events::Hardware;
 use perf_event::events::Software;
 use serde::Deserialize;
@@ -18,98 +15,77 @@ use serde::Serialize;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Report {
-    cpu_cycle_count: u64,
-    instruction_count: u64,
-    // l1d_rm: u64,
-    // l1d_ra: u64,
-    //
-    // l1d_wm: u64,
-    // l1d_wa: u64,
-    //
-    // ll_rm: u64,
-    // ll_ra: u64,
-    //
-    // ll_wm: u64,
-    // ll_wa: u64,
+    cache_access: u64,
+    cache_miss_rate: f64,
+    branch: u64,
+    branch_miss_rate: f64,
+    lock_load: u64,
+    l3_hitm: u64,
 }
 
 pub(crate) struct Perf {
-    group: perf_event::Group,
+    group: Group,
     counters: Vec<Counter>,
 }
 
 impl Perf {
-    pub fn new(cpu: usize) -> anyhow::Result<Self> {
-        let mut group = perf_event::Group::builder()
-            .one_cpu(cpu)
-            .build_group()
-            .context("Perf build group")?;
+    pub fn new(cpu: usize) -> Self {
+        let mut group = Group::builder().one_cpu(cpu).build_group().unwrap();
         let mut counters = Vec::new();
 
-        let mut builder = Builder::new(Software::DUMMY);
-        builder.one_cpu(cpu);
+        let mut template = Builder::new(Software::DUMMY);
+        let template = template.one_cpu(cpu);
 
-        counters.push(
-            group
-                .add(builder.event(Hardware::CPU_CYCLES))
-                .context("Perf add cycles")?,
-        );
-        counters.push(
-            group
-                .add(builder.event(Hardware::INSTRUCTIONS))
-                .context("Perf add instructions")?,
-        );
+        for event in [
+            Hardware::CACHE_REFERENCES,
+            Hardware::CACHE_MISSES,
+            Hardware::BRANCH_INSTRUCTIONS,
+            Hardware::BRANCH_MISSES,
+        ] {
+            counters.push(template.event(event).build_with_group(&mut group).unwrap());
+        }
 
-        // for which in [CacheId::L1D, CacheId::LL] {
-        //     for operation in [CacheOp::READ, CacheOp::WRITE] {
-        //         for result in [CacheResult::MISS, CacheResult::ACCESS] {
-        //             let cache = Cache {
-        //                 which,
-        //                 operation,
-        //                 result,
-        //             };
-        //             counters.push(
-        //                 group
-        //                     .add(builder.event(cache.clone()))
-        //                     .with_context(|| anyhow!("Perf add cache: {:?}", cache))?,
-        //             );
-        //         }
-        //     }
-        // }
+        // From Intel SDM Vol. 3B Table 22-37
+        for config in [
+            0x21D0, // mem_inst_retired.lock_loads
+            0x04D2, // mem_load_l3_hit_retired.xsnp_hitm
+        ] {
+            counters.push(
+                template
+                    .event(perf_event::events::Raw::new(config))
+                    .build_with_group(&mut group)
+                    .unwrap(),
+            );
+        }
 
-        Ok(Self { group, counters })
+        Self { group, counters }
     }
 
-    pub fn start(&mut self) -> anyhow::Result<()> {
-        self.group.enable().context("Perf event enable")?;
-        Ok(())
+    pub fn start(&mut self) {
+        self.group.enable().expect("Perf event enable");
     }
 
-    pub fn stop(&mut self) -> anyhow::Result<Report> {
-        self.group.disable().context("Perf event disable")?;
+    pub fn stop(&mut self) -> Report {
+        self.group.disable().expect("Perf event disable");
 
-        let data = self.group.read().context("Perf event read")?;
+        let data = self.group.read().expect("Perf event read");
 
         let scale =
             data.time_enabled().unwrap().as_secs_f64() / data.time_running().unwrap().as_secs_f64();
 
         let get = |index: usize| (data[&self.counters[index]] as f64 * scale) as u64;
 
-        Ok(Report {
-            cpu_cycle_count: get(0),
-            instruction_count: get(1),
-            // l1d_rm: get(2),
-            // l1d_ra: get(3),
-            //
-            // l1d_wm: get(4),
-            // l1d_wa: get(5),
-            //
-            // ll_rm: get(6),
-            // ll_ra: get(7),
-            //
-            // ll_wm: get(8),
-            // ll_wa: get(9),
-        })
+        let cache_access = get(0);
+        let branch = get(2);
+
+        Report {
+            cache_access,
+            cache_miss_rate: get(1) as f64 / cache_access as f64,
+            branch,
+            branch_miss_rate: get(3) as f64 / branch as f64,
+            lock_load: get(4),
+            l3_hitm: get(5),
+        }
     }
 }
 

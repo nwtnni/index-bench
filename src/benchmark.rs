@@ -108,10 +108,7 @@ pub fn run<K: KeyDistribution, V: index::Value, I: Index<K::Key, V, H>, H: index
                         }
                     }
 
-                    let mut perf = perf_internal
-                        .then(|| measure::Perf::new(core_id))
-                        .transpose()
-                        .context("Initialize perf-event")?;
+                    let mut perf = perf_internal.then(|| measure::Perf::new(core_id));
 
                     if cfg!(feature = "stat") {
                         arctic::stat::start();
@@ -128,7 +125,7 @@ pub fn run<K: KeyDistribution, V: index::Value, I: Index<K::Key, V, H>, H: index
                     let _ = barrier.wait();
 
                     if let Some(perf) = &mut perf {
-                        perf.start().context("Start perf-event")?;
+                        perf.start();
                     }
 
                     let mut buffer = Vec::with_capacity(workload.ycsb.max_scan_length);
@@ -188,11 +185,7 @@ pub fn run<K: KeyDistribution, V: index::Value, I: Index<K::Key, V, H>, H: index
 
                     let time = start.elapsed();
 
-                    let perf_report = perf
-                        .as_mut()
-                        .map(|perf| perf.stop())
-                        .transpose()
-                        .context("Stop perf-event")?;
+                    let perf_report = perf.as_mut().map(|perf| perf.stop());
                     let index_report = map.report();
 
                     let _ = barrier.wait();
