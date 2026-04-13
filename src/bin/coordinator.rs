@@ -57,8 +57,6 @@ fn main() -> anyhow::Result<()> {
 
         if matches!(config.workload.key, index_bench::workload::Key::Url) {
             config.workload.ycsb.record_count = 33_600_000;
-        } else if matches!(config.workload.key, index_bench::workload::Key::Ipv4) {
-            config.workload.ycsb.record_count = 2_520_000;
         }
 
         // // HACK: congee doesn't support string keys
@@ -89,6 +87,7 @@ fn main() -> anyhow::Result<()> {
         out.write_all(&child.wait_with_output()?.stdout)
             .context("Write output to file")?;
         out.write_all(b"\n").context("Write newline to file")?;
+        out.flush()?;
     }
 
     Ok(())
