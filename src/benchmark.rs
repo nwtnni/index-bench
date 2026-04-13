@@ -37,6 +37,7 @@ pub fn run<K: KeyDistribution, V: index::Value, I: Index<K::Key, V, H>, H: index
         .depth_for_type(ObjectType::PU)
         .map_err(|error| anyhow!("Failed to get processing unit depth: {:?}", error))?;
     let cores = topology.objects_at_depth(depth).cycle();
+    let numa = &config.global.numa;
 
     config.global.numa.bind(topology)?;
 
@@ -81,7 +82,15 @@ pub fn run<K: KeyDistribution, V: index::Value, I: Index<K::Key, V, H>, H: index
                 scope.spawn(move || -> anyhow::Result<_> {
                     crate::THREAD_ID.set(thread_id);
 
-                    let core_id = core.os_index().expect("No OS index for core");
+                    let core_id = match numa {
+                        crate::config::Numa::None | crate::config::Numa::Bind { node: 0 } => {
+                            core.os_index().expect("No OS index for core")
+                        }
+                        // HACK: on our evaluation machine, this evenly distributes cores
+                        // across NUMA nodes, rather than filling up node 0 first, then 1
+                        crate::config::Numa::Interleave { .. } => thread_id,
+                        crate::config::Numa::Bind { .. } => unimplemented!(),
+                    };
 
                     log::debug!("Pin thread {thread_id} to core {core}");
 
