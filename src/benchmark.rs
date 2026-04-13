@@ -60,7 +60,7 @@ pub fn run<K: KeyDistribution, V: index::Value, I: Index<K::Key, V, H>, H: index
             if let Some(perf) = &mut perf_external {
                 perf.enable()?;
             } else if let Some(perf) = &mut perf_internal {
-                perf.start()
+                perf.enable()
             };
 
             let _ = barrier.wait();
@@ -71,7 +71,7 @@ pub fn run<K: KeyDistribution, V: index::Value, I: Index<K::Key, V, H>, H: index
             if let Some(perf) = &mut perf_external {
                 perf.disable()?;
             } else if let Some(perf) = &mut perf_internal {
-                return Ok(Some(perf.stop()));
+                return Ok(Some(perf.disable()));
             }
 
             Ok(None)
