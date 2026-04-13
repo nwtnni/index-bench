@@ -44,14 +44,14 @@ pub fn run<K: KeyDistribution, V: index::Value, I: Index<K::Key, V, H>, H: index
     let barrier = &Barrier::new(config.global.thread_count + 1);
     let mut map = I::new(&config.index);
 
-    let threads = thread::scope(|scope| -> anyhow::Result<_> {
+    let (perf, threads) = thread::scope(|scope| -> anyhow::Result<_> {
         let workload = &config.workload;
 
         let mut perf_external = match (env::var("PERF_CTL_FIFO"), env::var("PERF_ACK_FIFO")) {
             (Ok(ctl), Ok(ack)) => Some(measure::perf::Sync::new(ctl, ack)?),
             _ => None,
         };
-        let perf_internal = perf_external.is_none();
+        let mut perf_internal = perf_external.is_none().then(|| measure::Perf::new());
 
         let coordinator = scope.spawn(move || -> anyhow::Result<_> {
             // Thread setup complete
@@ -59,7 +59,9 @@ pub fn run<K: KeyDistribution, V: index::Value, I: Index<K::Key, V, H>, H: index
 
             if let Some(perf) = &mut perf_external {
                 perf.enable()?;
-            }
+            } else if let Some(perf) = &mut perf_internal {
+                perf.start()
+            };
 
             let _ = barrier.wait();
 
@@ -68,9 +70,11 @@ pub fn run<K: KeyDistribution, V: index::Value, I: Index<K::Key, V, H>, H: index
 
             if let Some(perf) = &mut perf_external {
                 perf.disable()?;
+            } else if let Some(perf) = &mut perf_internal {
+                return Ok(Some(perf.stop()));
             }
 
-            Ok(())
+            Ok(None)
         });
 
         let threads = (0..config.global.thread_count)
@@ -117,8 +121,6 @@ pub fn run<K: KeyDistribution, V: index::Value, I: Index<K::Key, V, H>, H: index
                         }
                     }
 
-                    let mut perf = perf_internal.then(|| measure::Perf::new(core_id));
-
                     if cfg!(feature = "stat") {
                         arctic::stat::start();
                     }
@@ -130,12 +132,8 @@ pub fn run<K: KeyDistribution, V: index::Value, I: Index<K::Key, V, H>, H: index
                         map.enable_membarrier();
                     }
 
-                    // External perf enabled
+                    // Perf enabled
                     let _ = barrier.wait();
-
-                    if let Some(perf) = &mut perf {
-                        perf.start();
-                    }
 
                     let mut buffer = Vec::with_capacity(workload.ycsb.max_scan_length);
 
@@ -194,17 +192,15 @@ pub fn run<K: KeyDistribution, V: index::Value, I: Index<K::Key, V, H>, H: index
 
                     let time = start.elapsed();
 
-                    let perf_report = perf.as_mut().map(|perf| perf.stop());
-                    let index_report = map.report();
-
                     let _ = barrier.wait();
+
+                    let index_report = map.report();
 
                     Ok(measure::Thread {
                         id: thread_id,
                         core: core_id,
                         time: time.as_nanos(),
                         operation_count: operation_count_per_thread as u64,
-                        perf: perf_report,
                         index: index_report,
                     })
                 })
@@ -214,9 +210,9 @@ pub fn run<K: KeyDistribution, V: index::Value, I: Index<K::Key, V, H>, H: index
             .map(|handle| handle.join().unwrap())
             .collect::<anyhow::Result<Vec<_>>>()?;
 
-        coordinator.join().unwrap()?;
+        let perf = coordinator.join().unwrap()?;
 
-        Ok(threads)
+        Ok((perf, threads))
     })?;
 
     let mimalloc = crate::measure::Mimalloc::new();
@@ -227,6 +223,7 @@ pub fn run<K: KeyDistribution, V: index::Value, I: Index<K::Key, V, H>, H: index
         config,
         output: measure::Process {
             index: map.report(),
+            perf,
             mimalloc,
             memory_key_value,
             thread: threads,

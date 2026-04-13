@@ -37,11 +37,15 @@ pub(crate) struct Perf {
 }
 
 impl Perf {
-    pub fn new(cpu: usize) -> Self {
+    pub fn new() -> Self {
         let mut template = Builder::new(Software::DUMMY);
-        let template = template.one_cpu(cpu);
+        let template = template.inherit(true);
 
-        let mut branch_group = Group::builder().one_cpu(cpu).build_group().unwrap();
+        let mut branch_group = Group::builder()
+            .inherit(true)
+            .pinned(true)
+            .build_group()
+            .unwrap();
         let branch = branch_group
             .add(template.event(Hardware::BRANCH_INSTRUCTIONS))
             .unwrap();
@@ -58,7 +62,7 @@ impl Perf {
         //     .unwrap();
 
         let mut l3_group = Group::builder()
-            .one_cpu(cpu)
+            .inherit(true)
             .pinned(true)
             .build_group()
             .unwrap();
