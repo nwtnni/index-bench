@@ -7,7 +7,7 @@ import click
 import dash
 from dash import Dash, html, dcc, Input, State, Output, callback
 from dash.dash_table import DataTable
-from dash.dash_table.Format import Format, Group, Scheme
+from dash.dash_table.Format import Format, Scheme
 import dash_bootstrap_components as dbc
 
 # HACK: https://stackoverflow.com/questions/9059699/use-a-library-locally-instead-of-installing-it
@@ -86,6 +86,8 @@ class Col:
             return [
                 {"label": label, "value": value}
                 for label, value in [
+                    ("Show", "show"),
+                    ("Geomean", "geomean"),
                     ("Mean", "mean"),
                     ("Sum", "sum"),
                     ("Hide", "ignore"),
@@ -96,6 +98,8 @@ class Col:
                 {"label": label, "value": value}
                 for label, value in [
                     ("Show", "show"),
+                    ("Geomean", "geomean"),
+                    ("Mean", "mean"),
                     ("Hide", "ignore"),
                 ]
             ]
@@ -253,8 +257,7 @@ def flatten(persist: str, df: pl.LazyFrame):
                         aggregate,
                     )
 
-            # FIXME: only supports lists of structs, which
-            # is true in our case (`output/thread`)
+            # HACK: assume list of structs is thread output
             case pl.List(inner=pl.Struct(fields=fields)):
                 for field in fields:
                     yield from recurse(
@@ -264,6 +267,13 @@ def flatten(persist: str, df: pl.LazyFrame):
                         lambda inner: selector(name).list.explode().struct.field(inner),
                         True,
                     )
+            # HACK: assume list of integers is numa/interleave
+            case pl.List(inner=pl.Int64()):
+                pass
+
+            case pl.List():
+                raise NotImplementedError("unrecognized list field")
+
             case _:
                 yield Col(
                     persist,
@@ -401,8 +411,10 @@ def update(
             pl.col(y.name).std().alias(f"{y.name}_std"),
         ]
 
-        if op == "mean":
-            aggregate_global_y = [pl.col(y.name).explode()]
+        if op == "geomean":
+            aggregate_local_y = aggregate_local_y.log().mean().exp()
+        elif op == "mean":
+            aggregate_local_y = aggregate_local_y.mean()
         elif op == "sum":
             aggregate_local_y = aggregate_local_y.sum()
         elif y.distribution:
@@ -415,7 +427,7 @@ def update(
             ]
         else:
             assert op == "show"
-            aggregate_local_y = aggregate_local_y.first()
+            aggregate_global_y = [pl.col(y.name).explode()]
 
         aggregate_local.append(aggregate_local_y)
         aggregate_global.extend(aggregate_global_y)
@@ -439,7 +451,7 @@ def update(
 
         if not y.distribution:
             fig = None
-            if op == "mean":
+            if op == "show":
                 fig = px.violin(
                     df.explode(y.name),
                     x=x.name,
