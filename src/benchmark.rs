@@ -125,6 +125,10 @@ pub fn run<K: KeyDistribution, V: index::Value, I: Index<K::Key, V, H>, H: index
                         arctic::stat::start();
                     }
 
+                    let mut latency_get = measure::Histogram::default();
+                    let mut latency_update = measure::Histogram::default();
+                    let mut latency_insert = measure::Histogram::default();
+
                     // Setup complete
                     let _ = barrier.wait();
 
@@ -143,7 +147,9 @@ pub fn run<K: KeyDistribution, V: index::Value, I: Index<K::Key, V, H>, H: index
                         while let Some(key) = loader.next_key() {
                             let checksum = K::Key::checksum(key);
                             let value = V::from_checksum(checksum);
+                            let timer = measure::Timer::default();
                             map.insert(key, value);
+                            latency_insert.record(timer);
                         }
                     } else {
                         for _ in 0..operation_count_per_thread {
@@ -151,7 +157,10 @@ pub fn run<K: KeyDistribution, V: index::Value, I: Index<K::Key, V, H>, H: index
                             match operation {
                                 ycsb::Operation::Read => {
                                     let (_, key) = runner.next_key_read(&mut rng);
+                                    let timer = measure::Timer::default();
                                     let _value = map.get(key);
+                                    latency_get.record(timer);
+
                                     // if !I::IGNORE_GET {
                                     //     assert_eq!(value, Some(K::Key::checksum(key)));
                                     // }
@@ -160,7 +169,10 @@ pub fn run<K: KeyDistribution, V: index::Value, I: Index<K::Key, V, H>, H: index
                                     let (_, key) = runner.next_key_read(&mut rng);
                                     let checksum = K::Key::checksum(key);
                                     let value = V::from_checksum(checksum);
+                                    let timer = measure::Timer::default();
                                     let _old = map.update(key, value);
+                                    latency_update.record(timer);
+
                                     // if !I::IGNORE_UPDATE {
                                     //     assert_eq!(old, Some(checksum));
                                     // }
@@ -175,7 +187,10 @@ pub fn run<K: KeyDistribution, V: index::Value, I: Index<K::Key, V, H>, H: index
                                     let (id, key) = runner.next_key_insert();
                                     let checksum = K::Key::checksum(key);
                                     let value = V::from_checksum(checksum);
+                                    let timer = measure::Timer::default();
                                     let _old = map.insert(key, value);
+                                    latency_insert.record(timer);
+
                                     // if !I::IGNORE_INSERT {
                                     //     assert_eq!(old, None);
                                     // }
@@ -202,6 +217,9 @@ pub fn run<K: KeyDistribution, V: index::Value, I: Index<K::Key, V, H>, H: index
                         time: time.as_nanos(),
                         operation_count: operation_count_per_thread as u64,
                         index: index_report,
+                        latency_get,
+                        latency_update,
+                        latency_insert,
                     })
                 })
             })

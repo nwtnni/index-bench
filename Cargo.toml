@@ -7,6 +7,7 @@ default-run = "coordinator"
 [features]
 default = []
 stat = ["arctic/stat"]
+stat-latency = ["dep:base64", "dep:hdrhistogram"]
 
 smr-disable = ["arctic/smr-disable"]
 smr-epoch = ["arctic/smr-epoch"]
@@ -23,8 +24,10 @@ opt-4 = ["membarrier"]
 [dependencies]
 anyhow = "1.0.99"
 art-sys = { path = "extern/ARTSynchronized/art-sys" }
+base64 = { version = "0.22.1", optional = true }
 # concurrent-map = "5.0.37"
 # crossbeam-skiplist = "0.1.3"
+hdrhistogram = { version = "7.5.4", optional = true, default-features = false, features = ["serialization"] }
 hwlocality = "1.0.0-alpha.10"
 libc = "0.2.176"
 log = "0.4.27"
