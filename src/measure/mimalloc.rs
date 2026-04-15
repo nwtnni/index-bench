@@ -10,12 +10,12 @@ unsafe extern "C" {
 // https://github.com/microsoft/mimalloc/blob/09a27098aa6e9286518bd9c74e6ffa7199c3f04e/include/mimalloc-stats.h
 #[derive(Serialize, Deserialize)]
 pub struct Mimalloc {
-    pages: Count,
-    reserved: Count,
+    // pages: Count,
+    // reserved: Count,
     committed: Count,
-    malloc_normal: Count,
-    malloc_huge: Count,
-    malloc_requested: Count,
+    // malloc_normal: Count,
+    // malloc_huge: Count,
+    // malloc_requested: Count,
 }
 
 impl Mimalloc {
