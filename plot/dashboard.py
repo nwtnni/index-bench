@@ -107,6 +107,11 @@ class Col:
 
 @click.command
 @click.option("--vary")
+@click.option(
+    "--persist",
+    type=str,
+    default="default",
+)
 @click.argument(
     "paths",
     nargs=-1,
@@ -119,9 +124,8 @@ class Col:
         path_type=PurePath,
     ),
 )
-def main(vary, paths):
+def main(vary, persist, paths):
     df = pl.concat([load(vary, path) for path in paths])
-    persist = "+".join(sorted([path.name for path in paths]))
 
     ui_control = [html.H2("Control")]
     ui_independent = [html.H2("Independent")]
