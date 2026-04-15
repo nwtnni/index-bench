@@ -16,11 +16,12 @@ use serde::Serialize;
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Report {
     branch: u64,
-    branch_miss_rate: f64,
+    branch_miss: u64,
     // lock_load: u64,
-    l3: u64,
-    l3_hitm_rate: f64,
-    l3_miss_rate: f64,
+    l3_hit: u64,
+    l3_hit_hitm: u64,
+    l3_miss: u64,
+    l3_miss_hitm: u64,
 }
 
 pub(crate) struct Perf(Vec<Counter>);
@@ -99,21 +100,22 @@ impl Perf {
         };
 
         let branch = get(0);
-        let branch_miss_rate = get(1) as f64 / branch as f64;
+        let branch_miss = get(1);
 
         // let lock_load = get(2);
+        let l3_hit = get(2);
         let l3_miss = get(3);
-        let l3 = get(2) + l3_miss;
-        let l3_miss_rate = l3_miss as f64 / l3 as f64;
-        let l3_hitm_rate = (get(4) as f64 + get(5) as f64) / l3 as f64;
+        let l3_hit_hitm = get(4);
+        let l3_miss_hitm = get(5);
 
         let report = Report {
             branch,
-            branch_miss_rate,
+            branch_miss,
             // lock_load,
-            l3,
-            l3_miss_rate,
-            l3_hitm_rate,
+            l3_hit,
+            l3_miss,
+            l3_hit_hitm,
+            l3_miss_hitm,
         };
 
         self.0
