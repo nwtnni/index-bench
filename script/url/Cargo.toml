@@ -1,0 +1,10 @@
+[package]
+name = "url"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+bytes = "1.11.1"
+hdrhistogram = "7.5.4"
+libflate = "2.3.0"
+reqwest = { version = "0.13.2", features = ["blocking"] }
