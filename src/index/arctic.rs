@@ -1,3 +1,4 @@
+use core::borrow::Borrow as _;
 use core::ops::ControlFlow;
 
 use crate::Index;
@@ -103,38 +104,28 @@ where
         self.smr().enable_membarrier();
     }
 
-    fn get(&mut self, key: <K as ::arctic::raw::Key>::Borrow<'static>) -> Option<V> {
-        let _ = std::hint::black_box(Map::get(self, key));
+    fn get(&mut self, key: <K as index::Key>::Borrow) -> Option<V> {
+        let _ = std::hint::black_box(Map::get(self, key.borrow()));
         None
     }
 
-    fn insert(&mut self, key: <K as ::arctic::raw::Key>::Borrow<'static>, value: V) -> Option<V> {
-        let _ = std::hint::black_box(Map::upsert(self, key, value));
+    fn insert(&mut self, key: <K as index::Key>::Borrow, value: V) -> Option<V> {
+        let _ = std::hint::black_box(Map::upsert(self, key.borrow(), value));
         None
     }
 
-    fn update(&mut self, key: <K as ::arctic::raw::Key>::Borrow<'static>, value: V) -> Option<V> {
-        let _ = std::hint::black_box(Map::update(self, key, value));
+    fn update(&mut self, key: <K as index::Key>::Borrow, value: V) -> Option<V> {
+        let _ = std::hint::black_box(Map::update(self, key.borrow(), value));
         None
     }
 
-    fn remove(&mut self, key: <K as ::arctic::raw::Key>::Borrow<'static>) -> Option<V> {
-        let _ = std::hint::black_box(Map::update_with::<_, core::convert::Infallible>(
-            self,
-            key,
-            None,
-            |_, _| core::ops::ControlFlow::Continue(None),
-        ));
+    fn remove(&mut self, key: <K as index::Key>::Borrow) -> Option<V> {
+        let _ = std::hint::black_box(Map::remove_non_recursive(self, key.borrow()));
         None
     }
 
-    fn scan(
-        &mut self,
-        key: <K as arctic::raw::Key>::Borrow<'static>,
-        mut count: usize,
-        buffer: &mut Vec<V>,
-    ) {
-        let Some(prefix) = Map::range(self, key..) else {
+    fn scan(&mut self, key: <K as index::Key>::Borrow, mut count: usize, buffer: &mut Vec<V>) {
+        let Some(prefix) = Map::range(self, key.borrow()..) else {
             return;
         };
 

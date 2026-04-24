@@ -85,7 +85,7 @@ where
     K: KeyDistribution,
 {
     #[inline]
-    pub(crate) fn next_key(&mut self) -> Option<<K::Key as ::arctic::raw::Key>::Borrow<'static>> {
+    pub(crate) fn next_key(&mut self) -> Option<<K::Key as index::Key>::Borrow> {
         Some(self.keys.get(self.inner.next_key()?.id()))
     }
 }
@@ -105,7 +105,7 @@ impl<'ycsb, K: KeyDistribution> Runner<'ycsb, K> {
         &mut self,
         rng: &mut R,
         start: ycsb::Key,
-    ) -> <K::Key as ::arctic::raw::Key>::Borrow<'static> {
+    ) -> <K::Key as index::Key>::Borrow {
         let delta = self.inner.next_scan_length(rng);
         let end = start.id() + delta as u64 - 1;
         self.keys.get(end)
@@ -118,14 +118,12 @@ impl<'ycsb, K: KeyDistribution> Runner<'ycsb, K> {
     pub(crate) fn next_key_read<R: rand::Rng>(
         &mut self,
         rng: &mut R,
-    ) -> (ycsb::Key, <K::Key as ::arctic::raw::Key>::Borrow<'static>) {
+    ) -> (ycsb::Key, <K::Key as index::Key>::Borrow) {
         let key = self.inner.next_key_read(rng);
         (key, self.keys.get(key.id()))
     }
 
-    pub(crate) fn next_key_insert(
-        &mut self,
-    ) -> (ycsb::Key, <K::Key as ::arctic::raw::Key>::Borrow<'static>) {
+    pub(crate) fn next_key_insert(&mut self) -> (ycsb::Key, <K::Key as index::Key>::Borrow) {
         let key = self.inner.next_key_insert();
         (key, self.keys.get(key.id()))
     }
@@ -138,7 +136,7 @@ impl<'ycsb, K: KeyDistribution> Runner<'ycsb, K> {
 pub trait KeyDistribution {
     type Key: index::Key;
     fn new(config: &Key) -> Self;
-    fn get(&self, index: u64) -> <Self::Key as ::arctic::raw::Key>::Borrow<'static>;
+    fn get(&self, index: u64) -> <Self::Key as index::Key>::Borrow;
 }
 
 pub struct U64;
@@ -150,7 +148,7 @@ impl KeyDistribution for U64 {
         Self
     }
 
-    fn get(&self, index: u64) -> Self::Key {
+    fn get(&self, index: u64) -> u64 {
         index
     }
 }
@@ -232,7 +230,7 @@ impl KeyDistribution for Sparse {
         Self(*sparse)
     }
 
-    fn get(&self, index: u64) -> Self::Key {
+    fn get(&self, index: u64) -> u64 {
         (index as f64 * self.0) as u64
     }
 }
@@ -251,7 +249,7 @@ impl KeyDistribution for Kmer {
     }
 
     /// https://github.com/nicolasgarza/fetchkmer/blob/d910161007cb7e4c3396a49998081db6d6a1f134/src/fetch.rs#L1-L20
-    fn get(&self, index: u64) -> Self::Key {
+    fn get(&self, index: u64) -> u64 {
         // Hard-code for 28-mer (from KMC-2 and Gerbil papers) and f. vesca sequence
         // Each sequence is 151 base pairs = 302 bits = 38 bytes
         // There are 123 28-mers in each sequence (0..28, 1..29, ..., 123..151)
@@ -302,7 +300,7 @@ impl KeyDistribution for Ts {
         Self(*resolution)
     }
 
-    fn get(&self, seq: u64) -> Self::Key {
+    fn get(&self, seq: u64) -> u64 {
         static EPOCH: LazyLock<Instant> = LazyLock::new(Instant::now);
 
         let ts = Instant::now();

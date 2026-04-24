@@ -1,3 +1,5 @@
+use core::borrow::Borrow as _;
+
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -133,18 +135,24 @@ pub trait IndexSend<K: Key, V: Value, H> {
 pub trait Hasher: core::hash::BuildHasher + Clone + Default + Send + Sync + 'static {}
 impl<T> Hasher for T where T: core::hash::BuildHasher + Clone + Default + Send + Sync + 'static {}
 
-pub trait Key: ::arctic::Key {
-    fn checksum(key: Self::Borrow<'_>) -> u64;
+pub trait Key: ::arctic::Key
+where
+    <Self as Key>::Borrow: core::borrow::Borrow<<Self as ::arctic::raw::Key>::Borrowed>,
+{
+    type Borrow: Copy;
+    fn checksum(key: <Self as Key>::Borrow) -> u64;
 }
 
 impl Key for u64 {
-    fn checksum(key: Self::Borrow<'_>) -> u64 {
-        key
+    type Borrow = Self;
+    fn checksum(key: <Self as Key>::Borrow) -> u64 {
+        *key.borrow()
     }
 }
 
 impl Key for Vec<u8> {
-    fn checksum(key: Self::Borrow<'_>) -> u64 {
+    type Borrow = &'static [u8];
+    fn checksum(key: <Self as Key>::Borrow) -> u64 {
         key.len() as u64
     }
 }
@@ -152,7 +160,7 @@ impl Key for Vec<u8> {
 pub trait Value: ::arctic::Value {
     fn from_checksum(checksum: u64) -> Self;
 
-    fn from_borrow<'a>(borrow: <Self as ::arctic::sequential::Value>::Borrow<'a>) -> Self
+    fn from_borrow<'a>(borrow: &'a <Self as ::arctic::sequential::Value>::Target) -> Self
     where
         Self: 'a;
 }
@@ -162,11 +170,11 @@ impl Value for u64 {
         checksum
     }
 
-    fn from_borrow<'a>(borrow: u64) -> Self
+    fn from_borrow<'a>(borrow: &u64) -> Self
     where
         Self: 'a,
     {
-        borrow
+        *borrow
     }
 }
 
@@ -188,27 +196,22 @@ impl Value for Box<u64> {
 pub trait IndexPin<K: Key, V: Value> {
     fn enable_membarrier(&self) {}
 
-    fn get(&mut self, key: <K as ::arctic::raw::Key>::Borrow<'static>) -> Option<V>;
+    fn get(&mut self, key: <K as Key>::Borrow) -> Option<V>;
 
-    fn insert(&mut self, key: <K as ::arctic::raw::Key>::Borrow<'static>, value: V) -> Option<V>;
+    fn insert(&mut self, key: <K as Key>::Borrow, value: V) -> Option<V>;
 
-    fn update(&mut self, key: <K as ::arctic::raw::Key>::Borrow<'static>, value: V) -> Option<V> {
+    fn update(&mut self, key: <K as Key>::Borrow, value: V) -> Option<V> {
         self.insert(key, value)
     }
 
-    fn remove(&mut self, _key: <K as ::arctic::raw::Key>::Borrow<'static>) -> Option<V> {
+    fn remove(&mut self, _key: <K as Key>::Borrow) -> Option<V> {
         unimplemented!(
             "TODO: implement remove for {}",
             std::any::type_name::<Self>()
         )
     }
 
-    fn scan(
-        &mut self,
-        _key: <K as ::arctic::raw::Key>::Borrow<'static>,
-        _count: usize,
-        _buffer: &mut Vec<V>,
-    ) {
+    fn scan(&mut self, _key: <K as Key>::Borrow, _count: usize, _buffer: &mut Vec<V>) {
         unimplemented!("TODO: implement scan for {}", std::any::type_name::<Self>())
     }
 

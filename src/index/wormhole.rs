@@ -52,12 +52,7 @@ impl index::IndexPin<u64, u64> for wormhole_sys::WormRef<'_> {
         None
     }
 
-    fn scan(
-        &mut self,
-        key: <u64 as arctic::raw::Key>::Borrow<'static>,
-        count: usize,
-        buffer: &mut Vec<u64>,
-    ) {
+    fn scan(&mut self, key: u64, count: usize, buffer: &mut Vec<u64>) {
         let key = key.to_be_bytes();
         let ptr = key.as_ptr().cast();
         buffer.extend(unsafe { wormhole_sys::WormRef::iter(self, ptr, key.len()) }.take(count));
