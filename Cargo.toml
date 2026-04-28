@@ -8,6 +8,7 @@ default-run = "coordinator"
 default = []
 stat = ["arctic/stat"]
 stat-latency = ["dep:base64", "dep:hdrhistogram"]
+stat-garbage = ["arctic/stat-garbage"]
 
 smr-disable = ["arctic/smr-disable"]
 smr-epoch = ["arctic/smr-epoch"]

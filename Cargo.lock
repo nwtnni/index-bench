@@ -29,10 +29,10 @@ checksum = "993a810118f8f37e9c4411c86f1c4c940a09a7ab34b7bf2d88d06f50c553fab7"
 [[package]]
 name = "arctic"
 version = "0.1.0"
-source = "git+ssh://github.com/nwtnni/arctic#90aa1caf8df781be282c1a07498e315ef78f8a1e"
+source = "git+ssh://github.com/nwtnni/arctic#5b1770928146aff780a0772bae8ae2c1867735e9"
 dependencies = [
  "base64 0.22.1",
- "crossbeam-epoch 0.9.13",
+ "crossbeam-epoch 0.9.13 (git+https://github.com/nwtnni/crossbeam.git?branch=smr-benchmark)",
  "hdrhistogram",
  "libc",
  "ribbit",
@@ -188,7 +188,19 @@ source = "git+https://github.com/kaist-cp/crossbeam?branch=smr-benchmark#ee76060
 dependencies = [
  "autocfg",
  "cfg-if",
- "crossbeam-utils 0.8.14",
+ "crossbeam-utils 0.8.14 (git+https://github.com/kaist-cp/crossbeam?branch=smr-benchmark)",
+ "memoffset 0.7.1",
+ "scopeguard",
+]
+
+[[package]]
+name = "crossbeam-epoch"
+version = "0.9.13"
+source = "git+https://github.com/nwtnni/crossbeam.git?branch=smr-benchmark#d7f027a7ed633323f065a8b8974f2d546e00303c"
+dependencies = [
+ "autocfg",
+ "cfg-if",
+ "crossbeam-utils 0.8.14 (git+https://github.com/nwtnni/crossbeam.git?branch=smr-benchmark)",
  "memoffset 0.7.1",
  "scopeguard",
 ]
@@ -206,6 +218,14 @@ dependencies = [
 name = "crossbeam-utils"
 version = "0.8.14"
 source = "git+https://github.com/kaist-cp/crossbeam?branch=smr-benchmark#ee760604650f37e9bef5ebcd55a1c6403c6dfe0c"
+dependencies = [
+ "cfg-if",
+]
+
+[[package]]
+name = "crossbeam-utils"
+version = "0.8.14"
+source = "git+https://github.com/nwtnni/crossbeam.git?branch=smr-benchmark#d7f027a7ed633323f065a8b8974f2d546e00303c"
 dependencies = [
  "cfg-if",
 ]
@@ -483,7 +503,7 @@ dependencies = [
  "base64 0.22.1",
  "bitflags",
  "cartesian",
- "crossbeam-epoch 0.9.13",
+ "crossbeam-epoch 0.9.13 (git+https://github.com/kaist-cp/crossbeam?branch=smr-benchmark)",
  "crossbeam-epoch 0.9.18",
  "dashmap",
  "fbtree-sys",
@@ -859,8 +879,7 @@ checksum = "d68f2ec51b097e4c1a75b681a8bec621909b5e91f15bb7b840c4f2f7b01148b2"
 [[package]]
 name = "seize"
 version = "0.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5b55fb86dfd3a2f5f76ea78310a88f96c4ea21a3031f8d212443d56123fd0521"
+source = "git+https://github.com/migopp/seize.git#863ff99645223c778ae20ec8fee5e0f20f324391"
 dependencies = [
  "libc",
  "windows-sys",
