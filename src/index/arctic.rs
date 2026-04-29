@@ -1,9 +1,8 @@
 use core::borrow::Borrow as _;
 use core::ops::ControlFlow;
 
-use crate::Index;
 use crate::index;
-use arctic::concurrent::smr::Global as _;
+use crate::Index;
 
 #[cfg(not(any(feature = "smr-disable", feature = "smr-epoch", feature = "smr-seize")))]
 type Smr = arctic::concurrent::smr::Hazard;
@@ -81,7 +80,10 @@ where
 
     #[cfg(feature = "stat-garbage")]
     fn garbage(&mut self) -> u32 {
-        self.smr().garbage()
+        <
+            <Smr as arctic::concurrent::Smr>::Global<<K as arctic::concurrent::Key>::Prefix, V>
+            as arctic::concurrent::smr::Global<<K as arctic::concurrent::Key>::Prefix, V>
+        >::garbage(self.smr_mut())
     }
 }
 
