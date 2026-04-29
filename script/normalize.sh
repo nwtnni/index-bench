@@ -40,14 +40,14 @@ readonly CPU="/sys/devices/system/cpu"
 # https://en.wikipedia.org/wiki/Intel_Turbo_Boost
 # https://www.kernel.org/doc/html/v5.0/admin-guide/pm/intel_pstate.html
 if [[ -d "$CPU/intel_pstate" ]]; then
-    echo 1 | sudo tee "$CPU/intel_pstate/no_turbo" || true
+    echo 1 | sudo tee "$CPU/intel_pstate/no_turbo"
 else
-    echo 0 | sudo tee "$CPU/cpufreq/boost" || true
+    echo 0 | sudo tee "$CPU/cpufreq/boost"
 fi
 
 # Set performance mode
 # https://docs.kernel.org/admin-guide/pm/cpufreq.html
-echo "performance" | sudo tee "$CPU/cpu*{0..9}/cpufreq/scaling_governor" || true
+{ echo "performance" | sudo tee $CPU/cpu[0-9]*/cpufreq/scaling_governor; } || true
 
 # Disable SMT
 # https://en.wikipedia.org/wiki/Simultaneous_multithreading

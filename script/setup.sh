@@ -5,7 +5,8 @@ set -o nounset
 set -o pipefail
 set -o xtrace
 
-cd ~
+# https://stackoverflow.com/a/246128
+ROOT=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 sudo apt update
 sudo apt install ripgrep
@@ -23,7 +24,7 @@ else
     curl -sfL https://direnv.net/install.sh | sudo -E bin_path=/usr/bin bash
 fi
 
-rg -q direnv ~/.bashrc || echo 'eval "$(direnv hook bash)"' >> ~/.bashrc
+rg -q direnv ~/.bashrc || { echo 'eval "$(direnv hook bash)"' >> ~/.bashrc; }
 
 # NOTE: below is for setting up dotfiles
 # if command -v home-manager &>/dev/null; then
@@ -39,17 +40,26 @@ rg -q direnv ~/.bashrc || echo 'eval "$(direnv hook bash)"' >> ~/.bashrc
 # sed -i"" "s/local = true/local = false/" home.nix
 # home-manager init --switch . -b bak
 
-cd ~
-[ -d "index-bench" ] || git clone git@github.com:nwtnni/index-bench.git
+cd "$ROOT/../data"
+[ -f 'email.txt' ] || { wget -O email.txt.gz 'https://www.dropbox.com/scl/fi/fif8lg9vwosftb3hyew61/email.txt.gz?rlkey=5649fx3b4ae8mnqg6e7ts6rrl&st=hpbbt6hx&dl=1' && gunzip email.txt.gz; }
+[ -f 'ipv4.bin' ] || { wget -O ipv4.bin.gz 'https://www.dropbox.com/scl/fi/0lbdg8d4dx1xj81e7v4yp/ipv4.bin.gz?rlkey=ezt27zcppxbvuh4xdwl4jmy4m&st=i7ohi54p&dl=1' && gunzip ipv4.bin.gz; }
+[ -f 'snowflake.bin' ] || { wget -O snowflake.bin.gz 'https://www.dropbox.com/scl/fi/q9vnnitkxj8cu71eer3nj/snowflake.bin.gz?rlkey=zi5f62591w30qbbpl76pk6fc6&st=wk02kan3&dl=1' && gunzip snowflake.bin.gz; }
+[ -f 'url.txt' ] || { wget -O url.txt.gz 'https://www.dropbox.com/scl/fi/eurnrj268bdxhbjjzmq7z/url.txt.gz?rlkey=9upb8mmygnjvjgbtlnwya9y73&st=ssm465fb&dl=1' && gunzip url.txt.gz; }
 
-cd ~/index-bench/data
-[ -f 'email.txt' ] || wget -O email.txt.gz 'https://www.dropbox.com/scl/fi/fif8lg9vwosftb3hyew61/email.txt.gz?rlkey=5649fx3b4ae8mnqg6e7ts6rrl&st=hpbbt6hx&dl=1' && gunzip email.txt.gz
-[ -f 'ipv4.bin' ] || wget -O ipv4.bin.gz 'https://www.dropbox.com/scl/fi/x2jypzq32e9e4stemckw8/ipv4.bin.gz?rlkey=q61foqtcnt5hhx6gc2hmegn39&st=gtl246uh&dl=1' && gunzip ipv4.bin.gz
-[ -f 'snowflake.bin' ] || wget -O snowflake.bin.gz 'https://www.dropbox.com/scl/fi/q9vnnitkxj8cu71eer3nj/snowflake.bin.gz?rlkey=zi5f62591w30qbbpl76pk6fc6&st=wk02kan3&dl=1' && gunzip snowflake.bin.gz
-[ -f 'url.txt' ] || wget -O url.txt.gz 'https://www.dropbox.com/scl/fi/eurnrj268bdxhbjjzmq7z/url.txt.gz?rlkey=9upb8mmygnjvjgbtlnwya9y73&st=ssm465fb&dl=1' && gunzip url.txt.gz
-
-cd ~/index-bench
+cd "$ROOT/.."
 git submodule update --init --recursive
-rg -q "flake" .envrc || echo 'use flake' >> .envrc
+rg -q "flake" .envrc || { echo 'use flake' >> .envrc; }
+
+# https://github.com/direnv/direnv/issues/262
 direnv allow .
+eval "$(direnv export bash)"
+
 ./script/normalize.sh
+
+cd "$ROOT/../extern/mimalloc_rust/libmimalloc-sys/c_src/mimalloc/v3/"
+mkdir -p build && cd build
+cmake .. -DCMAKE_C_FLAGS="-DMI_STAT=2"
+make -j mimalloc-static
+
+cd "$ROOT/../extern/IndexResearch/util/"
+git apply ../util.patch || true
