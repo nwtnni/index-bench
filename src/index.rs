@@ -122,6 +122,11 @@ pub trait Index<K: Key, V: Value, H> {
     fn memory_key_value(&mut self) -> u64 {
         0
     }
+
+    // Report the maximum number of unreclaimed allocations
+    fn garbage(&mut self) -> u32 {
+        0
+    }
 }
 
 pub trait IndexSend<K: Key, V: Value, H> {

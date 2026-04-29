@@ -23,6 +23,7 @@ pub struct Process {
     pub perf: Option<perf::Report>,
     pub mimalloc: Mimalloc,
     pub memory_key_value: u64,
+    pub garbage: u32,
     pub thread: Vec<Thread>,
 }
 

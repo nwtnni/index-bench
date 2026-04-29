@@ -235,6 +235,7 @@ pub fn run<K: KeyDistribution, V: index::Value, I: Index<K::Key, V, H>, H: index
 
     let mimalloc = crate::measure::Mimalloc::new();
     let memory_key_value = map.memory_key_value();
+    let garbage = map.garbage();
 
     Ok(measure::Global {
         date,
@@ -244,6 +245,7 @@ pub fn run<K: KeyDistribution, V: index::Value, I: Index<K::Key, V, H>, H: index
             perf,
             mimalloc,
             memory_key_value,
+            garbage,
             thread: threads,
         },
     })
