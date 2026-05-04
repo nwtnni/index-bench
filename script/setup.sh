@@ -42,7 +42,7 @@ rg -q direnv ~/.bashrc || { echo 'eval "$(direnv hook bash)"' >> ~/.bashrc; }
 
 cd "$ROOT/../data"
 [ -f 'email.txt' ] || { wget -O email.txt.gz 'https://www.dropbox.com/scl/fi/fif8lg9vwosftb3hyew61/email.txt.gz?rlkey=5649fx3b4ae8mnqg6e7ts6rrl&st=hpbbt6hx&dl=1' && gunzip email.txt.gz; }
-[ -f 'ipv4.bin' ] || { wget -O ipv4.bin.gz 'https://www.dropbox.com/scl/fi/0lbdg8d4dx1xj81e7v4yp/ipv4.bin.gz?rlkey=ezt27zcppxbvuh4xdwl4jmy4m&st=i7ohi54p&dl=1' && gunzip ipv4.bin.gz; }
+[ -f 'ipv4.bin' ] || { wget -O ipv4.bin.gz 'https://www.dropbox.com/scl/fi/x2jypzq32e9e4stemckw8/ipv4.bin.gz?rlkey=q61foqtcnt5hhx6gc2hmegn39&st=y6k757n9&dl=1' && gunzip ipv4.bin.gz; }
 [ -f 'snowflake.bin' ] || { wget -O snowflake.bin.gz 'https://www.dropbox.com/scl/fi/q9vnnitkxj8cu71eer3nj/snowflake.bin.gz?rlkey=zi5f62591w30qbbpl76pk6fc6&st=wk02kan3&dl=1' && gunzip snowflake.bin.gz; }
 [ -f 'url.txt' ] || { wget -O url.txt.gz 'https://www.dropbox.com/scl/fi/eurnrj268bdxhbjjzmq7z/url.txt.gz?rlkey=9upb8mmygnjvjgbtlnwya9y73&st=ssm465fb&dl=1' && gunzip url.txt.gz; }
 
