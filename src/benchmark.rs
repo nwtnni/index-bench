@@ -184,7 +184,7 @@ pub fn run<K: KeyDistribution, V: index::Value, I: Index<K::Key, V, H>, H: index
                                     map.scan(key, len, &mut buffer);
                                 }
                                 ycsb::Operation::Insert => {
-                                    let (id, key) = runner.next_key_insert();
+                                    let key = runner.next_key_insert();
                                     let checksum = K::Key::checksum(key);
                                     let value = V::from_checksum(checksum);
                                     let timer = measure::Timer::default();
@@ -194,7 +194,7 @@ pub fn run<K: KeyDistribution, V: index::Value, I: Index<K::Key, V, H>, H: index
                                     // if !I::IGNORE_INSERT {
                                     //     assert_eq!(old, None);
                                     // }
-                                    runner.acknowledge(id);
+                                    // runner.acknowledge(id);
                                 }
                                 ycsb::Operation::ReadModifyWrite => todo!(),
                                 ycsb::Operation::Delete => {

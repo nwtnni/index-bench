@@ -1169,7 +1169,7 @@ dependencies = [
 [[package]]
 name = "ycsb"
 version = "0.1.0"
-source = "git+https://github.com/nwtnni/ycsb.git#5d59e9da87f05820f13fcb1f4178a4b8a9c0ec14"
+source = "git+https://github.com/nwtnni/ycsb.git#ec718db109424c05d0a58615dfd412d3f7456af8"
 dependencies = [
  "cartesian",
  "rand",

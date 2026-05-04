@@ -4,7 +4,6 @@ use std::time::Instant;
 use cartesian::Cartesian;
 use serde::Deserialize;
 use serde::Serialize;
-use ycsb::Acknowledged;
 
 use crate::index;
 
@@ -44,8 +43,6 @@ pub enum Value {
     Box,
 }
 
-static ACKNOWLEDGED: Acknowledged = Acknowledged::new();
-
 impl Config {
     pub(crate) fn operation_count_per_thread(&self, thread_count: usize) -> usize {
         (if self.load {
@@ -69,7 +66,7 @@ impl Config {
 
     pub(crate) fn runner<K: KeyDistribution>(&self, config: &Key) -> Runner<K> {
         Runner {
-            inner: self.ycsb.runner(&ACKNOWLEDGED),
+            inner: self.ycsb.runner(),
             keys: K::new(config),
         }
     }
@@ -123,13 +120,9 @@ impl<'ycsb, K: KeyDistribution> Runner<'ycsb, K> {
         (key, self.keys.get(key.id()))
     }
 
-    pub(crate) fn next_key_insert(&mut self) -> (ycsb::Key, <K::Key as index::Key>::Borrow) {
+    pub(crate) fn next_key_insert(&mut self) -> <K::Key as index::Key>::Borrow {
         let key = self.inner.next_key_insert();
-        (key, self.keys.get(key.id()))
-    }
-
-    pub(crate) fn acknowledge(&mut self, key: ycsb::Key) {
-        self.inner.acknowledge(key)
+        self.keys.get(key.id())
     }
 }
 
