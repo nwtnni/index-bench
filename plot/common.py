@@ -42,6 +42,7 @@ class Node(enum.StrEnum):
 
 
 class Map(enum.StrEnum):
+    SKIPLIST = "skiplist"
     ARCTIC = "arctic"
     ART = "art"
     DM = "dash_map"
@@ -252,3 +253,34 @@ SELECT_L3_HIT = pl.col("output").struct["perf"].struct["l3_hit"]
 SELECT_L3_MISS = pl.col("output").struct["perf"].struct["l3_miss"]
 SELECT_BRANCH = pl.col("output").struct["perf"].struct["branch"]
 SELECT_BRANCH_MISS = pl.col("output").struct["perf"].struct["branch_miss"]
+
+
+def display_abs(value) -> str:
+    suffix = ""
+    divisor = 1
+
+    if value < 1e3:
+        pass
+    elif value < 1e6:
+        suffix = "K"
+        divisor = int(1e3)
+    elif value < 1e9:
+        suffix = "M"
+        divisor = int(1e6)
+    elif value < 1e12:
+        suffix = "B"
+        divisor = int(1e9)
+    elif value < 1e15:
+        suffix = "T"
+        divisor = int(1e12)
+
+    if isinstance(value, int):
+        return f"{value // divisor}{suffix}"
+    else:
+        return f"{value / divisor:.1f}{suffix}"
+
+    assert False
+
+
+def display_rel(ratio: float) -> str:
+    return f"{ratio:.2f}x"
