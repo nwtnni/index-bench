@@ -32,8 +32,8 @@
             gdb
 
             # Build ART
+            clang-tools
             cmake
-            mimalloc
             tbb
 
             # Build masstree
@@ -48,13 +48,17 @@
               dash
               dash-bootstrap-components
               pandas
-              # Build hdrhistogram locally (python3 setup.py build)
-              pbr
               plotly
               polars
               pyarrow
               python-lsp-ruff
               python-lsp-server
+
+              # Export PDF
+              kaleido
+
+              # Build hdrhistogram locally (python3 setup.py build)
+              pbr
 
               # Preprocess emails
               click
