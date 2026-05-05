@@ -112,13 +112,13 @@ class Workload(enum.StrEnum):
 
 
 class Key(enum.StrEnum):
-    IP = "ipv4"
     SEQ = "seq-u64"
     RAND = "rand-u64"
+    IP = "ipv4"
     SNOWFLAKE = "twitter"
+    KMER = "kmer"
     EMAIL = "email"
     URL = "url"
-    KMER = "kmer"
 
     def index(self):
         return list(Key).index(self)
