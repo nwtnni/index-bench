@@ -277,7 +277,7 @@ def display_abs(value) -> str:
     if isinstance(value, int):
         return f"{value // divisor}{suffix}"
     else:
-        return f"{value / divisor:.1f}{suffix}"
+        return f"{value / divisor:.0f}{suffix}"
 
     assert False
 

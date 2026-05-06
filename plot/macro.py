@@ -29,6 +29,7 @@ def main():
         .group_by("index", "tc")
         .agg(
             pl.col("tp").mean(),
+            pl.col("tp").std().alias("std"),
             (
                 pl.col("total", "commit", "insert", "exists")
                 / pl.col("tc")
@@ -41,6 +42,7 @@ def main():
             index=pl.col("index").str.replace("skipmap", "skiplist").cast(common.Map),
             tc="tc",
             tp="tp",
+            std="std",
             total="total",
             commit=pl.col("commit"),
             memtable=pl.col("insert") + pl.col("exists"),
@@ -59,7 +61,7 @@ def main():
             )
         )
         .group_by("index", "tc")
-        .agg(cs.numeric().mean())
+        .agg(cs.numeric().mean(), std=pl.col("tp").std())
         .select(
             wl=pl.lit("rocksdb"),
             index=pl.col("index")
@@ -69,6 +71,7 @@ def main():
             .cast(common.Map),
             tc="tc",
             tp="tp",
+            std="std",
             total="uptime",
             memtable=pl.col("memtable") / 1e9,
             batch=pl.col("batch") / 1e9,
@@ -84,6 +87,7 @@ def main():
 
             for (tc,), col in row.sort("tc").group_by("tc", maintain_order=True):
                 tp = col.select("tp").item()
+                std = col.select("std").item() * 100 / tp
 
                 if index == common.Map.SKIPLIST:
                     tp = common.display_abs(tp)
@@ -98,6 +102,9 @@ def main():
                         .item()
                     )
                     tp = common.display_rel(tp / baseline)
+
+                if std > 5:
+                    tp = tp + f" $\\pm$ {int(std)}\\%"
 
                 buffer += f" & {tp}"
 
