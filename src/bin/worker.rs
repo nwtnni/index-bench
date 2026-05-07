@@ -55,6 +55,12 @@ fn specialize_key<
         index_bench::workload::Key::Snowflake => {
             specialize_index_u64::<H, index_bench::workload::Snowflake, V>(config)
         }
+        index_bench::workload::Key::UuidV4 => {
+            specialize_index_u128::<H, index_bench::workload::UuidV4, V>(config)
+        }
+        index_bench::workload::Key::UuidV7 => {
+            specialize_index_u128::<H, index_bench::workload::UuidV7, V>(config)
+        }
         index_bench::workload::Key::Email => {
             specialize_index_str::<H, index_bench::workload::Email, V>(config)
         }
@@ -83,6 +89,32 @@ fn specialize_index_u64<
         }
         index_bench::index::Name::FbTree => {
             index_bench::run::<K, u64, fbtree_sys::FbU64, H>(config)
+        }
+        index_bench::index::Name::Wormhole => {
+            index_bench::run::<K, u64, wormhole_sys::Wormhole, H>(config)
+        }
+    }
+}
+
+fn specialize_index_u128<
+    H: index_bench::index::Hasher,
+    K: index_bench::workload::KeyDistribution<Key = u128>,
+    V: index_bench::index::Value + ::arctic::Value + Send + Sync,
+>(
+    config: index_bench::Config,
+) -> anyhow::Result<index_bench::measure::Global> {
+    match config.index.name {
+        index_bench::index::Name::Art => {
+            index_bench::run::<K, u64, art_sys::Rowex<Vec<u8>>, H>(config)
+        }
+        index_bench::index::Name::Arctic => {
+            index_bench::run::<K, V, index_bench::index::arctic::Map<K::Key, V>, H>(config)
+        }
+        index_bench::index::Name::DashMap => {
+            index_bench::run::<K, u64, dashmap::DashMap<K::Key, u64, H>, H>(config)
+        }
+        index_bench::index::Name::FbTree => {
+            index_bench::run::<K, u64, fbtree_sys::FbString, H>(config)
         }
         index_bench::index::Name::Wormhole => {
             index_bench::run::<K, u64, wormhole_sys::Wormhole, H>(config)

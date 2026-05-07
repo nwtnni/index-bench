@@ -34,6 +34,8 @@ pub enum Key {
     Ts(u64),
     Ipv4,
     Snowflake,
+    UuidV4,
+    UuidV7,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -346,5 +348,45 @@ impl KeyDistribution for Snowflake {
         let index = index as usize % (SNOWFLAKE_BUFFER.len() / 8);
         let data = SNOWFLAKE_BUFFER[index..].first_chunk::<8>().unwrap();
         u64::from_le_bytes(*data)
+    }
+}
+
+pub struct UuidV4;
+
+static UUID_V4_BUFFER: LazyLock<Vec<u8>> =
+    LazyLock::new(|| std::fs::read("data/uuid-v4.bin").expect("Failed to find data/uuid-v4.bin"));
+
+impl KeyDistribution for UuidV4 {
+    type Key = u128;
+
+    fn new(_: &Key) -> Self {
+        LazyLock::force(&UUID_V4_BUFFER);
+        Self
+    }
+
+    fn get(&self, index: u64) -> u128 {
+        let index = index as usize % (UUID_V4_BUFFER.len() / 16);
+        let data = UUID_V4_BUFFER[index..].first_chunk::<16>().unwrap();
+        u128::from_le_bytes(*data)
+    }
+}
+
+pub struct UuidV7;
+
+static UUID_V7_BUFFER: LazyLock<Vec<u8>> =
+    LazyLock::new(|| std::fs::read("data/uuid-v7.bin").expect("Failed to find data/uuid-v7.bin"));
+
+impl KeyDistribution for UuidV7 {
+    type Key = u128;
+
+    fn new(_: &Key) -> Self {
+        LazyLock::force(&UUID_V7_BUFFER);
+        Self
+    }
+
+    fn get(&self, index: u64) -> u128 {
+        let index = index as usize % (UUID_V7_BUFFER.len() / 16);
+        let data = UUID_V7_BUFFER[index..].first_chunk::<16>().unwrap();
+        u128::from_le_bytes(*data)
     }
 }
