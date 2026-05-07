@@ -56,12 +56,10 @@ fn specialize_key<
             specialize_index_u64::<H, index_bench::workload::Snowflake, V>(config)
         }
         index_bench::workload::Key::Email => {
-            // specialize_index_str::<H, index_bench::workload::Email>(config)
             specialize_index_str::<H, index_bench::workload::Email, V>(config)
         }
         index_bench::workload::Key::Url => {
-            // specialize_index_str::<H, index_bench::workload::Url>(config)
-            specialize_index_string::<H, index_bench::workload::Url, V>(config)
+            specialize_index_str::<H, index_bench::workload::Url, V>(config)
         }
     }
 }
