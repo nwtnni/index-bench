@@ -29,10 +29,10 @@ checksum = "993a810118f8f37e9c4411c86f1c4c940a09a7ab34b7bf2d88d06f50c553fab7"
 [[package]]
 name = "arctic"
 version = "0.1.0"
-source = "git+ssh://github.com/nwtnni/arctic#5b1770928146aff780a0772bae8ae2c1867735e9"
+source = "git+https://github.com/nwtnni/arctic.git#5b1770928146aff780a0772bae8ae2c1867735e9"
 dependencies = [
  "base64 0.22.1",
- "crossbeam-epoch 0.9.13 (git+https://github.com/nwtnni/crossbeam.git?branch=smr-benchmark)",
+ "crossbeam-epoch",
  "hdrhistogram",
  "libc",
  "ribbit",
@@ -184,48 +184,19 @@ dependencies = [
 [[package]]
 name = "crossbeam-epoch"
 version = "0.9.13"
-source = "git+https://github.com/kaist-cp/crossbeam?branch=smr-benchmark#ee760604650f37e9bef5ebcd55a1c6403c6dfe0c"
+source = "git+https://github.com/nwtnni/crossbeam?branch=smr-benchmark#d7f027a7ed633323f065a8b8974f2d546e00303c"
 dependencies = [
  "autocfg",
  "cfg-if",
- "crossbeam-utils 0.8.14 (git+https://github.com/kaist-cp/crossbeam?branch=smr-benchmark)",
+ "crossbeam-utils 0.8.14",
  "memoffset 0.7.1",
  "scopeguard",
 ]
 
 [[package]]
-name = "crossbeam-epoch"
-version = "0.9.13"
-source = "git+https://github.com/nwtnni/crossbeam.git?branch=smr-benchmark#d7f027a7ed633323f065a8b8974f2d546e00303c"
-dependencies = [
- "autocfg",
- "cfg-if",
- "crossbeam-utils 0.8.14 (git+https://github.com/nwtnni/crossbeam.git?branch=smr-benchmark)",
- "memoffset 0.7.1",
- "scopeguard",
-]
-
-[[package]]
-name = "crossbeam-epoch"
-version = "0.9.18"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5b82ac4a3c2ca9c3460964f020e1402edd5753411d7737aa39c3714ad1b5420e"
-dependencies = [
- "crossbeam-utils 0.8.21",
-]
-
-[[package]]
 name = "crossbeam-utils"
 version = "0.8.14"
-source = "git+https://github.com/kaist-cp/crossbeam?branch=smr-benchmark#ee760604650f37e9bef5ebcd55a1c6403c6dfe0c"
-dependencies = [
- "cfg-if",
-]
-
-[[package]]
-name = "crossbeam-utils"
-version = "0.8.14"
-source = "git+https://github.com/nwtnni/crossbeam.git?branch=smr-benchmark#d7f027a7ed633323f065a8b8974f2d546e00303c"
+source = "git+https://github.com/nwtnni/crossbeam?branch=smr-benchmark#d7f027a7ed633323f065a8b8974f2d546e00303c"
 dependencies = [
  "cfg-if",
 ]
@@ -503,8 +474,6 @@ dependencies = [
  "base64 0.22.1",
  "bitflags",
  "cartesian",
- "crossbeam-epoch 0.9.13 (git+https://github.com/kaist-cp/crossbeam?branch=smr-benchmark)",
- "crossbeam-epoch 0.9.18",
  "dashmap",
  "fbtree-sys",
  "hdrhistogram",
@@ -514,7 +483,7 @@ dependencies = [
  "mimalloc",
  "perf-event2",
  "rand",
- "rapidhash 4.4.1",
+ "rapidhash",
  "serde",
  "serde_json",
  "toml",
@@ -802,12 +771,6 @@ checksum = "76afc826de14238e6e8c374ddcc1fa19e374fd8dd986b0d2af0d02377261d83c"
 dependencies = [
  "getrandom",
 ]
-
-[[package]]
-name = "rapidhash"
-version = "1.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9813f789f95ee4fe6b4d01834404d7cccacbc3f6c029343af910b3c2835eb9f1"
 
 [[package]]
 name = "rapidhash"
@@ -1169,11 +1132,11 @@ dependencies = [
 [[package]]
 name = "ycsb"
 version = "0.1.0"
-source = "git+https://github.com/nwtnni/ycsb.git#ec718db109424c05d0a58615dfd412d3f7456af8"
+source = "git+https://github.com/nwtnni/ycsb.git#07a0f8320a731b6d16bfe720f6c9d252b93f553b"
 dependencies = [
  "cartesian",
  "rand",
- "rapidhash 1.4.0",
+ "rapidhash",
  "serde",
 ]
 
