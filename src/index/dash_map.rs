@@ -46,6 +46,22 @@ impl<H: index::Hasher> index::IndexPin<u64, u64> for &'_ dashmap::DashMap<u64, u
     }
 }
 
+impl_index!(u128, u128);
+
+impl<H: index::Hasher> index::IndexPin<u128, u64> for &'_ dashmap::DashMap<u128, u64, H> {
+    fn get(&mut self, key: u128) -> Option<u64> {
+        dashmap::DashMap::get(self, &key).map(|value| *value)
+    }
+
+    fn insert(&mut self, key: u128, value: u64) -> Option<u64> {
+        dashmap::DashMap::insert(self, key, value)
+    }
+
+    fn remove(&mut self, key: u128) -> Option<u64> {
+        dashmap::DashMap::remove(self, &key).map(|(_, value)| value)
+    }
+}
+
 impl_index!(Vec<u8>, &'static [u8]);
 
 impl<H: index::Hasher> index::IndexPin<Vec<u8>, u64>

@@ -140,10 +140,7 @@ pub trait IndexSend<K: Key, V: Value, H> {
 pub trait Hasher: core::hash::BuildHasher + Clone + Default + Send + Sync + 'static {}
 impl<T> Hasher for T where T: core::hash::BuildHasher + Clone + Default + Send + Sync + 'static {}
 
-pub trait Key: ::arctic::Key
-where
-    <Self as Key>::Borrow: core::borrow::Borrow<<Self as ::arctic::raw::Key>::Borrowed>,
-{
+pub trait Key {
     type Borrow: Copy;
     fn checksum(key: <Self as Key>::Borrow) -> u64;
 }
@@ -152,6 +149,13 @@ impl Key for u64 {
     type Borrow = Self;
     fn checksum(key: <Self as Key>::Borrow) -> u64 {
         *key.borrow()
+    }
+}
+
+impl Key for u128 {
+    type Borrow = Self;
+    fn checksum(key: <Self as Key>::Borrow) -> u64 {
+        *key.borrow() as u64
     }
 }
 

@@ -1,8 +1,8 @@
 use core::borrow::Borrow as _;
 use core::ops::ControlFlow;
 
-use crate::index;
 use crate::Index;
+use crate::index;
 
 #[cfg(not(any(feature = "smr-disable", feature = "smr-epoch", feature = "smr-seize")))]
 type Smr = arctic::concurrent::smr::Hazard;
@@ -21,6 +21,7 @@ pub type Map<K, V> = arctic::concurrent::Map<K, V, Smr>;
 impl<K, V, H> Index<K, V, H> for Map<K, V>
 where
     K: index::Key + ::arctic::Key,
+    <K as index::Key>::Borrow: core::borrow::Borrow<<K as ::arctic::raw::Key>::Borrowed>,
     V: index::Value + ::arctic::Value + Send + Sync,
     H: index::Hasher,
 {
@@ -90,6 +91,7 @@ where
 impl<K, V, H> index::IndexSend<K, V, H> for &'_ Map<K, V>
 where
     K: index::Key + ::arctic::Key,
+    <K as index::Key>::Borrow: core::borrow::Borrow<<K as ::arctic::raw::Key>::Borrowed>,
     V: index::Value + ::arctic::Value + Send + Sync,
 {
     type Handle<'a>
@@ -105,6 +107,7 @@ where
 impl<'a, K, V> index::IndexPin<K, V> for &'a Map<K, V>
 where
     K: index::Key + ::arctic::Key,
+    <K as index::Key>::Borrow: core::borrow::Borrow<<K as ::arctic::raw::Key>::Borrowed>,
     V: index::Value + ::arctic::Value + Send + Sync,
 {
     fn enable_membarrier(&self) {
