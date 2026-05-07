@@ -63,3 +63,17 @@ make -j mimalloc-static
 
 cd "$ROOT/../extern/IndexResearch/util/"
 git apply ../util.patch || true
+
+cd ~
+[ -d 'turso-arctic' ] || git clone https://github.com/jennyhour/turso-arctic.git
+cd ~/turso-arctic
+direnv allow .
+eval "$(direnv export bash)"
+./perf/throughput/turso/scripts/setup.sh
+
+cd ~
+[ -d 'rocksdb-arctic' ] || git clone https://github.com/nwtnni/rocksdb-arctic.git
+cd ~/rocksdb-arctic
+direnv allow .
+eval "$(direnv export bash)"
+./setup.sh
