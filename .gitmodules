@@ -1,9 +1,6 @@
 [submodule "extern/ARTSynchronized"]
 	path = extern/ARTSynchronized
 	url = https://github.com/nwtnni/ARTSynchronized.git
-[submodule "extern/HdrHistogram_py"]
-	path = extern/HdrHistogram_py
-	url = https://github.com/HdrHistogram/HdrHistogram_py.git
 [submodule "extern/index-microbench"]
 	path = extern/index-microbench
 	url = https://github.com/nwtnni/index-microbench.git
@@ -19,3 +16,6 @@
 [submodule "extern/mimalloc_rust"]
 	path = extern/mimalloc_rust
 	url = https://github.com/nwtnni/mimalloc_rust.git
+[submodule "extern/HdrHistogram_py"]
+	path = extern/HdrHistogram_py
+	url = https://github.com/HdrHistogram/HdrHistogram_py.git
