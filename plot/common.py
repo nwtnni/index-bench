@@ -105,8 +105,8 @@ class Workload(enum.StrEnum):
     D = "YCSB-D"
     E = "YCSB-E"
 
-    # SCAN = "Scan"
-    # READ = "Read"
+    SCAN = "Scan"
+    READ = "Read"
 
     def index(self):
         return list(Workload).index(self)
@@ -203,7 +203,7 @@ SELECT_MAP = translate(
 )
 
 _WL = pl.col("config").struct["workload"]
-_ZF = _WL.struct["request_distribution"].struct.field("zipfian").is_not_null()
+_ZF = _WL.struct["request_distribution"] != pl.lit("uniform")
 
 SELECT_WORKLOAD = translate(
     {

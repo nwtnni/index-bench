@@ -16,4 +16,3 @@ for level in $(seq 0 4); do
 done
 
 cat arctic-*.ndjson > ablation.ndjson
-gzip ablation.ndjson
