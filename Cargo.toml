@@ -56,4 +56,4 @@ fbtree-sys = { path = "extern/IndexResearch/fbtree-sys" }
 [profile.release]
 codegen-units = 1
 lto = "fat"
-# debug = true
+debug = true

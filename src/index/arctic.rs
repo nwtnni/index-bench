@@ -22,6 +22,7 @@ impl<K, V, H> Index<K, V, H> for Map<K, V>
 where
     K: index::Key + ::arctic::Key,
     <K as index::Key>::Borrow: core::borrow::Borrow<<K as ::arctic::raw::Key>::Borrowed>,
+    <K as ::arctic::raw::Key>::Borrowed: Len,
     V: index::Value + ::arctic::Value + Send + Sync,
     H: index::Hasher,
 {
@@ -74,7 +75,7 @@ where
         let mut iter = self.as_sequential().all().entries::<arctic::Ascend>();
         let mut total = 0;
         while let Some((key, _)) = iter.lend() {
-            total += <K as ::arctic::raw::Key>::len(key) + 8;
+            total += Len::len(key) + 8;
         }
         total as u64
     }
@@ -92,6 +93,7 @@ impl<K, V, H> index::IndexSend<K, V, H> for &'_ Map<K, V>
 where
     K: index::Key + ::arctic::Key,
     <K as index::Key>::Borrow: core::borrow::Borrow<<K as ::arctic::raw::Key>::Borrowed>,
+    <K as ::arctic::raw::Key>::Borrowed: Len,
     V: index::Value + ::arctic::Value + Send + Sync,
 {
     type Handle<'a>
@@ -156,5 +158,27 @@ where
     #[cfg(feature = "stat")]
     fn report(&mut self) -> serde_json::Value {
         serde_json::to_value(arctic::stat::thread()).unwrap()
+    }
+}
+
+trait Len {
+    fn len(&self) -> usize;
+}
+
+impl Len for u64 {
+    fn len(&self) -> usize {
+        8
+    }
+}
+
+impl Len for u128 {
+    fn len(&self) -> usize {
+        16
+    }
+}
+
+impl Len for [u8] {
+    fn len(&self) -> usize {
+        <[u8]>::len(self)
     }
 }

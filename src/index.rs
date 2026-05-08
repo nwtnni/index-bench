@@ -169,7 +169,7 @@ impl Key for Vec<u8> {
 pub trait Value: ::arctic::Value {
     fn from_checksum(checksum: u64) -> Self;
 
-    fn from_borrow<'a>(borrow: &'a <Self as ::arctic::sequential::Value>::Target) -> Self
+    fn from_borrow<'a>(borrow: &'a <Self as ::arctic::concurrent::Value>::Target) -> Self
     where
         Self: 'a;
 }
