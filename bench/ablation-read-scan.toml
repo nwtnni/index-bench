@@ -8,11 +8,11 @@ name = "arctic"
 
 [workload]
 load = [false]
-key = ["u64", "url", "email"]
+key = ["u64"]
 value = ["u64"]
 insert_order = ["ordered", "hashed"]
 record_count = [100800000]
-operation_count = [1000000]
+operation_count = [100000000]
 read_proportion = [1.0, 0.0]
 update_proportion = [0.0]
 insert_proportion = [0.0]
