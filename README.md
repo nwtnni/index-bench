@@ -2,18 +2,24 @@
 
 Benchmark harness for concurrent shared memory index data structures.
 
+This is the main artifact for "Arctic: a practical lock-free adaptive radix tree",
+published in OSDI 2026. The source code for `arctic` itself can be found in
+[this repository](https://github.com/nwtnni/arctic).
+
 ## Getting started
 
 The main setup script is `script/setup.sh`, which we typically use to
 set up a fresh [Chameleon Cloud](https://www.chameleoncloud.org/)
 `compute_icelake_r650` instance running a `CC-Ubuntu22.04` image.
+The default benchmark configurations assume at least two NUMA nodes
+and 80 physical cores. We've only run experiments on Linux and Intel x86-64.
 
-This repository uses a [Nix](https://nixos.org/) flake and [direnv](https://direnv.net/)
+We use a [Nix](https://nixos.org/) flake and [direnv](https://direnv.net/)
 to set up a reproducible build environment. The setup script installs
-these, downloads some benchmark datasets, and clones some submodules
-and two macrobenchmark repositories.
+these, downloads some benchmark datasets (~6.1GiB total), and clones
+some submodules and two macrobenchmark repositories.
 
-Once everything is installed, build the benchmark runner with
+Once everything is installed, build the benchmark runner with:
 
 ```bash
 cargo build --release
@@ -72,7 +78,7 @@ python3 plot/ycsb.py ycsb-*.ndjson
 
 The [rocksdb-arctic](https://github.com/nwtnni/rocksdb-arctic/tree/main)
 and [turso-arctic](https://github.com/jennyhour/turso-arctic) repositories
-should be cloned into the home directory and set up by `scripts/setup.sh`.
+should be cloned into the home directory and set up by `script/setup.sh`.
 
 
 ```bash
