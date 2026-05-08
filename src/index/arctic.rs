@@ -106,7 +106,7 @@ where
     }
 }
 
-impl<'a, K, V> index::IndexPin<K, V> for &'a Map<K, V>
+impl<K, V> index::IndexPin<K, V> for &'_ Map<K, V>
 where
     K: index::Key + ::arctic::Key,
     <K as index::Key>::Borrow: core::borrow::Borrow<<K as ::arctic::raw::Key>::Borrowed>,
@@ -162,6 +162,7 @@ where
 }
 
 trait Len {
+    #[cfg_attr(not(feature = "stat"), expect(unused))]
     fn len(&self) -> usize;
 }
 
