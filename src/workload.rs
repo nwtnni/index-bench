@@ -1,3 +1,4 @@
+use core::hash::Hasher;
 use std::sync::LazyLock;
 use std::time::Instant;
 
@@ -353,21 +354,25 @@ impl KeyDistribution for Snowflake {
 
 pub struct UuidV4;
 
-static UUID_V4_BUFFER: LazyLock<Vec<u8>> =
-    LazyLock::new(|| std::fs::read("data/uuid-v4.bin").expect("Failed to find data/uuid-v4.bin"));
-
 impl KeyDistribution for UuidV4 {
     type Key = u128;
 
     fn new(_: &Key) -> Self {
-        LazyLock::force(&UUID_V4_BUFFER);
         Self
     }
 
     fn get(&self, index: u64) -> u128 {
-        let index = index as usize % (UUID_V4_BUFFER.len() / 16);
-        let data = UUID_V4_BUFFER[index..].first_chunk::<16>().unwrap();
-        u128::from_le_bytes(*data)
+        let mut hasher = rapidhash::fast::RapidHasher::default();
+        hasher.write_u64(index);
+        let lo = hasher.finish();
+        hasher.write_u64(index);
+        let hi = hasher.finish();
+
+        uuid::Builder::from_random_bytes(((lo as u128) | ((hi as u128) << 64)).to_ne_bytes())
+            .with_version(uuid::Version::Random)
+            .with_variant(uuid::Variant::RFC4122)
+            .into_uuid()
+            .as_u128()
     }
 }
 
