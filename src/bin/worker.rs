@@ -93,6 +93,7 @@ fn specialize_index_u64<
         index_bench::index::Name::Wormhole => {
             index_bench::run::<K, u64, wormhole_sys::Wormhole, H>(config)
         }
+        index_bench::index::Name::Hot => index_bench::run::<K, u64, hot_sys::HotTreeU64, H>(config),
     }
 }
 
@@ -118,6 +119,9 @@ fn specialize_index_u128<
         }
         index_bench::index::Name::Wormhole => {
             index_bench::run::<K, u64, wormhole_sys::Wormhole, H>(config)
+        }
+        index_bench::index::Name::Hot => {
+            index_bench::run::<K, u64, hot_sys::HotTreeString, H>(config)
         }
     }
 }
@@ -146,6 +150,9 @@ fn specialize_index_str<
         index_bench::index::Name::Wormhole => {
             index_bench::run::<K, u64, wormhole_sys::Wormhole, H>(config)
         }
+        index_bench::index::Name::Hot => {
+            index_bench::run::<K, u64, hot_sys::HotTreeString, H>(config)
+        }
     }
 }
 
@@ -172,6 +179,9 @@ fn specialize_index_string<
         }
         index_bench::index::Name::Wormhole => {
             index_bench::run::<K, u64, wormhole_sys::Wormhole, H>(config)
+        }
+        index_bench::index::Name::Hot => {
+            index_bench::run::<K, u64, hot_sys::HotTreeString, H>(config)
         }
     }
 }

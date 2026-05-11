@@ -16,6 +16,7 @@ mod fb_tree;
 // pub mod kaist;
 // mod papaya;
 // mod scc;
+mod hot;
 mod wormhole;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -86,6 +87,7 @@ pub enum Name {
     // SccHashMap,
     // SccTreeIndex,
     Wormhole,
+    Hot,
 }
 
 pub enum Insert {
