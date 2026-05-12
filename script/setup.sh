@@ -56,6 +56,10 @@ eval "$(direnv export bash)"
 
 ./script/normalize.sh
 
+# Build vendored hdrhistogram submodule
+cd "$ROOT/../extern/HdrHistogram_py"
+python3 setup.py build
+
 cd "$ROOT/../extern/mimalloc_rust/libmimalloc-sys/c_src/mimalloc/v3/"
 mkdir -p build && cd build
 cmake .. -DCMAKE_C_FLAGS="-DMI_STAT=2"
