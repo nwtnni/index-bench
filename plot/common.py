@@ -52,8 +52,9 @@ class Map(enum.StrEnum):
     # SCC_TI = "scc_tree_index"
     WH = "wormhole"
     CB = "crossbeam_skiplist"
-    ARCTIC_LEAK = "arctic-leak"
-    ARCTIC_EBR = "arctic-epoch"
+    ARCTIC_LEAK = "leak"
+    ARCTIC_EBR = "epoch"
+    ARCTIC_SEIZE = "hyaline"
 
     ARCTIC_0 = "baseline"
     ARCTIC_1 = "+path"
@@ -113,11 +114,12 @@ class Workload(enum.StrEnum):
 
 
 class Key(enum.StrEnum):
+    IP = "ip-v4"
     SEQ = "seq-u64"
     RAND = "rand-u64"
-    IP = "ipv4"
     SNOWFLAKE = "twitter"
-    KMER = "kmer"
+    # KMER = "kmer"
+    UUID_V4 = "uuid-v4"
     EMAIL = "email"
     URL = "url"
 
@@ -127,11 +129,8 @@ class Key(enum.StrEnum):
     # Memory used by input file
     def memory_overhead(self):
         match self:
-            case Key.SEQ | Key.RAND:
+            case Key.SEQ | Key.RAND | Key.UUID_V4:
                 return 0
-            case Key.KMER:
-                # File size (`du SRR31218470.bin`)
-                return 879308 * 1024
             case Key.EMAIL:
                 return (
                     # File size (`du email.txt`)
@@ -154,6 +153,9 @@ class Key(enum.StrEnum):
             case Key.SNOWFLAKE:
                 # File size (`du snowflake.bin`)
                 return 859380 * 1024
+            # case Key.KMER:
+            #     # File size (`du SRR31218470.bin`)
+            #     return 879308 * 1024
 
     # Computed from arctic summing key/value sizes after load
     # Field `output/memory_key_value` with feature flag `arctic/stat`
@@ -161,8 +163,10 @@ class Key(enum.StrEnum):
         match self:
             case Key.SEQ | Key.RAND:
                 return 1612800000
-            case Key.KMER:
-                return 961790032
+            case Key.UUID_V4:
+                return 0
+            # case Key.KMER:
+            #     return 961790032
             case Key.EMAIL:
                 return 1853303369
             case Key.URL:
@@ -194,13 +198,14 @@ SELECT_MAP = translate(
         Map.ARCTIC: (_NAME == "arctic").and_(_SMR == "hazard"),
         Map.ARCTIC_LEAK: (_NAME == "arctic").and_(_SMR == "disable"),
         Map.ARCTIC_EBR: (_NAME == "arctic").and_(_SMR == "epoch"),
+        Map.ARCTIC_SEIZE: (_NAME == "arctic").and_(_SMR == "seize"),
         Map.ARCTIC_0: (_NAME == "arctic-0"),
         Map.ARCTIC_1: (_NAME == "arctic-1"),
         Map.ARCTIC_2: (_NAME == "arctic-2"),
         Map.ARCTIC_3: (_NAME == "arctic-3"),
         Map.ARCTIC_4: (_NAME == "arctic-4"),
     }
-)
+).alias("map")
 
 _WL = pl.col("config").struct["workload"]
 _ZF = _WL.struct["request_distribution"] != pl.lit("uniform")
@@ -219,27 +224,43 @@ SELECT_WORKLOAD = translate(
         ),
         Workload.E: approx_eq(_WL.struct["scan_proportion"], 0.95),
     }
+).alias("wl")
+
+SELECT_ZIPF = (
+    pl.col("config")
+    .struct["workload"]
+    .struct["request_distribution"]
+    .struct["zipfian"]
+    .alias("zipf")
+)
+SELECT_UPDATE = (
+    pl.col("config").struct["workload"].struct["update_proportion"].alias("update")
 )
 
 _KEY = pl.col("config").struct["workload"].struct["key"]
 _ORDER = pl.col("config").struct["workload"].struct["insert_order"]
-SELECT_KEY = translate(
-    {
-        Key.SEQ: (_KEY == "u64").and_(_ORDER == "ordered"),
-        Key.RAND: (_KEY == "u64").and_(_ORDER == "hashed"),
-        Key.KMER: (_KEY == "kmer").and_(_ORDER == "ordered"),
-        Key.EMAIL: (_KEY == "email").and_(_ORDER == "hashed"),
-        Key.URL: (_KEY == "url").and_(_ORDER == "hashed"),
-        Key.IP: (_KEY == "ipv4").and_(_ORDER == "hashed"),
-        Key.SNOWFLAKE: (_KEY == "snowflake").and_(_ORDER == "ordered"),
-    }
-).cast(pl.Enum(Key))
+SELECT_KEY = (
+    translate(
+        {
+            Key.IP: (_KEY == "ipv4").and_(_ORDER == "hashed"),
+            Key.SEQ: (_KEY == "u64").and_(_ORDER == "ordered"),
+            Key.RAND: (_KEY == "u64").and_(_ORDER == "hashed"),
+            Key.SNOWFLAKE: (_KEY == "snowflake").and_(_ORDER == "ordered"),
+            # Key.KMER: (_KEY == "kmer").and_(_ORDER == "ordered"),
+            Key.UUID_V4: (_KEY == "uuid_v4").and_(_ORDER == "hashed"),
+            Key.EMAIL: (_KEY == "email").and_(_ORDER == "hashed"),
+            Key.URL: (_KEY == "url").and_(_ORDER == "hashed"),
+        }
+    )
+    .cast(pl.Enum(Key))
+    .alias("key")
+)
 
-SELECT_TC = pl.col("config").struct["global"].struct["thread_count"]
+SELECT_TC = pl.col("config").struct["global"].struct["thread_count"].alias("tc")
 
 SELECT_MEM = (
     pl.col("output").struct["mimalloc"].struct["committed"].struct["peak"] / 1e9
-)
+).alias("mem")
 SELECT_TP = (
     pl.col("output")
     .struct["thread"]
@@ -248,11 +269,12 @@ SELECT_TP = (
     )
     .list.sum()
     / 1e6
-)
+).alias("tp")
 SELECT_L3_HIT = pl.col("output").struct["perf"].struct["l3_hit"]
 SELECT_L3_MISS = pl.col("output").struct["perf"].struct["l3_miss"]
 SELECT_BRANCH = pl.col("output").struct["perf"].struct["branch"]
 SELECT_BRANCH_MISS = pl.col("output").struct["perf"].struct["branch_miss"]
+SELECT_GARBAGE = pl.col("output").struct["garbage"]
 
 
 def display_abs(value) -> str:
@@ -284,3 +306,7 @@ def display_abs(value) -> str:
 
 def display_rel(ratio: float) -> str:
     return f"{ratio:.2f}x"
+
+
+def bold(string: str) -> str:
+    return f"<b>{string}</b>"
