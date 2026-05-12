@@ -48,6 +48,7 @@ fn main() -> anyhow::Result<()> {
             index_bench::workload::Key::Url
                 | index_bench::workload::Key::Email
                 | index_bench::workload::Key::Ipv4
+                | index_bench::workload::Key::UuidV4
         ) && matches!(
             config.workload.ycsb.insert_order,
             ycsb::InsertOrder::Ordered
