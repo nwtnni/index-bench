@@ -9,7 +9,7 @@ name = "arctic"
 [workload]
 load = [false]
 key = ["u64"]
-value = ["u64"]
+value = ["box"]
 insert_order = ["hashed"]
 record_count = [100800000]
 operation_count = [100000000]
