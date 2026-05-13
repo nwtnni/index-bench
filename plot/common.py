@@ -68,31 +68,32 @@ class Map(enum.StrEnum):
     def style(self):
         index = self.index()
         color = COLORS[index]
-        symbol = "diamond"
+        symbol = None
 
         match self:
             # Tries
-            case Map.ARCTIC | Map.ART:
-                if self == Map.ARCTIC:
-                    color = "black"
+            case Map.ARCTIC:
+                color = "black"
                 symbol = "triangle-up"
+            case Map.ART:
+                symbol = "square"
             # Hash tables
             # Map.PP | Map.SCC_HM:
             case Map.DM:
-                symbol = "hexagon"
+                symbol = "circle"
             # B+-trees
             # Map.SCC_TI
             case Map.FB:
                 symbol = "bowtie"
-            case Map.CB:
-                symbol = "circle"
+            case Map.WH:
+                symbol = "diamond"
             # Other
             case _:
                 pass
 
         style = dict(
             line=dict(color=color),
-            marker=dict(color=color, symbol=symbol, size=7),
+            marker=dict(color=color, symbol=symbol, size=9),
             zorder=len(Map) - index,
         )
         return style

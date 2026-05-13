@@ -35,6 +35,7 @@ def main():
             tp_std=pl.when((pl.col("tp_std") / pl.col("tp")) > 0.1).then("tp_std"),
             mem_std=pl.when((pl.col("mem_std") / pl.col("mem")) > 0.1).then("mem_std"),
         )
+        .sort("key", "wl", "map")
         .collect()
     )
 
@@ -43,18 +44,18 @@ def main():
         cols=len(YCSB) + 1,
         shared_xaxes=True,
         subplot_titles=[bold(title) for title in list(YCSB) + ["YCSB-Load"]],
-        y_title=Y_TITLE,
+        # y_title=Y_TITLE,
         horizontal_spacing=0.025,
-        vertical_spacing=0.02,
+        vertical_spacing=0.015,
     )
 
-    for (key,), row_data in df.group_by("key"):
+    for (key,), row_data in df.group_by("key", maintain_order=True):
         i = common.Key(key).index() + 1
 
-        for (wl,), col_data in row_data.group_by("wl"):
+        for (wl,), col_data in row_data.group_by("wl", maintain_order=True):
             j = common.Workload(wl).index() + 1
 
-            for (map,), map_data in col_data.group_by("map"):
+            for (map,), map_data in col_data.group_by("map", maintain_order=True):
                 map_data = map_data.sort("tc")
                 map = common.Map(map)
                 trace = go.Scatter(
@@ -87,23 +88,41 @@ def main():
                 x1=165,
                 line_width=0,
                 fillcolor="black",
-                opacity=0.1,
+                opacity=0.2,
                 row=i,
                 col=j,
             )
 
-    for (key,), row_data in df.filter(
-        pl.col("wl") == common.Workload.L, pl.col("tc") == 80
-    ).group_by("key", maintain_order=True):
+    map_count = len(df.select(pl.col("map").unique()))
+
+    for (key,), row_data in (
+        df.filter(pl.col("wl") == common.Workload.L, pl.col("tc") == 80)
+        .with_columns(
+            mem=(
+                pl.col("mem")
+                - pl.col("key").map_elements(
+                    lambda key: common.Key(key).memory_overhead() / 2**30,
+                    returns_scalar=True,
+                    return_dtype=pl.Float64,
+                )
+            )
+        )
+        .with_columns(
+            rel=pl.col("mem")
+            / pl.col("key").map_elements(
+                lambda key: common.Key(key).memory_baseline() / 2**30,
+                returns_scalar=True,
+                return_dtype=pl.Float64,
+            )
+        )
+        .group_by("key", maintain_order=True)
+    ):
         key = common.Key(key)
 
         i = key.index() + 1
         j = len(YCSB) + 1
 
         for (map,), map_data in row_data.group_by("map", maintain_order=True):
-            map_data = map_data.sort("tc").with_columns(
-                pl.col("mem") - key.memory_overhead() / 2**30
-            )
             map = common.Map(map)
 
             style = map.style()
@@ -118,19 +137,34 @@ def main():
                 name=map,
                 legendgroup=map,
                 legendrank=map.index(),
+                text=[f"{rel:.1f}x" for rel in map_data["rel"]],
                 **style,
             )
 
             fig.add_trace(trace, i, j)
-            fig.update_yaxes(side="right", row=i, col=j)
+            fig.update_yaxes(
+                side="right",
+                row=i,
+                col=j,
+            )
 
-        fig.add_hline(
-            y=key.memory_baseline() / 2**30,
-            line=dict(dash="dash", color="blue", width=3),
+        fig.update_xaxes(
+            showticklabels=False,
+            row=i,
+            col=j,
+            range=[-0.5, map_count - 0.5],
+        )
+
+        fig.add_hrect(
+            type="rect",
+            y0=0,
+            y1=key.memory_baseline() / 2**30,
+            line_width=0,
+            fillcolor="black",
+            opacity=0.2,
             row=i,
             col=j,
         )
-        fig.update_xaxes(showticklabels=False, row=i, col=j)
 
     fig.update_xaxes(
         title=X_TITLE,
@@ -160,7 +194,8 @@ def main():
         legend=dict(orientation="h", y=-0.04, title=bold("Index"), font=dict(size=16)),
         width=1080,
         height=700,
-        margin=dict(l=80, r=0, t=20, b=0),
+        margin=dict(l=0, r=0, t=20, b=0),
+        uniformtext=dict(minsize=14, mode="show"),
     )
     # HACK: avoid overlap
     fig.update_annotations(selector=dict(text=Y_TITLE), xshift=-60)
