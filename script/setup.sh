@@ -65,9 +65,6 @@ mkdir -p build && cd build
 cmake .. -DCMAKE_C_FLAGS="-DMI_STAT=2"
 make -j mimalloc-static
 
-cd "$ROOT/../extern/IndexResearch/util/"
-git apply ../util.patch || true
-
 cd ~
 [ -d 'turso-arctic' ] || git clone https://github.com/jennyhour/turso-arctic.git
 cd ~/turso-arctic
