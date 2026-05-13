@@ -37,29 +37,17 @@ fn specialize_key<
     config: index_bench::Config,
 ) -> anyhow::Result<index_bench::measure::Global> {
     match config.workload.key {
-        index_bench::workload::Key::U64 => {
-            specialize_index_u64::<H, index_bench::workload::U64, V>(config)
-        }
-        index_bench::workload::Key::Sparse(_) => {
-            specialize_index_u64::<H, index_bench::workload::Sparse, V>(config)
-        }
-        index_bench::workload::Key::Kmer => {
-            specialize_index_u64::<H, index_bench::workload::Kmer, V>(config)
-        }
-        index_bench::workload::Key::Ts(_) => {
-            specialize_index_u64::<H, index_bench::workload::Ts, V>(config)
-        }
         index_bench::workload::Key::Ipv4 => {
             specialize_index_u64::<H, index_bench::workload::Ipv4, V>(config)
+        }
+        index_bench::workload::Key::U64 => {
+            specialize_index_u64::<H, index_bench::workload::U64, V>(config)
         }
         index_bench::workload::Key::Snowflake => {
             specialize_index_u64::<H, index_bench::workload::Snowflake, V>(config)
         }
         index_bench::workload::Key::UuidV4 => {
             specialize_index_u128::<H, index_bench::workload::UuidV4, V>(config)
-        }
-        index_bench::workload::Key::UuidV7 => {
-            specialize_index_u128::<H, index_bench::workload::UuidV7, V>(config)
         }
         index_bench::workload::Key::Email => {
             specialize_index_str::<H, index_bench::workload::Email, V>(config)

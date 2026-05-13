@@ -1,6 +1,5 @@
 use core::hash::Hasher;
 use std::sync::LazyLock;
-use std::time::Instant;
 
 use cartesian::Cartesian;
 use serde::Deserialize;
@@ -26,17 +25,12 @@ pub struct Config {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Key {
-    U64,
-    Email,
-    Url,
-    // Prefix(usize),
-    Sparse(f64),
-    Kmer,
-    Ts(u64),
     Ipv4,
+    U64,
     Snowflake,
     UuidV4,
-    UuidV7,
+    Email,
+    Url,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -135,182 +129,6 @@ pub trait KeyDistribution {
     fn get(&self, index: u64) -> <Self::Key as index::Key>::Borrow;
 }
 
-pub struct U64;
-
-impl KeyDistribution for U64 {
-    type Key = u64;
-
-    fn new(_: &Key) -> Self {
-        Self
-    }
-
-    fn get(&self, index: u64) -> u64 {
-        index
-    }
-}
-
-static EMAIL_BUFFER: LazyLock<String> = LazyLock::new(|| {
-    std::fs::read_to_string("data/email.txt").expect("Failed to find data/email.txt")
-});
-
-static EMAIL_INDEX: LazyLock<Vec<&'static str>> =
-    LazyLock::new(|| EMAIL_BUFFER.split_inclusive('\n').collect());
-
-pub struct Email(&'static [&'static str]);
-
-impl KeyDistribution for Email {
-    type Key = Vec<u8>;
-
-    fn new(_: &Key) -> Self {
-        Self(LazyLock::force(&EMAIL_INDEX).as_slice())
-    }
-
-    fn get(&self, index: u64) -> &'static [u8] {
-        self.0[index as usize % self.0.len()].as_bytes()
-    }
-}
-
-static URL_BUFFER: LazyLock<String> =
-    LazyLock::new(|| std::fs::read_to_string("data/url.txt").expect("Failed to find data/url.txt"));
-
-static URL_INDEX: LazyLock<Vec<&'static str>> =
-    LazyLock::new(|| URL_BUFFER.split_inclusive('\n').collect());
-
-pub struct Url(&'static [&'static str]);
-
-impl KeyDistribution for Url {
-    type Key = Vec<u8>;
-
-    fn new(_: &Key) -> Self {
-        Self(LazyLock::force(&URL_INDEX).as_slice())
-    }
-
-    fn get(&self, index: u64) -> &'static [u8] {
-        self.0[index as usize % self.0.len()].as_bytes()
-    }
-}
-
-// pub struct Prefix(usize);
-//
-// impl KeyDistribution for Prefix {
-//     type Key = Vec<u8>;
-//
-//     fn new(config: &Key) -> Self {
-//         let len = match config {
-//             Key::Prefix(len) => len,
-//             _ => unreachable!(),
-//         };
-//
-//         Self(*len)
-//     }
-//
-//     fn get(&self, index: u64) -> Self::Key {
-//         let mut key = Vec::with_capacity(self.0 + 8);
-//         key.extend((0..self.0).map(|_| 0));
-//         key.extend(index.to_be_bytes());
-//         key
-//     }
-// }
-
-pub struct Sparse(f64);
-
-impl KeyDistribution for Sparse {
-    type Key = u64;
-
-    fn new(config: &Key) -> Self {
-        let sparse = match config {
-            Key::Sparse(sparse) => sparse,
-            _ => unreachable!(),
-        };
-
-        Self(*sparse)
-    }
-
-    fn get(&self, index: u64) -> u64 {
-        (index as f64 * self.0) as u64
-    }
-}
-
-static KMER_BUFFER: LazyLock<Vec<u8>> = LazyLock::new(|| {
-    std::fs::read("data/SRR31218470.bin").expect("Failed to find data/SRR31218470.bin")
-});
-
-pub struct Kmer(&'static [u8]);
-
-impl KeyDistribution for Kmer {
-    type Key = u64;
-
-    fn new(_: &Key) -> Self {
-        Self(LazyLock::force(&KMER_BUFFER).as_ref())
-    }
-
-    /// https://github.com/nicolasgarza/fetchkmer/blob/d910161007cb7e4c3396a49998081db6d6a1f134/src/fetch.rs#L1-L20
-    fn get(&self, index: u64) -> u64 {
-        // Hard-code for 28-mer (from KMC-2 and Gerbil papers) and f. vesca sequence
-        // Each sequence is 151 base pairs = 302 bits = 38 bytes
-        // There are 123 28-mers in each sequence (0..28, 1..29, ..., 123..151)
-        let sequence_index = index / 123;
-        let sequence_byte_offset = sequence_index * 38;
-        let kmer_index = index % 123;
-
-        let bit_offset = kmer_index * 2;
-        let byte_offset = bit_offset / 8;
-        let intra_byte_offset = bit_offset % 8;
-
-        // let mut buf: u128 = 0;
-        // for j in 0..K / 2 {
-        //     let byte = self.0[byte_offset as usize + j];
-        //     buf |= (byte as u128) << (8 * j);
-        // }
-        //
-        // let shifted = buf >> intra_byte_offset;
-        //
-        // // mask exactly 64 bits
-        // (shifted & 0xFFFF_FFFF_FFFF_FFFFu128) as u64
-
-        // Load as native endian integer
-        // FIXME: doesn't check for boundary condition near EOF
-        let buf = u128::from_be_bytes(
-            self.0[(sequence_byte_offset + byte_offset) as usize..][..16]
-                .try_into()
-                .unwrap(),
-        );
-
-        // 28-mer means keep top 56 bits
-        const K_MASK: u64 = !(u64::MAX >> 56);
-        (((buf << intra_byte_offset) >> 64) as u64) & K_MASK
-    }
-}
-
-pub struct Ts(u64);
-
-impl KeyDistribution for Ts {
-    type Key = u64;
-
-    fn new(config: &Key) -> Self {
-        let resolution = match config {
-            Key::Ts(resolution) => resolution,
-            _ => unreachable!(),
-        };
-
-        Self(*resolution)
-    }
-
-    fn get(&self, seq: u64) -> u64 {
-        static EPOCH: LazyLock<Instant> = LazyLock::new(Instant::now);
-
-        let ts = Instant::now();
-
-        let ts = ts.duration_since(*EPOCH).as_nanos() as u64;
-        let ts = ts / self.0;
-
-        let id = crate::THREAD_ID.get() as u64;
-
-        // https://en.wikipedia.org/wiki/Snowflake_ID
-        ts << 22 | id << 12 | seq
-    }
-}
-
 static IP_BUFFER: LazyLock<Vec<u8>> =
     LazyLock::new(|| std::fs::read("data/ipv4.bin").expect("Failed to find data/ipv4.bin"));
 
@@ -328,6 +146,20 @@ impl KeyDistribution for Ipv4 {
         let index = index as usize % (IP_BUFFER.len() / 4);
         let data = IP_BUFFER[index..].first_chunk::<4>().unwrap();
         u32::from_le_bytes(*data) as u64
+    }
+}
+
+pub struct U64;
+
+impl KeyDistribution for U64 {
+    type Key = u64;
+
+    fn new(_: &Key) -> Self {
+        Self
+    }
+
+    fn get(&self, index: u64) -> u64 {
+        index
     }
 }
 
@@ -376,22 +208,43 @@ impl KeyDistribution for UuidV4 {
     }
 }
 
-pub struct UuidV7;
+static EMAIL_BUFFER: LazyLock<String> = LazyLock::new(|| {
+    std::fs::read_to_string("data/email.txt").expect("Failed to find data/email.txt")
+});
 
-static UUID_V7_BUFFER: LazyLock<Vec<u8>> =
-    LazyLock::new(|| std::fs::read("data/uuid-v7.bin").expect("Failed to find data/uuid-v7.bin"));
+static EMAIL_INDEX: LazyLock<Vec<&'static str>> =
+    LazyLock::new(|| EMAIL_BUFFER.split_inclusive('\n').collect());
 
-impl KeyDistribution for UuidV7 {
-    type Key = u128;
+pub struct Email(&'static [&'static str]);
+
+impl KeyDistribution for Email {
+    type Key = Vec<u8>;
 
     fn new(_: &Key) -> Self {
-        LazyLock::force(&UUID_V7_BUFFER);
-        Self
+        Self(LazyLock::force(&EMAIL_INDEX).as_slice())
     }
 
-    fn get(&self, index: u64) -> u128 {
-        let index = index as usize % (UUID_V7_BUFFER.len() / 16);
-        let data = UUID_V7_BUFFER[index..].first_chunk::<16>().unwrap();
-        u128::from_le_bytes(*data)
+    fn get(&self, index: u64) -> &'static [u8] {
+        self.0[index as usize % self.0.len()].as_bytes()
+    }
+}
+
+static URL_BUFFER: LazyLock<String> =
+    LazyLock::new(|| std::fs::read_to_string("data/url.txt").expect("Failed to find data/url.txt"));
+
+static URL_INDEX: LazyLock<Vec<&'static str>> =
+    LazyLock::new(|| URL_BUFFER.split_inclusive('\n').collect());
+
+pub struct Url(&'static [&'static str]);
+
+impl KeyDistribution for Url {
+    type Key = Vec<u8>;
+
+    fn new(_: &Key) -> Self {
+        Self(LazyLock::force(&URL_INDEX).as_slice())
+    }
+
+    fn get(&self, index: u64) -> &'static [u8] {
+        self.0[index as usize % self.0.len()].as_bytes()
     }
 }

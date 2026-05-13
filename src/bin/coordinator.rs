@@ -31,18 +31,17 @@ fn main() -> anyhow::Result<()> {
             continue;
         }
 
-        // HACK: hashing doesn't make sense for k-mer or timestamp workloads, but we also
+        // HACK: hashing doesn't make sense for time-ordered snowflake IDs, but we also
         // don't want to duplicate the configuration file to avoid one case
         if matches!(
             config.workload.key,
-            index_bench::workload::Key::Kmer
-                | index_bench::workload::Key::Ts(_)
                 | index_bench::workload::Key::Snowflake
         ) && matches!(config.workload.ycsb.insert_order, ycsb::InsertOrder::Hashed)
         {
             continue;
         }
 
+        // HACK: similarly, skip ordering for random keys
         if matches!(
             config.workload.key,
             index_bench::workload::Key::Url
