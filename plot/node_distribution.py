@@ -69,7 +69,6 @@ def node_distributions():
             )
             .otherwise(None),
         )
-        .filter(pl.col("key") != common.Key.KMER)
         .sort("key", "node", descending=[True, False])
     )
 
@@ -106,7 +105,7 @@ def node_distributions():
     )
     fig.update_layout(
         barmode="stack",
-        height=150,
+        height=160,
         width=400,
         legend=dict(orientation="h", x=-0.1, y=1.3, title=""),
         margin=dict(l=0, r=0, t=0, b=0),

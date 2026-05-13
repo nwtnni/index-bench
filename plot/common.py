@@ -118,7 +118,6 @@ class Key(enum.StrEnum):
     SEQ = "seq-u64"
     RAND = "rand-u64"
     SNOWFLAKE = "twitter"
-    # KMER = "kmer"
     UUID_V4 = "uuid-v4"
     EMAIL = "email"
     URL = "url"
@@ -153,9 +152,6 @@ class Key(enum.StrEnum):
             case Key.SNOWFLAKE:
                 # File size (`du snowflake.bin`)
                 return 859380 * 1024
-            # case Key.KMER:
-            #     # File size (`du SRR31218470.bin`)
-            #     return 879308 * 1024
 
     # Computed from arctic summing key/value sizes after load
     # Field `output/memory_key_value` with feature flag `arctic/stat`
@@ -164,9 +160,7 @@ class Key(enum.StrEnum):
             case Key.SEQ | Key.RAND:
                 return 1612800000
             case Key.UUID_V4:
-                return 0
-            # case Key.KMER:
-            #     return 961790032
+                return 2419200000
             case Key.EMAIL:
                 return 1853303369
             case Key.URL:
@@ -246,7 +240,6 @@ SELECT_KEY = (
             Key.SEQ: (_KEY == "u64").and_(_ORDER == "ordered"),
             Key.RAND: (_KEY == "u64").and_(_ORDER == "hashed"),
             Key.SNOWFLAKE: (_KEY == "snowflake").and_(_ORDER == "ordered"),
-            # Key.KMER: (_KEY == "kmer").and_(_ORDER == "ordered"),
             Key.UUID_V4: (_KEY == "uuid_v4").and_(_ORDER == "hashed"),
             Key.EMAIL: (_KEY == "email").and_(_ORDER == "hashed"),
             Key.URL: (_KEY == "url").and_(_ORDER == "hashed"),

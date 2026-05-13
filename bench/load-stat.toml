@@ -9,7 +9,7 @@ name = "arctic"
 
 [workload]
 load = [true]
-key = ["u64", "ipv4", "snowflake", "email", "url"]
+key = ["ipv4", "u64", "snowflake", "uuid_v4", "email", "url"]
 value = ["u64"]
 insert_order = ["ordered", "hashed"]
 record_count = [100800000]

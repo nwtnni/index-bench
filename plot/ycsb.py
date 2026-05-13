@@ -3,11 +3,14 @@ import sys
 import polars as pl
 import plotly.graph_objects as go
 import plotly.subplots as sp
+import polars.selectors as cs
 
 import common
+from common import bold
 
-X_TITLE = "Thread Count"
-Y_TITLE = "Throughput (Mops/sec)"
+X_TITLE = bold("Thread Count")
+Y_TITLE = bold("Throughput (Mops/sec) for Key Distribution")
+YCSB = [wl for wl in common.Workload if wl.startswith("YCSB")]
 
 
 def main():
@@ -21,18 +24,27 @@ def main():
             common.SELECT_MEM.alias("mem"),
             common.SELECT_TP.alias("tp"),
         )
-        .filter(pl.col("key") != common.Key.KMER)
-        .drop_nulls()
+        .group_by(cs.exclude("tp", "mem"))
+        .agg(
+            pl.col("tp").mean(),
+            pl.col("tp").std().fill_null(0).alias("tp_std"),
+            pl.col("mem").mean(),
+            pl.col("mem").std().fill_null(0).alias("mem_std"),
+        )
+        .with_columns(
+            tp_std=pl.when((pl.col("tp_std") / pl.col("tp")) > 0.1).then("tp_std"),
+            mem_std=pl.when((pl.col("mem_std") / pl.col("mem")) > 0.1).then("mem_std"),
+        )
         .collect()
     )
 
     fig = sp.make_subplots(
-        rows=len(common.Key) - 1,
-        cols=len(common.Workload) + 1,
+        rows=len(common.Key),
+        cols=len(YCSB) + 1,
         shared_xaxes=True,
-        subplot_titles=list(common.Workload) + ["YCSB-Load"],
+        subplot_titles=[bold(title) for title in list(YCSB) + ["YCSB-Load"]],
         y_title=Y_TITLE,
-        horizontal_spacing=0.02,
+        horizontal_spacing=0.025,
         vertical_spacing=0.02,
     )
 
@@ -48,6 +60,7 @@ def main():
                 trace = go.Scatter(
                     x=map_data["tc"],
                     y=map_data["tp"],
+                    error_y=dict(type="data", array=map_data["tp_std"]),
                     name=map,
                     legendgroup=map,
                     legendrank=map.index(),
@@ -65,12 +78,13 @@ def main():
                 col=j,
                 tick0=0,
                 dtick=40,
+                range=[0, 165],
             )
             fig.update_yaxes(rangemode="tozero", row=i, col=j)
             fig.add_vrect(
                 type="rect",
                 x0=80,
-                x1=160,
+                x1=165,
                 line_width=0,
                 fillcolor="black",
                 opacity=0.1,
@@ -84,7 +98,7 @@ def main():
         key = common.Key(key)
 
         i = key.index() + 1
-        j = len(common.Workload) + 1
+        j = len(YCSB) + 1
 
         for (map,), map_data in row_data.group_by("map", maintain_order=True):
             map_data = map_data.sort("tc").with_columns(
@@ -100,6 +114,7 @@ def main():
             trace = go.Bar(
                 x=[map],
                 y=map_data["mem"],
+                error_y=dict(type="data", array=map_data["mem_std"]),
                 name=map,
                 legendgroup=map,
                 legendrank=map.index(),
@@ -119,14 +134,14 @@ def main():
 
     fig.update_xaxes(
         title=X_TITLE,
-        row=len(common.Key) - 1,
+        row=len(common.Key),
         col=5,
     )
 
     fig.update_yaxes(
-        title="Peak memory usage (GiB)",
+        title=bold("Peak Memory Usage (GiB)"),
         row=4,
-        col=len(common.Workload) + 1,
+        col=len(YCSB) + 1,
     )
 
     # Deduplicate legend entries
@@ -139,13 +154,13 @@ def main():
     )
 
     for row, key in enumerate(common.Key):
-        fig.update_yaxes(title=key, row=row + 1, col=1)
+        fig.update_yaxes(title=bold(key), row=row + 1, col=1)
 
     fig.update_layout(
-        legend=dict(orientation="h", y=-0.04, font=dict(size=16)),
+        legend=dict(orientation="h", y=-0.04, title=bold("Index"), font=dict(size=16)),
         width=1080,
         height=700,
-        margin=dict(l=0, r=0, t=20, b=0),
+        margin=dict(l=80, r=0, t=20, b=0),
     )
     # HACK: avoid overlap
     fig.update_annotations(selector=dict(text=Y_TITLE), xshift=-60)
