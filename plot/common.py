@@ -1,4 +1,5 @@
 import enum
+import math
 
 import polars as pl
 
@@ -271,7 +272,7 @@ SELECT_BRANCH_MISS = pl.col("output").struct["perf"].struct["branch_miss"]
 SELECT_GARBAGE = pl.col("output").struct["garbage"]
 
 
-def display_abs(value) -> str:
+def display_abs(value, sig: int = 2) -> str:
     suffix = ""
     divisor = 1
 
@@ -290,17 +291,34 @@ def display_abs(value) -> str:
         suffix = "T"
         divisor = int(1e12)
 
-    if isinstance(value, int):
-        return f"{value // divisor}{suffix}"
-    else:
-        return f"{value / divisor:.0f}{suffix}"
-
-    assert False
+    return f"{sigfig(value / divisor, sig)}{suffix}"
 
 
-def display_rel(ratio: float) -> str:
-    return f"{ratio:.2f}x"
+def display_rel(ratio: float, sig: int = 2) -> str:
+    return f"{sigfig(ratio, sig)}x"
 
 
 def bold(string: str) -> str:
     return f"<b>{string}</b>"
+
+
+def sigfig(value: float, digits: int):
+    assert value > -1e-5
+
+    if abs(value) < 1e-5:
+        return f"{value:.{digits - 1}f}"
+
+    # Maximum precision within sigfig digits
+    value = round(value, digits)
+
+    if value < 1.0:
+        return f"{value:.{digits}f}"
+
+    # Handle exact powers of ten by adding epsilon
+    power = math.ceil(math.log10(value + 1e-5))
+    place = -power + digits
+
+    if place <= 0:
+        return str(int(round(value, place)))
+    else:
+        return f"{value:.{place}f}"

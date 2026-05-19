@@ -17,12 +17,12 @@ def main():
     df = (
         pl.scan_ndjson(sys.argv[1:])
         .select(
-            common.SELECT_MAP.alias("map"),
-            common.SELECT_TC.alias("tc"),
-            common.SELECT_KEY.alias("key"),
-            common.SELECT_WORKLOAD.alias("wl"),
-            common.SELECT_MEM.alias("mem"),
-            common.SELECT_TP.alias("tp"),
+            common.SELECT_MAP,
+            common.SELECT_TC,
+            common.SELECT_KEY,
+            common.SELECT_WORKLOAD,
+            common.SELECT_MEM,
+            common.SELECT_TP,
         )
         .group_by(cs.exclude("tp", "mem"))
         .agg(
@@ -45,7 +45,7 @@ def main():
         shared_xaxes=True,
         subplot_titles=[bold(title) for title in list(YCSB) + ["YCSB-Load"]],
         # y_title=Y_TITLE,
-        horizontal_spacing=0.025,
+        horizontal_spacing=0.02,
         vertical_spacing=0.015,
     )
 
@@ -137,7 +137,7 @@ def main():
                 name=map,
                 legendgroup=map,
                 legendrank=map.index(),
-                text=[f"{rel:.1f}x" for rel in map_data["rel"]],
+                text=[common.display_rel(rel) for rel in map_data["rel"]],
                 **style,
             )
 
