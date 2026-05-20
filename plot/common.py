@@ -78,6 +78,10 @@ class Map(enum.StrEnum):
                 symbol = "triangle-up"
             case Map.ART:
                 symbol = "square"
+            case Map.ARCTIC_EBR:
+                color = COLORS[0]
+            case Map.ARCTIC_SEIZE:
+                color = COLORS[1]
             # Hash tables
             # Map.PP | Map.SCC_HM:
             case Map.DM:

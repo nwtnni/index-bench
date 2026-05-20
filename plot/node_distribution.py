@@ -19,12 +19,15 @@ def node_distributions():
     df = pl.read_ndjson(sys.argv[1:])
 
     df = df.select(
-        common.SELECT_KEY.alias("key"),
+        common.SELECT_KEY,
         pl.col("output").struct["index"].struct["node_3"],
         pl.col("output").struct["index"].struct["node_15"],
         pl.col("output").struct["index"].struct["node_47"],
         pl.col("output").struct["index"].struct["node_256"],
+        pl.col("output").struct["memory_key_value"],
     )
+
+    print(df)
 
     keys = []
     nodes = []
@@ -88,7 +91,7 @@ def node_distributions():
                 textfont_color="black",
                 legendrank=3 - index,
                 marker_pattern_shape=node.pattern(),
-                marker=dict(pattern=dict(size=5, solidity=0.1)),
+                marker=dict(pattern=dict(size=15, solidity=0.05)),
             )
         )
 

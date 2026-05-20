@@ -45,7 +45,7 @@ def main():
         shared_xaxes=True,
         subplot_titles=[bold(title) for title in list(YCSB) + ["YCSB-Load"]],
         # y_title=Y_TITLE,
-        horizontal_spacing=0.02,
+        horizontal_spacing=0.025,
         vertical_spacing=0.015,
     )
 
