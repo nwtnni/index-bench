@@ -118,6 +118,7 @@ def main():
         .group_by("key", maintain_order=True)
     ):
         key = common.Key(key)
+        max_mem = row_data.select("mem").max().item()
 
         i = key.index() + 1
         j = len(YCSB) + 1
@@ -137,7 +138,11 @@ def main():
                 name=map,
                 legendgroup=map,
                 legendrank=map.index(),
-                text=[common.display_rel(rel) for rel in map_data["rel"]],
+                text=common.display_rel(map_data["rel"].item()),
+                textangle=-90,
+                textposition="inside"
+                if map_data["mem"].item() / max_mem > 0.5
+                else "outside",
                 **style,
             )
 
