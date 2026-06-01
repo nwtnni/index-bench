@@ -113,7 +113,6 @@ class Workload(enum.StrEnum):
     E = "YCSB-E"
 
     SCAN = "Scan"
-    READ = "Read"
 
     def index(self):
         return list(Workload).index(self)
@@ -192,39 +191,52 @@ def approx_eq(expr: pl.Expr, literal: float) -> pl.Expr:
 
 _NAME = pl.col("config").struct["index"].struct["name"]
 _SMR = pl.col("config").struct["index"].struct["smr"]
-SELECT_MAP = translate(
-    {map.value: _NAME == map.value for map in Map if not map.value.startswith("arctic")}
-    | {
-        Map.ARCTIC: (_NAME == "arctic").and_(_SMR == "hazard"),
-        Map.ARCTIC_LEAK: (_NAME == "arctic").and_(_SMR == "disable"),
-        Map.ARCTIC_EBR: (_NAME == "arctic").and_(_SMR == "epoch"),
-        Map.ARCTIC_SEIZE: (_NAME == "arctic").and_(_SMR == "seize"),
-        Map.ARCTIC_0: (_NAME == "arctic-0"),
-        Map.ARCTIC_1: (_NAME == "arctic-1"),
-        Map.ARCTIC_2: (_NAME == "arctic-2"),
-        Map.ARCTIC_3: (_NAME == "arctic-3"),
-        Map.ARCTIC_4: (_NAME == "arctic-4"),
-    }
-).alias("map")
+SELECT_MAP = (
+    translate(
+        {
+            map.value: _NAME == map.value
+            for map in Map
+            if not map.value.startswith("arctic")
+        }
+        | {
+            Map.ARCTIC: (_NAME == "arctic").and_(_SMR == "hazard"),
+            Map.ARCTIC_LEAK: (_NAME == "arctic").and_(_SMR == "disable"),
+            Map.ARCTIC_EBR: (_NAME == "arctic").and_(_SMR == "epoch"),
+            Map.ARCTIC_SEIZE: (_NAME == "arctic").and_(_SMR == "seize"),
+            Map.ARCTIC_0: (_NAME == "arctic-0"),
+            Map.ARCTIC_1: (_NAME == "arctic-1"),
+            Map.ARCTIC_2: (_NAME == "arctic-2"),
+            Map.ARCTIC_3: (_NAME == "arctic-3"),
+            Map.ARCTIC_4: (_NAME == "arctic-4"),
+        }
+    )
+    .cast(pl.Enum(Map))
+    .alias("map")
+)
 
 _WL = pl.col("config").struct["workload"]
 _ZF = _WL.struct["request_distribution"] != pl.lit("uniform")
 
-SELECT_WORKLOAD = translate(
-    {
-        Workload.L: _WL.struct["load"],
-        Workload.A: approx_eq(_WL.struct["read_proportion"], 0.5).and_(_ZF),
-        Workload.B: approx_eq(_WL.struct["read_proportion"], 0.95)
-        .and_(approx_eq(_WL.struct["update_proportion"], 0.05))
-        .and_(_ZF),
-        Workload.C: approx_eq(_WL.struct["read_proportion"], 1.0).and_(_ZF),
-        # FIXME: detect if `latest` field is not null instead of relying on early exit above
-        Workload.D: approx_eq(_WL.struct["read_proportion"], 0.95).and_(
-            approx_eq(_WL.struct["insert_proportion"], 0.05)
-        ),
-        Workload.E: approx_eq(_WL.struct["scan_proportion"], 0.95),
-    }
-).alias("wl")
+SELECT_WORKLOAD = (
+    translate(
+        {
+            Workload.L: _WL.struct["load"],
+            Workload.A: approx_eq(_WL.struct["read_proportion"], 0.5).and_(_ZF),
+            Workload.B: approx_eq(_WL.struct["read_proportion"], 0.95)
+            .and_(approx_eq(_WL.struct["update_proportion"], 0.05))
+            .and_(_ZF),
+            Workload.C: approx_eq(_WL.struct["read_proportion"], 1.0).and_(_ZF),
+            # FIXME: detect if `latest` field is not null instead of relying on early exit above
+            Workload.D: approx_eq(_WL.struct["read_proportion"], 0.95).and_(
+                approx_eq(_WL.struct["insert_proportion"], 0.05)
+            ),
+            Workload.E: approx_eq(_WL.struct["scan_proportion"], 0.95),
+            Workload.SCAN: approx_eq(_WL.struct["scan_proportion"], 1.0),
+        }
+    )
+    .cast(pl.Enum(Workload))
+    .alias("wl")
+)
 
 SELECT_ZIPF = (
     pl.col("config")
@@ -258,7 +270,7 @@ SELECT_KEY = (
 SELECT_TC = pl.col("config").struct["global"].struct["thread_count"].alias("tc")
 
 SELECT_MEM = (
-    pl.col("output").struct["mimalloc"].struct["committed"].struct["peak"] / 1e9
+    pl.col("output").struct["mimalloc"].struct["committed"].struct["peak"] / 2**30
 ).alias("mem")
 SELECT_TP = (
     pl.col("output")
@@ -269,8 +281,17 @@ SELECT_TP = (
     .list.sum()
     / 1e6
 ).alias("tp")
+SELECT_OPS = (
+    pl.col("output")
+    .struct["thread"]
+    .list.eval(pl.element().struct["operation_count"])
+    .list.sum()
+    .alias("ops")
+)
 SELECT_L3_HIT = pl.col("output").struct["perf"].struct["l3_hit"]
 SELECT_L3_MISS = pl.col("output").struct["perf"].struct["l3_miss"]
+SELECT_L3_HIT_HITM = pl.col("output").struct["perf"].struct["l3_hit_hitm"]
+SELECT_L3_MISS_HITM = pl.col("output").struct["perf"].struct["l3_miss_hitm"]
 SELECT_BRANCH = pl.col("output").struct["perf"].struct["branch"]
 SELECT_BRANCH_MISS = pl.col("output").struct["perf"].struct["branch_miss"]
 SELECT_GARBAGE = pl.col("output").struct["garbage"]
@@ -304,6 +325,10 @@ def display_rel(ratio: float, sig: int = 2) -> str:
 
 def bold(string: str) -> str:
     return f"<b>{string}</b>"
+
+
+def title(string: str):
+    return dict(title=dict(text=bold(string), font=dict(size=16)))
 
 
 def sigfig(value: float, digits: int):

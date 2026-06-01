@@ -8,8 +8,6 @@ import polars.selectors as cs
 import common
 from common import bold
 
-X_TITLE = bold("Thread Count")
-Y_TITLE = bold("Throughput (Mops/sec) for Key Distribution")
 YCSB = [wl for wl in common.Workload if wl.startswith("YCSB")]
 
 
@@ -172,13 +170,13 @@ def main():
         )
 
     fig.update_xaxes(
-        title=X_TITLE,
+        **common.title("Thread Count"),
         row=len(common.Key),
         col=5,
     )
 
     fig.update_yaxes(
-        title=bold("Peak Memory Usage (GiB)"),
+        **common.title("Peak Memory Usage (GiB)"),
         row=4,
         col=len(YCSB) + 1,
     )
@@ -193,17 +191,15 @@ def main():
     )
 
     for row, key in enumerate(common.Key):
-        fig.update_yaxes(title=bold(key), row=row + 1, col=1)
+        fig.update_yaxes(**common.title(key), row=row + 1, col=1)
 
     fig.update_layout(
         legend=dict(orientation="h", y=-0.04, title=bold("Index"), font=dict(size=16)),
         width=1080,
         height=700,
         margin=dict(l=0, r=0, t=20, b=0),
-        uniformtext=dict(minsize=14, mode="show"),
+        uniformtext=dict(minsize=16, mode="show"),
     )
-    # HACK: avoid overlap
-    fig.update_annotations(selector=dict(text=Y_TITLE), xshift=-60)
     fig.write_image("ycsb.pdf")
 
 

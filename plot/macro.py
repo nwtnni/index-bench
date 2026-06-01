@@ -4,12 +4,9 @@ import polars as pl
 import plotly.graph_objects as go
 import plotly.subplots as sp
 import polars.selectors as cs
-import plotly.express as px
 
 import common
-
-X_TITLE = "Number of Threads"
-Y_TITLE = "Throughput (rows/sec)"
+from common import bold
 
 
 def main():
@@ -169,17 +166,21 @@ def main():
             col=2,
         )
 
-    fig.update_yaxes(title="<b>Thread Count and Index</b>", row=1, col=1)
-    fig.update_xaxes(title="<b>Time (sec)</b>")
+    fig.update_yaxes(
+        **common.title("Thread Count and Index"),
+        row=1,
+        col=1,
+    )
+    fig.update_xaxes(**common.title("Time (sec)"))
 
     fig.update_layout(
         barmode="stack",
         height=300,
         width=1080,
-        uniformtext=dict(minsize=14, mode="show"),
+        uniformtext=dict(minsize=16, mode="show"),
         legend1=dict(
-            font=dict(size=15),
-            title="<b>RocksDB Operation</b>",
+            font=dict(size=16),
+            title=bold("RocksDB Operation"),
             orientation="h",
             xref="paper",
             yref="paper",
@@ -187,8 +188,8 @@ def main():
             y=1.15,
         ),
         legend2=dict(
-            font=dict(size=15),
-            title="<b>Turso Operation</b>",
+            font=dict(size=16),
+            title=bold("Turso Operation"),
             orientation="h",
             xref="paper",
             yref="paper",

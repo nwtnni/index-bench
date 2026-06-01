@@ -1,9 +1,7 @@
 import sys
 import polars as pl
-import plotly.express as px
 import plotly.graph_objects as go
 import plotly.subplots as sp
-import polars.selectors as cs
 
 import common
 
@@ -62,7 +60,6 @@ fig = sp.make_subplots(
     cols=3,
     column_titles=list(map(common.bold, ["Zipf 0.99", "Zipf 1.1", "Zipf 1.2"])),
     row_titles=list(map(common.bold, ["YCSB-A", "YCSB-B"])),
-    y_title=common.bold("Thread Count and SMR Scheme"),
     shared_xaxes=True,
     shared_yaxes=True,
     horizontal_spacing=0.03,
@@ -99,66 +96,77 @@ for i, ((update,), outer) in enumerate(df.group_by("update", maintain_order=True
                     col=(k + 1),
                 )
 
-    # fig = px.bar(
-    #     x="map",
-    #     y="garbage",
-    #     color="map",
-    #     # pattern_shape="map",
-    #     facet_row="threads",
-    #     facet_col="zipf",
-    #     facet_row_spacing=0.03,
-    #     facet_col_spacing=0.01,
-    #     text="rel",
-    #     color_discrete_map=dict(
-    #         hazard="black",
-    #         epoch=common.COLORS[0],
-    #         hyaline=common.COLORS[1],
-    #     ),
-    #     # pattern_shape_map=dict(
-    #     #     epoch="/",
-    #     #     hyaline="+",
-    #     # ),
-    # )
-    #
-    # # https://community.plotly.com/t/quick-help-with-barchart-text-formatting/47808
-    # fig.update_traces(textangle=90, textposition="outside", selector=dict(type="bar"))
-    # # fig.update_traces(
-    # #     textposition="inside", selector=dict(type="bar", x="epoch"), row=1
-    # # )
-    #
-    # fig.update_yaxes(title=None)
-    # fig.update_yaxes(title=common.bold("Maximum Unreclaimed Allocations"), row=2, col=1)
-    #
-    # fig.update_layout(
-    #     width=1080,
-    #     height=300,
-    #     legend=dict(
-    #         orientation="h",
-    #         title=common.bold("Safe Memory Reclamation Scheme"),
-    #         x=-0.05,
-    #         y=-0.02,
-    #     ),
-    #     margin=dict(t=0, b=0, l=0, r=10),
-    #     uniformtext=dict(minsize=14, mode="show"),
-    # )
-    #
-    # fig.for_each_xaxis(lambda xaxis: xaxis.update(showticklabels=False, title=None))
-    # fig.write_image(f"smr-{wl.lower()}.pdf")
-fig.update_xaxes(title=dict(text=common.bold("Peak Garbage Count")), row=2, col=3)
+# for i, ((wl,), group) in enumerate(df.group_by("update", maintain_order=True)):
+#     wl = {0.5: "A", 0.05: "B"}[wl]
+#     fig = px.bar(
+#         group.sort(
+#             "update", "map", "zipf", "threads", descending=[True, False, False, False]
+#         ).with_columns(pl.col("map").str.replace("arctic", "hazard")),
+#         x="map",
+#         y="garbage",
+#         color="map",
+#         # pattern_shape="map",
+#         facet_row="threads",
+#         facet_col="zipf",
+#         facet_row_spacing=0.03,
+#         facet_col_spacing=0.01,
+#         text="rel",
+#         color_discrete_map=dict(
+#             hazard="black",
+#             epoch=common.COLORS[0],
+#             hyaline=common.COLORS[1],
+#         ),
+#         # pattern_shape_map=dict(
+#         #     epoch="/",
+#         #     hyaline="+",
+#         # ),
+#     )
+#
+#     # https://community.plotly.com/t/quick-help-with-barchart-text-formatting/47808
+#     # fig.update_traces(textangle=90, textposition="outside", selector=dict(type="bar"))
+#     # fig.update_traces(
+#     #     textposition="inside", selector=dict(type="bar", x="epoch"), row=1
+#     # )
+#
+#     fig.update_yaxes(title=None)
+#     fig.update_yaxes(title=common.bold("Maximum Unreclaimed Allocations"), row=2, col=1)
+#
+#     fig.update_layout(
+#         title=common.bold(f"Reclamation efficiency on YCSB-{wl}"),
+#         width=600,
+#         height=400,
+#         legend=dict(
+#             orientation="h",
+#             title=common.bold("Safe Memory Reclamation Scheme"),
+#             x=-0.05,
+#             y=-0.02,
+#         ),
+#         margin=dict(t=50, b=0, l=0, r=10),
+#         uniformtext=dict(minsize=14, mode="show"),
+#     )
+#
+#     fig.for_each_xaxis(lambda xaxis: xaxis.update(showticklabels=False, title=None))
+#     fig.write_image(f"smr-{wl.lower()}.pdf")
+
+fig.update_yaxes(**common.title("Thread Count"), col=1)
+fig.update_xaxes(**common.title("Peak Garbage"), row=2)
+# HACK: match ycsb figure
+fig.update_annotations(textangle=-90, selector=lambda a: "YCSB" in a.text)
+
 fig.update_xaxes(range=[0, 3e6])
 fig.update_yaxes(range=[-0.5, 2.5])
 fig.update_layout(
     barmode="group",
     bargroupgap=0.0,
-    width=540,
+    width=500,
     height=400,
     legend=dict(
         orientation="h",
         title=common.bold("SMR Scheme"),
-        entrywidth=0,
-        x=-0.1,
-        y=-0.06,
+        y=1.15,
+        font=dict(size=16),
     ),
-    margin=dict(t=20, b=0, l=60, r=10),
+    uniformtext=dict(minsize=16, mode="show"),
+    margin=dict(t=0, b=0, l=0, r=0),
 )
 fig.write_image("smr.pdf")
