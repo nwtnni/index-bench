@@ -13,9 +13,10 @@ df = (
         common.SELECT_KEY,
         common.SELECT_ZIPF,
         common.SELECT_UPDATE,
-        common.SELECT_GARBAGE,
-        common.SELECT_TP,
+        common.SELECT_BATCH,
+        common.SELECT_GARBAGE / common.SELECT_TC,
     )
+    .filter(pl.col("batch") == 256)
     .filter(pl.col("map") != pl.lit(common.Map.ARCTIC_LEAK))
     .filter(pl.col("zipf").is_in([0.99, 1.1, 1.2]))
     # .with_columns(
@@ -23,10 +24,6 @@ df = (
     #     .then(pl.lit("hazard"))
     #     .otherwise(pl.col("map"))
     # )
-)
-
-df = (
-    df.drop("tp")
     .with_columns(
         rel=pl.when(
             pl.col("map") == pl.lit(common.Map.ARCTIC),
@@ -60,10 +57,10 @@ fig = sp.make_subplots(
     cols=3,
     column_titles=list(map(common.bold, ["Zipf 0.99", "Zipf 1.1", "Zipf 1.2"])),
     row_titles=list(map(common.bold, ["YCSB-A", "YCSB-B"])),
-    shared_xaxes=True,
+    # shared_xaxes=True,
     shared_yaxes=True,
     horizontal_spacing=0.03,
-    vertical_spacing=0.02,
+    vertical_spacing=0.05,
 )
 fig.update_layout(
     uniformtext=dict(minsize=14, mode="show"),
@@ -84,7 +81,7 @@ for i, ((update,), outer) in enumerate(df.group_by("update", maintain_order=True
                         text=inner["rel"],
                         textangle=0,
                         textposition="outside"
-                        if inner["garbage"][0] < 1e6
+                        if inner["garbage"][0] < 6e3
                         else "inside",
                         marker=dict(color=common.Map(map).style()["marker"]["color"]),
                         legendrank=common.Map(map).index(),
@@ -149,11 +146,12 @@ for i, ((update,), outer) in enumerate(df.group_by("update", maintain_order=True
 #     fig.write_image(f"smr-{wl.lower()}.pdf")
 
 fig.update_yaxes(**common.title("Thread Count"), col=1)
-fig.update_xaxes(**common.title("Peak Garbage"), row=2)
+fig.update_xaxes(
+    **common.title("Peak Unreclaimed Retired Allocations per Thread"), row=2, col=2
+)
 # HACK: match ycsb figure
 fig.update_annotations(textangle=-90, selector=lambda a: "YCSB" in a.text)
 
-fig.update_xaxes(range=[0, 3e6])
 fig.update_yaxes(range=[-0.5, 2.5])
 fig.update_layout(
     barmode="group",

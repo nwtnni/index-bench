@@ -213,6 +213,9 @@ SELECT_MAP = (
     .cast(pl.Enum(Map))
     .alias("map")
 )
+SELECT_BATCH = (
+    pl.col("config").struct["index"].struct["reclaim_threshold"].alias("batch")
+)
 
 _WL = pl.col("config").struct["workload"]
 _ZF = _WL.struct["request_distribution"] != pl.lit("uniform")
