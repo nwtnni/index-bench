@@ -7,7 +7,9 @@ set -o xtrace
 
 for feature in "default" "smr-disable" "smr-seize" "smr-epoch"; do
     cargo build --release --features "$feature,stat-garbage"
-    cargo run --release  --features "$feature,stat-garbage" -- bench/smr.toml
+    for i in $(seq 10); do
+        cargo run --release  --features "$feature,stat-garbage" -- bench/smr.toml
+    done
     mv result.ndjson "arctic-$feature.ndjson"
 done
 
