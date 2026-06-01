@@ -59,7 +59,7 @@ def main():
             wl=pl.col("wl")
             .cast(pl.String)
             .str.replace(common.Workload.L, "Insert")
-            .str.replace(common.Workload.C, "Get")
+            .str.replace(common.Workload.C, "Read")
         )
     )
 
