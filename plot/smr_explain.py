@@ -4,6 +4,8 @@ import polars.selectors as cs
 
 import common
 
+pl.Config.set_tbl_cols(-1)
+
 df = (
     pl.read_ndjson(sys.argv[1:])
     .select(
@@ -16,29 +18,38 @@ df = (
         common.SELECT_GARBAGE,
         common.SELECT_TP,
     )
+    .filter(pl.col("zipf").is_in([0.99, 1.1, 1.2]))
     .group_by(cs.exclude("garbage", "tp"))
     .agg(garbage=pl.col("garbage").mean(), tp=pl.col("tp").mean())
     .with_columns(garbage=pl.col("garbage") / pl.col("tc"))
 )
 
-# Performance improvement from reclamation efficiency
+# 64 for crossbeam-epoch, 32 for seize
+DEFAULT_BATCH_SIZE = 64
+
+# Performance improvement from batch size configuration
 print(
     df.filter(
         pl.col("map") != pl.lit(common.Map.ARCTIC_LEAK),
-        pl.col("zipf") == 0.99,
         pl.col("update") == 0.5,
         pl.col("tc") == 80,
     )
     .group_by(cs.exclude("batch", "garbage", "tp"))
     .agg(
         garbage=pl.col("garbage").filter(pl.col("batch") == 256)
-        / pl.col("garbage").filter(pl.col("batch") == 64).get(0),
+        / pl.col("garbage").filter(pl.col("batch") == DEFAULT_BATCH_SIZE).get(0),
         tp=pl.col("tp").filter(pl.col("batch") == 256)
-        / pl.col("tp").filter(pl.col("batch") == 64).get(0),
+        / pl.col("tp").filter(pl.col("batch") == DEFAULT_BATCH_SIZE).get(0),
     )
     .explode("garbage", "tp")
+    # Geomean across zipf
+    .group_by(cs.exclude("zipf", "garbage", "tp"))
+    .agg(
+        garbage=pl.col("garbage").log().mean().exp(),
+        tp=pl.col("tp").log().mean().exp(),
+    )
     .drop_nulls()
-    .with_columns(garbage=1 / pl.col("garbage"))
+    .with_columns(garbage=pl.col("garbage"))
 )
 
 # Throughput drop relative to EBR

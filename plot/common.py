@@ -54,8 +54,8 @@ class Map(enum.StrEnum):
     WH = "wormhole"
     CB = "crossbeam_skiplist"
     ARCTIC_LEAK = "leak"
-    ARCTIC_EBR = "epoch"
-    ARCTIC_SEIZE = "hyaline"
+    ARCTIC_EBR = "crossbeam-epoch"
+    ARCTIC_SEIZE = "seize"
 
     ARCTIC_0 = "baseline"
     ARCTIC_1 = "+path"

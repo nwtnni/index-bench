@@ -1,5 +1,6 @@
 import sys
 import polars as pl
+import polars.selectors as cs
 import plotly.graph_objects as go
 import plotly.subplots as sp
 
@@ -19,11 +20,8 @@ df = (
     .filter(pl.col("batch") == 256)
     .filter(pl.col("map") != pl.lit(common.Map.ARCTIC_LEAK))
     .filter(pl.col("zipf").is_in([0.99, 1.1, 1.2]))
-    # .with_columns(
-    #     map=pl.when(pl.col("map") == pl.lit(common.Map.ARCTIC))
-    #     .then(pl.lit("hazard"))
-    #     .otherwise(pl.col("map"))
-    # )
+    .group_by(cs.exclude("garbage"), maintain_order=True)
+    .agg(garbage=pl.col("garbage").mean())
     .with_columns(
         rel=pl.when(
             pl.col("map") == pl.lit(common.Map.ARCTIC),
@@ -75,7 +73,7 @@ for i, ((update,), outer) in enumerate(df.group_by("update", maintain_order=True
                 shown.add(map)
                 fig.add_trace(
                     go.Bar(
-                        name=map if map != common.Map.ARCTIC else "hazard",
+                        name=map if map != common.Map.ARCTIC else "hazard-key",
                         y=inner["threads"],
                         x=inner["garbage"],
                         text=inner["rel"],
@@ -160,7 +158,7 @@ fig.update_layout(
     height=400,
     legend=dict(
         orientation="h",
-        title=common.bold("SMR Scheme"),
+        title=common.bold("SMR"),
         y=1.15,
         font=dict(size=16),
     ),
