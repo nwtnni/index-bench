@@ -1,6 +1,6 @@
 [global]
 thread_count = [80]
-numa = [{ policy = "bind", node = 0 }]
+numa = [{ policy = "interleave", nodes = [0, 1] }]
 
 [[index]]
 hash = "rapid_hash"
