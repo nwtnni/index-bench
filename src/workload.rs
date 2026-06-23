@@ -61,7 +61,7 @@ impl Config {
         }
     }
 
-    pub(crate) fn runner<K: KeyDistribution>(&self, config: &Key) -> Runner<K> {
+    pub(crate) fn runner<K: KeyDistribution>(&self, config: &Key) -> Runner<'_, K> {
         Runner {
             inner: self.ycsb.runner(),
             keys: K::new(config),

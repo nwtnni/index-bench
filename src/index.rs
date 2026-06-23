@@ -1,5 +1,4 @@
 use core::borrow::Borrow as _;
-use std::os::fd::BorrowedFd;
 
 use serde::Deserialize;
 use serde::Serialize;

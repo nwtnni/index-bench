@@ -29,12 +29,12 @@ macro_rules! impl_index {
             where
                 V: 'a;
 
-            fn new(config: &index::Config) -> Self {
+            fn new(_config: &index::Config) -> Self {
                 #[cfg(feature = "smr-hazard")]
                 {
                     Map::with_smr(Box::new(
                         arctic::concurrent::smr::hazard::Global::default()
-                            .with_reclaim_threshold(config.reclaim_threshold),
+                            .with_reclaim_threshold(_config.reclaim_threshold),
                     ))
                 }
 
@@ -46,7 +46,7 @@ macro_rules! impl_index {
                 #[cfg(feature = "smr-epoch")]
                 {
                     Map::with_smr(Box::new(
-                        arctic::concurrent::smr::epoch::Global::with_bag_capacity(config.reclaim_threshold),
+                        arctic::concurrent::smr::epoch::Global::with_bag_capacity(_config.reclaim_threshold),
                     ))
                 }
 
