@@ -1,4 +1,5 @@
 use core::borrow::Borrow as _;
+use std::os::fd::BorrowedFd;
 
 use serde::Deserialize;
 use serde::Serialize;
@@ -43,10 +44,10 @@ fn smr() -> Smr {
         Smr::Disable
     } else if cfg!(feature = "smr-epoch") {
         Smr::Epoch
-    } else if cfg!(feature = "smr-seize") {
-        Smr::Seize
-    } else {
+    } else if cfg!(feature = "smr-hazard") {
         Smr::Hazard
+    } else {
+        Smr::Seize
     }
 }
 
@@ -168,10 +169,10 @@ impl Key for Vec<u8> {
     }
 }
 
-pub trait Value: ::arctic::Value {
+pub trait Value: ::arctic::concurrent::Value {
     fn from_checksum(checksum: u64) -> Self;
 
-    fn from_borrow<'a>(borrow: &'a <Self as ::arctic::concurrent::Value>::Target) -> Self
+    fn from_borrow<'a>(borrow: &'a <Self as ::arctic::concurrent::Value>::Borrowed) -> Self
     where
         Self: 'a;
 }

@@ -30,10 +30,7 @@ fn specialize_value<H: index_bench::index::Hasher>(
     }
 }
 
-fn specialize_key<
-    H: index_bench::index::Hasher,
-    V: index_bench::index::Value + ::arctic::Value + Send + Sync,
->(
+fn specialize_key<H: index_bench::index::Hasher, V: index_bench::index::Value + Send + Sync>(
     config: index_bench::Config,
 ) -> anyhow::Result<index_bench::measure::Global> {
     match config.workload.key {
@@ -61,7 +58,7 @@ fn specialize_key<
 fn specialize_index_u64<
     H: index_bench::index::Hasher,
     K: index_bench::workload::KeyDistribution<Key = u64>,
-    V: index_bench::index::Value + ::arctic::Value + Send + Sync,
+    V: index_bench::index::Value + Send + Sync,
 >(
     config: index_bench::Config,
 ) -> anyhow::Result<index_bench::measure::Global> {
@@ -88,7 +85,7 @@ fn specialize_index_u64<
 fn specialize_index_u128<
     H: index_bench::index::Hasher,
     K: index_bench::workload::KeyDistribution<Key = u128>,
-    V: index_bench::index::Value + ::arctic::Value + Send + Sync,
+    V: index_bench::index::Value + Send + Sync,
 >(
     config: index_bench::Config,
 ) -> anyhow::Result<index_bench::measure::Global> {
@@ -118,7 +115,7 @@ fn specialize_index_u128<
 fn specialize_index_str<
     H: index_bench::index::Hasher,
     K: index_bench::workload::KeyDistribution<Key = Vec<u8>>,
-    V: index_bench::index::Value + ::arctic::Value + Send + Sync,
+    V: index_bench::index::Value + Send + Sync,
 >(
     config: index_bench::Config,
 ) -> anyhow::Result<index_bench::measure::Global> {
@@ -126,9 +123,15 @@ fn specialize_index_str<
         index_bench::index::Name::Art => {
             index_bench::run::<K, u64, art_sys::Rowex<Vec<u8>>, H>(config)
         }
-        index_bench::index::Name::Arctic => {
-            index_bench::run::<K, V, index_bench::index::arctic::Map<Vec<u8>, V>, H>(config)
-        }
+        index_bench::index::Name::Arctic => index_bench::run::<
+            K,
+            V,
+            index_bench::index::arctic::Map<
+                &'static ::arctic::key::Slice<::arctic::key::NonNull>,
+                V,
+            >,
+            H,
+        >(config),
         index_bench::index::Name::DashMap => {
             index_bench::run::<K, u64, dashmap::DashMap<&'static [u8], u64, H>, H>(config)
         }
@@ -148,7 +151,7 @@ fn specialize_index_str<
 fn specialize_index_string<
     H: index_bench::index::Hasher,
     K: index_bench::workload::KeyDistribution<Key = Vec<u8>>,
-    V: index_bench::index::Value + ::arctic::Value + Send + Sync,
+    V: index_bench::index::Value + Send + Sync,
 >(
     config: index_bench::Config,
 ) -> anyhow::Result<index_bench::measure::Global> {
@@ -156,9 +159,12 @@ fn specialize_index_string<
         index_bench::index::Name::Art => {
             index_bench::run::<K, u64, art_sys::Rowex<Vec<u8>>, H>(config)
         }
-        index_bench::index::Name::Arctic => {
-            index_bench::run::<K, V, index_bench::index::arctic::Map<Vec<u8>, V>, H>(config)
-        }
+        index_bench::index::Name::Arctic => index_bench::run::<
+            K,
+            V,
+            index_bench::index::arctic::Map<::arctic::key::BoxedSlice<::arctic::key::NonNull>, V>,
+            H,
+        >(config),
         index_bench::index::Name::DashMap => {
             index_bench::run::<K, u64, dashmap::DashMap<Vec<u8>, u64, H>, H>(config)
         }
