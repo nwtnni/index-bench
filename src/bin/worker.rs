@@ -148,7 +148,8 @@ fn specialize_index_slice<
         index::Name::Arctic => index_bench::run::<
             K,
             V,
-            index::arctic::Map<&'static ::arctic::key::Slice<::arctic::key::Terminated<b'\n'>>, V>,
+            // NOTE: currently `BoxedSlice` is faster
+            index::arctic::Map<::arctic::key::BoxedSlice<::arctic::key::Terminated<b'\n'>>, V>,
             H,
         >(config),
         index::Name::ConcurrentMap => {
