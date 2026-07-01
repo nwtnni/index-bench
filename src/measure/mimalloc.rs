@@ -19,7 +19,6 @@ pub struct Mimalloc {
 }
 
 impl Mimalloc {
-    #[expect(clippy::new_without_default)]
     pub fn new() -> Self {
         let json = unsafe { ffi::CString::from_raw(mi_stats_get_json()) };
         let json = json.to_string_lossy();

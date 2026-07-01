@@ -12,8 +12,9 @@ type Smr = arctic::concurrent::smr::NoOp;
 #[cfg(feature = "smr-epoch")]
 type Smr = arctic::concurrent::smr::Epoch;
 
+// FIXME
 #[cfg(not(any(feature = "smr-disable", feature = "smr-epoch", feature = "smr-hazard")))]
-type Smr = arctic::concurrent::smr::Seize;
+type Smr = arctic::concurrent::smr::NoOp;
 
 pub type Map<K, V> = arctic::concurrent::Map<K, V, Smr>;
 
@@ -21,7 +22,7 @@ macro_rules! impl_index {
     ($bench:ty, $arctic:ty $(, $convert:expr)?) => {
         impl<V, H> Index<$bench, V, H> for Map<$arctic, V>
         where
-            V: index::Value + ::arctic::concurrent::Value + Send + Sync,
+            V: ::arctic::concurrent::Value + Send + Sync,
             H: index::Hasher,
         {
             type Send<'a>
@@ -50,9 +51,11 @@ macro_rules! impl_index {
                     ))
                 }
 
+                // FIXME
                 #[cfg(not(any(feature = "smr-disable", feature = "smr-epoch", feature = "smr-hazard")))]
                 {
-                    Map::with_smr(arctic::concurrent::smr::Seize::default())
+                    Map::with_smr(arctic::concurrent::smr::NoOp)
+                    // Map::with_smr(arctic::concurrent::smr::Seize::default())
                 }
             }
 
@@ -70,7 +73,7 @@ macro_rules! impl_index {
                 let mut iter = self.as_sequential().all().entries::<arctic::Ascend>();
                 let mut total = 0;
                 while let Some((key, _)) = iter.lend() {
-                    total += Len::len(key) + 8;
+                    total += crate::index::Key::with_slice(&key, |slice| slice.len()) + 8;
                 }
                 total as u64
             }
@@ -86,7 +89,7 @@ macro_rules! impl_index {
 
         impl<V, H> index::IndexSend<$bench, V, H> for &'_ Map<$arctic, V>
         where
-            V: index::Value + ::arctic::concurrent::Value + Send + Sync,
+            V: ::arctic::concurrent::Value + Send + Sync,
         {
             type Handle<'a>
                 = &'a Map<$arctic, V>
@@ -100,49 +103,43 @@ macro_rules! impl_index {
 
         impl<V> index::IndexPin<$bench, V> for &'_ Map<$arctic, V>
         where
-            V: index::Value + ::arctic::concurrent::Value + Send + Sync,
+            V: ::arctic::concurrent::Value + Send + Sync,
         {
             fn enable_membarrier(&self) {
                 // #[cfg(not(any(feature = "smr-disable", feature = "smr-epoch", feature = "smr-seize")))]
                 // self.smr().enable_membarrier();
-                ()
             }
 
-            fn get(&mut self, key: <$bench as index::Key>::Borrow) -> Option<V> {
+            fn get(&mut self, key: $bench) {
                 $(let key = ($convert)(key);)?
-                let _ = std::hint::black_box(Map::get(self, &key));
-                None
+                let _ = core::hint::black_box(Map::get(self, &key));
             }
 
-            fn insert(&mut self, key: <$bench as index::Key>::Borrow, value: V) -> Option<V> {
+            fn insert(&mut self, key: $bench, value: V) {
                 $(let key = ($convert)(key);)?
-                let _ = std::hint::black_box(Map::upsert(self, key, value));
-                None
+                let _ = core::hint::black_box(Map::upsert(self, key, value));
             }
 
-            fn update(&mut self, key: <$bench as index::Key>::Borrow, value: V) -> Option<V> {
+            fn update(&mut self, key: $bench, value: V) {
                 $(let key = ($convert)(key);)?
-                let _ = std::hint::black_box(Map::update(self, &key, value));
-                None
+                let _ = core::hint::black_box(Map::update(self, &key, value));
             }
 
-            fn remove(&mut self, key: <$bench as index::Key>::Borrow) -> Option<V> {
+            fn remove(&mut self, key: $bench) {
                 $(let key = ($convert)(key);)?
-                let _ = std::hint::black_box(Map::remove_non_recursive(self, &key));
-                None
+                let _ = core::hint::black_box(Map::remove_non_recursive(self, &key));
             }
 
-            fn scan(&mut self, key: <$bench as index::Key>::Borrow, mut count: usize, buffer: &mut Vec<V>) {
+            fn scan(&mut self, key: $bench, mut count: usize) {
                 $(let key = ($convert)(key);)?
                 let shard = Map::range(self, key..);
 
                 shard
                     .values::<arctic::Ascend>()
-                    .for_each_internal(|value| {
+                    .for_each_internal(|_| {
                         if count == 0 {
                             ControlFlow::Break(())
                         } else {
-                            buffer.push(V::from_borrow(value));
                             count -= 1;
                             ControlFlow::Continue(())
                         }
@@ -160,39 +157,25 @@ macro_rules! impl_index {
 impl_index!(u64, u64);
 impl_index!(u128, u128);
 impl_index!(
-    Vec<u8>,
-    ::arctic::key::BoxedSlice<::arctic::key::NonNull>,
+    &'static [u8],
+    ::arctic::key::BoxedSlice<::arctic::key::Terminated<b'\n'>>,
     |key: &'static [u8]| unsafe {
-        ::arctic::key::Slice::<::arctic::key::NonNull>::new_unchecked(key)
+        ::arctic::key::Slice::<::arctic::key::Terminated<b'\n'>>::new_unchecked(key)
     }
 );
 impl_index!(
-    Vec<u8>,
-    &'static ::arctic::key::Slice<::arctic::key::NonNull>,
+    &'static [u8],
+    &'static ::arctic::key::Slice<::arctic::key::Terminated<b'\n'>>,
     |key: &'static [u8]| unsafe {
-        ::arctic::key::Slice::<::arctic::key::NonNull>::new_unchecked(key)
+        ::arctic::key::Slice::<::arctic::key::Terminated<b'\n'>>::new_unchecked(key)
     }
 );
 
-trait Len {
-    #[cfg_attr(not(feature = "stat"), expect(unused))]
-    fn len(&self) -> usize;
-}
-
-impl Len for u64 {
-    fn len(&self) -> usize {
-        8
-    }
-}
-
-impl Len for u128 {
-    fn len(&self) -> usize {
-        16
-    }
-}
-
-impl Len for [u8] {
-    fn len(&self) -> usize {
-        <[u8]>::len(self)
+impl index::Key for &'_ ::arctic::key::Slice<::arctic::key::Terminated<b'\n'>> {
+    fn with_slice<F, T>(&self, with: F) -> T
+    where
+        F: FnOnce(&[u8]) -> T,
+    {
+        with(self.as_bytes())
     }
 }

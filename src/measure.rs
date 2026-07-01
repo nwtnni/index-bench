@@ -52,8 +52,8 @@ pub struct Timer {
     start: std::time::Instant,
 }
 
-impl Default for Timer {
-    fn default() -> Self {
+impl Timer {
+    pub fn start() -> Self {
         Self {
             #[cfg(feature = "stat-latency")]
             start: std::time::Instant::now(),
@@ -72,12 +72,18 @@ impl Histogram {
     }
 }
 
-impl Default for Histogram {
-    fn default() -> Self {
+impl Histogram {
+    pub fn new() -> Self {
         Self {
             #[cfg(feature = "stat-latency")]
             inner: hdrhistogram::Histogram::new(3).unwrap(),
         }
+    }
+}
+
+impl Default for Histogram {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

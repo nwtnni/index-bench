@@ -79,7 +79,7 @@ where
     K: KeyDistribution,
 {
     #[inline]
-    pub(crate) fn next_key(&mut self) -> Option<<K::Key as index::Key>::Borrow> {
+    pub(crate) fn next_key(&mut self) -> Option<K::Key> {
         Some(self.keys.get(self.inner.next_key()?.id()))
     }
 }
@@ -95,11 +95,7 @@ impl<'ycsb, K: KeyDistribution> Runner<'ycsb, K> {
     }
 
     #[expect(unused)]
-    pub(crate) fn next_key_range<R: rand::Rng>(
-        &mut self,
-        rng: &mut R,
-        start: ycsb::Key,
-    ) -> <K::Key as index::Key>::Borrow {
+    pub(crate) fn next_key_range<R: rand::Rng>(&mut self, rng: &mut R, start: ycsb::Key) -> K::Key {
         let delta = self.inner.next_scan_length(rng);
         let end = start.id() + delta as u64 - 1;
         self.keys.get(end)
@@ -109,15 +105,12 @@ impl<'ycsb, K: KeyDistribution> Runner<'ycsb, K> {
         self.inner.next_scan_length(rng)
     }
 
-    pub(crate) fn next_key_read<R: rand::Rng>(
-        &mut self,
-        rng: &mut R,
-    ) -> (ycsb::Key, <K::Key as index::Key>::Borrow) {
+    pub(crate) fn next_key_read<R: rand::Rng>(&mut self, rng: &mut R) -> (ycsb::Key, K::Key) {
         let key = self.inner.next_key_read(rng);
         (key, self.keys.get(key.id()))
     }
 
-    pub(crate) fn next_key_insert(&mut self) -> <K::Key as index::Key>::Borrow {
+    pub(crate) fn next_key_insert(&mut self) -> K::Key {
         let key = self.inner.next_key_insert();
         self.keys.get(key.id())
     }
@@ -126,7 +119,7 @@ impl<'ycsb, K: KeyDistribution> Runner<'ycsb, K> {
 pub trait KeyDistribution {
     type Key: index::Key;
     fn new(config: &Key) -> Self;
-    fn get(&self, index: u64) -> <Self::Key as index::Key>::Borrow;
+    fn get(&self, index: u64) -> Self::Key;
 }
 
 static IP_BUFFER: LazyLock<Vec<u8>> =
@@ -218,7 +211,7 @@ static EMAIL_INDEX: LazyLock<Vec<&'static str>> =
 pub struct Email(&'static [&'static str]);
 
 impl KeyDistribution for Email {
-    type Key = Vec<u8>;
+    type Key = &'static [u8];
 
     fn new(_: &Key) -> Self {
         Self(LazyLock::force(&EMAIL_INDEX).as_slice())
@@ -238,7 +231,7 @@ static URL_INDEX: LazyLock<Vec<&'static str>> =
 pub struct Url(&'static [&'static str]);
 
 impl KeyDistribution for Url {
-    type Key = Vec<u8>;
+    type Key = &'static [u8];
 
     fn new(_: &Key) -> Self {
         Self(LazyLock::force(&URL_INDEX).as_slice())

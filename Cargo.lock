@@ -29,10 +29,9 @@ checksum = "993a810118f8f37e9c4411c86f1c4c940a09a7ab34b7bf2d88d06f50c553fab7"
 [[package]]
 name = "arctic"
 version = "0.1.0"
-source = "git+https://github.com/nwtnni/arctic.git#64a5116ab00924d7e3587dd94555918976d580f5"
+source = "git+https://github.com/nwtnni/arctic.git#95a6707cd5cb868f776e39e67296ba25709abcdd"
 dependencies = [
  "base64 0.22.1",
- "crossbeam-epoch",
  "hdrhistogram",
  "libc",
  "ribbit",
@@ -179,15 +178,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9481c1c90cbf2ac953f07c8d4a58aa3945c425b7185c9154d67a65e4230da511"
 dependencies = [
  "cfg-if",
-]
-
-[[package]]
-name = "crossbeam-epoch"
-version = "0.9.18"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5b82ac4a3c2ca9c3460964f020e1402edd5753411d7737aa39c3714ad1b5420e"
-dependencies = [
- "crossbeam-utils",
 ]
 
 [[package]]

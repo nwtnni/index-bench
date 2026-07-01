@@ -11,8 +11,8 @@ stat-latency = ["dep:base64", "dep:hdrhistogram"]
 stat-garbage = ["arctic/stat-garbage"]
 
 smr-disable = []
-smr-hazard = ["arctic/smr-hazard"]
-smr-epoch = ["arctic/smr-epoch"]
+smr-hazard = []
+smr-epoch = []
 
 membarrier = ["arctic/opt-membarrier"]
 
@@ -36,7 +36,7 @@ perf-event2 = "0.7.4"
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.143"
 ycsb = { git = "https://github.com/nwtnni/ycsb.git", features = ["cartesian", "serde"] }
-arctic = { git = "https://github.com/nwtnni/arctic.git" }
+arctic = { git = "https://github.com/nwtnni/arctic.git", default-features = false, features = ["smr-hazard"] }
 cartesian = { git = "https://github.com/nwtnni/cartesian.git" }
 toml = "0.9.5"
 # scc = "3.0.2"

@@ -2,8 +2,6 @@ use crate::Index;
 use crate::index;
 
 impl<H: index::Hasher> Index<u64, u64, H> for wormhole_sys::Wormhole {
-    const IGNORE_INSERT: bool = true;
-
     type Send<'a> = &'a Self;
 
     fn new(_: &index::Config) -> Self {
@@ -27,41 +25,40 @@ impl<H: index::Hasher> index::IndexSend<u64, u64, H> for &'_ wormhole_sys::Wormh
 }
 
 impl index::IndexPin<u64, u64> for wormhole_sys::WormRef<'_> {
-    fn get(&mut self, key: u64) -> Option<u64> {
+    fn get(&mut self, key: u64) {
         let key = key.to_be_bytes();
         let ptr = key.as_ptr().cast();
-        unsafe { wormhole_sys::WormRef::get(self, ptr, key.len()) }
+        core::hint::black_box(unsafe { wormhole_sys::WormRef::get(self, ptr, key.len()) });
     }
 
-    fn insert(&mut self, key: u64, value: u64) -> Option<u64> {
+    fn insert(&mut self, key: u64, value: u64) {
         let key = key.to_be_bytes();
         let ptr = key.as_ptr().cast();
-        unsafe { wormhole_sys::WormRef::put(self, ptr, key.len(), value) }
-        None
+        unsafe { wormhole_sys::WormRef::put(self, ptr, key.len(), value) };
     }
 
-    fn update(&mut self, key: u64, value: u64) -> Option<u64> {
+    fn update(&mut self, key: u64, value: u64) {
         <Self as index::IndexPin<u64, u64>>::insert(self, key, value);
-        None
     }
 
-    fn remove(&mut self, key: u64) -> Option<u64> {
+    fn remove(&mut self, key: u64) {
         let key = key.to_be_bytes();
         let ptr = key.as_ptr().cast();
         unsafe { wormhole_sys::WormRef::del(self, ptr, key.len()) };
-        None
     }
 
-    fn scan(&mut self, key: u64, count: usize, buffer: &mut Vec<u64>) {
+    fn scan(&mut self, key: u64, count: usize) {
         let key = key.to_be_bytes();
         let ptr = key.as_ptr().cast();
-        buffer.extend(unsafe { wormhole_sys::WormRef::iter(self, ptr, key.len()) }.take(count));
+        core::hint::black_box(
+            unsafe { wormhole_sys::WormRef::iter(self, ptr, key.len()) }
+                .take(count)
+                .count(),
+        );
     }
 }
 
 impl<H: index::Hasher> Index<u128, u64, H> for wormhole_sys::Wormhole {
-    const IGNORE_INSERT: bool = true;
-
     type Send<'a> = &'a Self;
 
     fn new(_: &index::Config) -> Self {
@@ -85,40 +82,38 @@ impl<H: index::Hasher> index::IndexSend<u128, u64, H> for &'_ wormhole_sys::Worm
 }
 
 impl index::IndexPin<u128, u64> for wormhole_sys::WormRef<'_> {
-    fn get(&mut self, key: u128) -> Option<u64> {
+    fn get(&mut self, key: u128) {
         let key = key.to_be_bytes();
-        unsafe { wormhole_sys::WormRef::get(self, key.as_ptr().cast(), key.len()) }
+        core::hint::black_box(unsafe {
+            wormhole_sys::WormRef::get(self, key.as_ptr().cast(), key.len())
+        });
     }
 
-    fn insert(&mut self, key: u128, value: u64) -> Option<u64> {
+    fn insert(&mut self, key: u128, value: u64) {
         let key = key.to_be_bytes();
-        unsafe { wormhole_sys::WormRef::put(self, key.as_ptr().cast(), key.len(), value) }
-        None
+        unsafe { wormhole_sys::WormRef::put(self, key.as_ptr().cast(), key.len(), value) };
     }
 
-    fn update(&mut self, key: u128, value: u64) -> Option<u64> {
+    fn update(&mut self, key: u128, value: u64) {
         <Self as index::IndexPin<u128, u64>>::insert(self, key, value);
-        None
     }
 
-    fn remove(&mut self, key: u128) -> Option<u64> {
+    fn remove(&mut self, key: u128) {
         let key = key.to_be_bytes();
         unsafe { wormhole_sys::WormRef::del(self, key.as_ptr().cast(), key.len()) };
-        None
     }
 
-    fn scan(&mut self, key: u128, count: usize, buffer: &mut Vec<u64>) {
+    fn scan(&mut self, key: u128, count: usize) {
         let key = key.to_be_bytes();
-        buffer.extend(
+        core::hint::black_box(
             unsafe { wormhole_sys::WormRef::iter(self, key.as_ptr().cast(), key.len()) }
-                .take(count),
+                .take(count)
+                .count(),
         );
     }
 }
 
-impl<H: index::Hasher> Index<Vec<u8>, u64, H> for wormhole_sys::Wormhole {
-    const IGNORE_INSERT: bool = true;
-
+impl<H: index::Hasher> Index<&'static [u8], u64, H> for wormhole_sys::Wormhole {
     type Send<'a> = &'a Self;
 
     fn new(_: &index::Config) -> Self {
@@ -130,7 +125,7 @@ impl<H: index::Hasher> Index<Vec<u8>, u64, H> for wormhole_sys::Wormhole {
     }
 }
 
-impl<H: index::Hasher> index::IndexSend<Vec<u8>, u64, H> for &'_ wormhole_sys::Wormhole {
+impl<H: index::Hasher> index::IndexSend<&'static [u8], u64, H> for &'_ wormhole_sys::Wormhole {
     type Handle<'a>
         = wormhole_sys::WormRef<'a>
     where
@@ -141,30 +136,26 @@ impl<H: index::Hasher> index::IndexSend<Vec<u8>, u64, H> for &'_ wormhole_sys::W
     }
 }
 
-impl index::IndexPin<Vec<u8>, u64> for wormhole_sys::WormRef<'_> {
-    fn get(&mut self, key: &'static [u8]) -> Option<u64> {
-        unsafe { wormhole_sys::WormRef::get(self, key.as_ptr().cast(), key.len()) }
+impl index::IndexPin<&'static [u8], u64> for wormhole_sys::WormRef<'_> {
+    fn get(&mut self, key: &'static [u8]) {
+        core::hint::black_box(unsafe {
+            wormhole_sys::WormRef::get(self, key.as_ptr().cast(), key.len())
+        });
     }
 
-    fn insert(&mut self, key: &'static [u8], value: u64) -> Option<u64> {
-        unsafe { wormhole_sys::WormRef::put(self, key.as_ptr().cast(), key.len(), value) }
-        None
+    fn insert(&mut self, key: &'static [u8], value: u64) {
+        unsafe { wormhole_sys::WormRef::put(self, key.as_ptr().cast(), key.len(), value) };
     }
 
-    fn update(&mut self, key: &'static [u8], value: u64) -> Option<u64> {
-        <Self as index::IndexPin<Vec<u8>, u64>>::insert(self, key, value);
-        None
-    }
-
-    fn remove(&mut self, key: &'static [u8]) -> Option<u64> {
+    fn remove(&mut self, key: &'static [u8]) {
         unsafe { wormhole_sys::WormRef::del(self, key.as_ptr().cast(), key.len()) };
-        None
     }
 
-    fn scan(&mut self, key: &'static [u8], count: usize, buffer: &mut Vec<u64>) {
-        buffer.extend(
+    fn scan(&mut self, key: &'static [u8], count: usize) {
+        core::hint::black_box(
             unsafe { wormhole_sys::WormRef::iter(self, key.as_ptr().cast(), key.len()) }
-                .take(count),
+                .take(count)
+                .count(),
         );
     }
 }

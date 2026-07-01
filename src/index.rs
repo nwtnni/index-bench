@@ -1,5 +1,3 @@
-use core::borrow::Borrow as _;
-
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -96,18 +94,10 @@ pub enum Insert {
     OldExists,
 }
 
-pub trait Index<K: Key, V: Value, H> {
-    /// HACK
-    ///
-    /// - `crossbeam-skiplist` returns the new value instead of the old
-    /// - `kaist::bonsai` returns whether the insertion succeeded
-    ///
-    /// Whether to skip validation of `insert`.
-    const IGNORE_INSERT: bool = false;
-    const IGNORE_UPDATE: bool = Self::IGNORE_INSERT;
-    /// - `crossbeam-skiplist` can see a removal during insertion: https://github.com/crossbeam-rs/crossbeam/issues/1023
-    const IGNORE_GET: bool = false;
+pub trait Hasher: core::hash::BuildHasher + Clone + Default + Send + Sync + 'static {}
+impl<T> Hasher for T where T: core::hash::BuildHasher + Clone + Default + Send + Sync + 'static {}
 
+pub trait Index<K, V, H> {
     type Send<'a>: IndexSend<K, V, H> + Send
     where
         Self: 'a;
@@ -131,7 +121,7 @@ pub trait Index<K: Key, V: Value, H> {
     }
 }
 
-pub trait IndexSend<K: Key, V: Value, H> {
+pub trait IndexSend<K, V, H> {
     type Handle<'a>: IndexPin<K, V>
     where
         Self: 'a;
@@ -139,94 +129,83 @@ pub trait IndexSend<K: Key, V: Value, H> {
     fn pin<'a>(&'a self) -> Self::Handle<'a>;
 }
 
-pub trait Hasher: core::hash::BuildHasher + Clone + Default + Send + Sync + 'static {}
-impl<T> Hasher for T where T: core::hash::BuildHasher + Clone + Default + Send + Sync + 'static {}
-
-pub trait Key {
-    type Borrow: Copy;
-    fn checksum(key: <Self as Key>::Borrow) -> u64;
-}
-
-impl Key for u64 {
-    type Borrow = Self;
-    fn checksum(key: <Self as Key>::Borrow) -> u64 {
-        *key.borrow()
-    }
-}
-
-impl Key for u128 {
-    type Borrow = Self;
-    fn checksum(key: <Self as Key>::Borrow) -> u64 {
-        *key.borrow() as u64
-    }
-}
-
-impl Key for Vec<u8> {
-    type Borrow = &'static [u8];
-    fn checksum(key: <Self as Key>::Borrow) -> u64 {
-        key.len() as u64
-    }
-}
-
-pub trait Value: ::arctic::concurrent::Value {
-    fn from_checksum(checksum: u64) -> Self;
-
-    fn from_borrow<'a>(borrow: &'a <Self as ::arctic::concurrent::Value>::Borrowed) -> Self
-    where
-        Self: 'a;
-}
-
-impl Value for u64 {
-    fn from_checksum(checksum: u64) -> Self {
-        checksum
-    }
-
-    fn from_borrow<'a>(borrow: &u64) -> Self
-    where
-        Self: 'a,
-    {
-        *borrow
-    }
-}
-
-impl Value for Box<u64> {
-    fn from_checksum(checksum: u64) -> Self {
-        Box::new(checksum)
-    }
-
-    // Uhhh. This sucks. Needed for scans on dynamically allocated values,
-    // but using `Arc` in that case would certainly be much better...
-    fn from_borrow<'a>(borrow: &'a u64) -> Self
-    where
-        Self: 'a,
-    {
-        Box::new(*borrow)
-    }
-}
-
-pub trait IndexPin<K: Key, V: Value> {
+pub trait IndexPin<K, V> {
     fn enable_membarrier(&self) {}
 
-    fn get(&mut self, key: <K as Key>::Borrow) -> Option<V>;
+    fn get(&mut self, key: K);
 
-    fn insert(&mut self, key: <K as Key>::Borrow, value: V) -> Option<V>;
+    fn insert(&mut self, key: K, value: V);
 
-    fn update(&mut self, key: <K as Key>::Borrow, value: V) -> Option<V> {
+    fn update(&mut self, key: K, value: V) {
         self.insert(key, value)
     }
 
-    fn remove(&mut self, _key: <K as Key>::Borrow) -> Option<V> {
+    fn remove(&mut self, _key: K) {
         unimplemented!(
             "TODO: implement remove for {}",
             std::any::type_name::<Self>()
         )
     }
 
-    fn scan(&mut self, _key: <K as Key>::Borrow, _count: usize, _buffer: &mut Vec<V>) {
+    fn scan(&mut self, _key: K, _count: usize) {
         unimplemented!("TODO: implement scan for {}", std::any::type_name::<Self>())
     }
 
     fn report(&mut self) -> serde_json::Value {
         serde_json::Value::Null
+    }
+}
+
+pub trait Key {
+    fn with_slice<F, T>(&self, with: F) -> T
+    where
+        F: FnOnce(&[u8]) -> T;
+}
+
+impl Key for u64 {
+    fn with_slice<F, T>(&self, with: F) -> T
+    where
+        F: FnOnce(&[u8]) -> T,
+    {
+        with(&self.to_ne_bytes())
+    }
+}
+
+impl Key for u128 {
+    fn with_slice<F, T>(&self, with: F) -> T
+    where
+        F: FnOnce(&[u8]) -> T,
+    {
+        with(&self.to_ne_bytes())
+    }
+}
+
+impl Key for &'static [u8] {
+    fn with_slice<F, T>(&self, with: F) -> T
+    where
+        F: FnOnce(&[u8]) -> T,
+    {
+        with(self)
+    }
+}
+
+pub trait Value {
+    fn checksum(key: &[u8]) -> Self;
+}
+
+impl Value for u64 {
+    fn checksum(key: &[u8]) -> Self {
+        let mut buffer = [0; 8];
+        buffer.copy_from_slice(key);
+        Self::from_ne_bytes(buffer)
+    }
+}
+
+impl<V> Value for Box<V>
+where
+    V: Value,
+{
+    fn checksum(key: &[u8]) -> Self {
+        Box::new(V::checksum(key))
     }
 }

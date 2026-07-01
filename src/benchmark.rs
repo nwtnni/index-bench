@@ -17,10 +17,11 @@ use crate::index;
 use crate::index::IndexPin as _;
 use crate::index::IndexSend as _;
 use crate::index::Key as _;
+use crate::index::Value;
 use crate::measure;
 use crate::workload::KeyDistribution;
 
-pub fn run<K: KeyDistribution, V: index::Value, I: Index<K::Key, V, H>, H: index::Hasher>(
+pub fn run<K: KeyDistribution, V: Value, I: Index<K::Key, V, H>, H: index::Hasher>(
     config: crate::Config,
 ) -> anyhow::Result<measure::Global> {
     let date = SystemTime::now()
@@ -51,7 +52,7 @@ pub fn run<K: KeyDistribution, V: index::Value, I: Index<K::Key, V, H>, H: index
             (Ok(ctl), Ok(ack)) => Some(measure::perf::Sync::new(ctl, ack)?),
             _ => None,
         };
-        let mut perf_internal = perf_external.is_none().then(|| measure::Perf::new());
+        let mut perf_internal = perf_external.is_none().then(measure::Perf::new);
 
         let coordinator = scope.spawn(move || -> anyhow::Result<_> {
             // Thread setup complete
@@ -115,8 +116,7 @@ pub fn run<K: KeyDistribution, V: index::Value, I: Index<K::Key, V, H>, H: index
 
                     if !workload.load {
                         while let Some(key) = loader.next_key() {
-                            let checksum = K::Key::checksum(key);
-                            let value = V::from_checksum(checksum);
+                            let value = key.with_slice(|slice| V::checksum(slice));
                             map.insert(key, value);
                         }
                     }
@@ -125,9 +125,9 @@ pub fn run<K: KeyDistribution, V: index::Value, I: Index<K::Key, V, H>, H: index
                         arctic::stat::start();
                     }
 
-                    let mut latency_get = measure::Histogram::default();
-                    let mut latency_update = measure::Histogram::default();
-                    let mut latency_insert = measure::Histogram::default();
+                    let mut latency_get = measure::Histogram::new();
+                    let mut latency_update = measure::Histogram::new();
+                    let mut latency_insert = measure::Histogram::new();
 
                     // Setup complete
                     let _ = barrier.wait();
@@ -139,15 +139,12 @@ pub fn run<K: KeyDistribution, V: index::Value, I: Index<K::Key, V, H>, H: index
                     // Perf enabled
                     let _ = barrier.wait();
 
-                    let mut buffer = Vec::with_capacity(workload.ycsb.max_scan_length);
-
                     let start = Instant::now();
 
                     if config.workload.load {
                         while let Some(key) = loader.next_key() {
-                            let checksum = K::Key::checksum(key);
-                            let value = V::from_checksum(checksum);
-                            let timer = measure::Timer::default();
+                            let value = key.with_slice(|slice| V::checksum(slice));
+                            let timer = measure::Timer::start();
                             map.insert(key, value);
                             latency_insert.record(timer);
                         }
@@ -157,49 +154,33 @@ pub fn run<K: KeyDistribution, V: index::Value, I: Index<K::Key, V, H>, H: index
                             match operation {
                                 ycsb::Operation::Read => {
                                     let (_, key) = runner.next_key_read(&mut rng);
-                                    let timer = measure::Timer::default();
-                                    let _value = map.get(key);
+                                    let timer = measure::Timer::start();
+                                    map.get(key);
                                     latency_get.record(timer);
-
-                                    // if !I::IGNORE_GET {
-                                    //     assert_eq!(value, Some(K::Key::checksum(key)));
-                                    // }
                                 }
                                 ycsb::Operation::Update => {
                                     let (_, key) = runner.next_key_read(&mut rng);
-                                    let checksum = K::Key::checksum(key);
-                                    let value = V::from_checksum(checksum);
-                                    let timer = measure::Timer::default();
-                                    let _old = map.update(key, value);
+                                    let value = key.with_slice(|slice| V::checksum(slice));
+                                    let timer = measure::Timer::start();
+                                    map.update(key, value);
                                     latency_update.record(timer);
-
-                                    // if !I::IGNORE_UPDATE {
-                                    //     assert_eq!(old, Some(checksum));
-                                    // }
                                 }
                                 ycsb::Operation::Scan => {
                                     let (_, key) = runner.next_key_read(&mut rng);
                                     let len = runner.next_scan_length(&mut rng);
-                                    buffer.clear();
-                                    map.scan(key, len, &mut buffer);
+                                    map.scan(key, len);
                                 }
                                 ycsb::Operation::Insert => {
                                     let key = runner.next_key_insert();
-                                    let checksum = K::Key::checksum(key);
-                                    let value = V::from_checksum(checksum);
-                                    let timer = measure::Timer::default();
-                                    let _old = map.insert(key, value);
+                                    let value = key.with_slice(|slice| V::checksum(slice));
+                                    let timer = measure::Timer::start();
+                                    map.insert(key, value);
                                     latency_insert.record(timer);
-
-                                    // if !I::IGNORE_INSERT {
-                                    //     assert_eq!(old, None);
-                                    // }
-                                    // runner.acknowledge(id);
                                 }
                                 ycsb::Operation::ReadModifyWrite => todo!(),
                                 ycsb::Operation::Delete => {
                                     let (_, key) = runner.next_key_read(&mut rng);
-                                    let _ = map.remove(key);
+                                    map.remove(key);
                                 }
                             }
                         }
