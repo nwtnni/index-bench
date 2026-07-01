@@ -11,6 +11,7 @@ mod contrie;
 mod crossbeam_skiplist;
 mod dash_map;
 mod fb_tree;
+mod leapfrog;
 // pub mod kaist;
 mod hot;
 mod papaya;
@@ -81,6 +82,7 @@ pub enum Name {
     CrossbeamSkiplist,
     DashMap,
     FbTree,
+    Leapfrog,
     Papaya,
     SccHashIndex,
     SccHashMap,
