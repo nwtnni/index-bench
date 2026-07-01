@@ -1,22 +1,26 @@
+use core::marker::PhantomData;
+use core::num::NonZeroU64;
 use core::ops::ControlFlow;
+use core::sync::atomic::Ordering;
+
+use seize::Guard as _;
 
 use crate::Index;
 use crate::index;
 
 #[cfg(feature = "smr-hazard")]
-type Smr = arctic::concurrent::smr::Hazard;
+type Smr<K, V> = arctic::concurrent::smr::Hazard<K, V>;
 
 #[cfg(feature = "smr-disable")]
-type Smr = arctic::concurrent::smr::NoOp;
+type Smr<K, V> = NoOp<K, V>;
 
 #[cfg(feature = "smr-epoch")]
-type Smr = arctic::concurrent::smr::Epoch;
+type Smr<K, V> = Epoch<K, V>;
 
-// FIXME
 #[cfg(not(any(feature = "smr-disable", feature = "smr-epoch", feature = "smr-hazard")))]
-type Smr = arctic::concurrent::smr::NoOp;
+type Smr<K, V> = Seize<K, V>;
 
-pub type Map<K, V> = arctic::concurrent::Map<K, V, Smr>;
+pub type Map<K, V> = arctic::concurrent::Map<K, V, Smr<K, V>>;
 
 macro_rules! impl_index {
     ($bench:ty, $arctic:ty $(, $convert:expr)?) => {
@@ -33,29 +37,26 @@ macro_rules! impl_index {
             fn new(_config: &index::Config) -> Self {
                 #[cfg(feature = "smr-hazard")]
                 {
-                    Map::with_smr(Box::new(
-                        arctic::concurrent::smr::hazard::Global::default()
+                    Map::with_smr(
+                        arctic::concurrent::smr::Hazard::default()
                             .with_reclaim_threshold(_config.reclaim_threshold),
-                    ))
+                    )
                 }
 
                 #[cfg(feature = "smr-disable")]
                 {
-                    Map::with_smr(arctic::concurrent::smr::NoOp)
+                    Map::with_smr(NoOp(PhantomData))
                 }
 
                 #[cfg(feature = "smr-epoch")]
                 {
-                    Map::with_smr(Box::new(
-                        arctic::concurrent::smr::epoch::Global::with_bag_capacity(_config.reclaim_threshold),
-                    ))
+                    crossbeam_epoch::set_bag_capacity(_config.reclaim_threshold);
+                    Map::with_smr(Epoch::default())
                 }
 
-                // FIXME
                 #[cfg(not(any(feature = "smr-disable", feature = "smr-epoch", feature = "smr-hazard")))]
                 {
-                    Map::with_smr(arctic::concurrent::smr::NoOp)
-                    // Map::with_smr(arctic::concurrent::smr::Seize::default())
+                    Map::with_smr(Seize { collector: seize::Collector::default().batch_size(_config.reclaim_threshold), _type: PhantomData})
                 }
             }
 
@@ -80,10 +81,7 @@ macro_rules! impl_index {
 
             #[cfg(feature = "stat-garbage")]
             fn garbage(&mut self) -> u32 {
-                <
-                    <Smr as arctic::concurrent::Smr>::Global<<K as arctic::concurrent::Key>::Prefix, V>
-                    as arctic::concurrent::smr::Global<<K as arctic::concurrent::Key>::Prefix, V>
-                >::garbage(self.smr_mut())
+                ::arctic::concurrent::Smr::garbage(self.smr_mut())
             }
         }
 
@@ -177,5 +175,164 @@ impl index::Key for &'_ ::arctic::key::Slice<::arctic::key::Terminated<b'\n'>> {
         F: FnOnce(&[u8]) -> T,
     {
         with(self.as_bytes())
+    }
+}
+
+pub struct NoOp<K, V>(PhantomData<(K, V)>);
+
+impl<K: ::arctic::Key, V: ::arctic::concurrent::Value> ::arctic::concurrent::smr::Smr<K, V>
+    for NoOp<K, V>
+{
+    type Guard<'g>
+        = NoOp<K, V>
+    where
+        V: 'g,
+        Self: 'g;
+
+    fn guard<'g>(&'g self, _: K::Read<'_>) -> Self::Guard<'g>
+    where
+        V: 'g,
+    {
+        Self(PhantomData)
+    }
+
+    fn garbage(&self) -> u32 {
+        ::arctic::concurrent::smr::Smr::<K, V>::garbage(&::arctic::concurrent::smr::NoOp)
+    }
+}
+
+impl<K: ::arctic::Key, V: ::arctic::concurrent::Value> ::arctic::concurrent::smr::Guard<V>
+    for NoOp<K, V>
+{
+    unsafe fn retire_node(&mut self, bits: usize, node: std::num::NonZeroU64) {
+        unsafe {
+            ::arctic::concurrent::smr::Guard::retire_node(
+                &mut ::arctic::concurrent::smr::no_op::Guard::<(), V>::default(),
+                bits,
+                node,
+            )
+        }
+    }
+
+    unsafe fn retire_value(&mut self, value: u64) {
+        unsafe {
+            ::arctic::concurrent::smr::Guard::retire_value(
+                &mut ::arctic::concurrent::smr::no_op::Guard::<(), V>::default(),
+                value,
+            )
+        }
+    }
+}
+
+pub struct Epoch<K, V>(PhantomData<(K, V)>);
+
+impl<K, V> Default for Epoch<K, V> {
+    fn default() -> Self {
+        Self(PhantomData)
+    }
+}
+
+impl<K: ::arctic::Key, V: ::arctic::concurrent::Value> ::arctic::concurrent::smr::Smr<K, V>
+    for Epoch<K, V>
+{
+    type Guard<'g>
+        = EpochGuard<V>
+    where
+        V: 'g,
+        Self: 'g;
+
+    fn guard<'g>(&'g self, _: K::Read<'_>) -> Self::Guard<'g>
+    where
+        V: 'g,
+    {
+        EpochGuard {
+            guard: crossbeam_epoch::pin(),
+            _type: PhantomData,
+        }
+    }
+
+    fn garbage(&self) -> u32 {
+        crossbeam_epoch::GLOBAL_GARBAGE_COUNT.load(Ordering::Relaxed) as u32
+    }
+}
+
+pub struct EpochGuard<V> {
+    guard: crossbeam_epoch::Guard,
+    _type: PhantomData<V>,
+}
+
+impl<V: ::arctic::concurrent::Value> ::arctic::concurrent::smr::Guard<V> for EpochGuard<V> {
+    unsafe fn retire_node(&mut self, _: usize, node: std::num::NonZeroU64) {
+        self.guard
+            .defer(move || unsafe { ::arctic::concurrent::smr::deallocate_node(node) })
+    }
+
+    unsafe fn retire_value(&mut self, value: u64) {
+        self.guard
+            .defer(move || unsafe { ::arctic::concurrent::smr::deallocate_value::<V>(value) })
+    }
+}
+
+pub struct Seize<K, V> {
+    collector: seize::Collector,
+    _type: PhantomData<(K, V)>,
+}
+
+impl<K, V> Default for Seize<K, V> {
+    fn default() -> Self {
+        Self {
+            collector: Default::default(),
+            _type: PhantomData,
+        }
+    }
+}
+
+impl<K: ::arctic::Key, V: ::arctic::concurrent::Value> ::arctic::concurrent::smr::Smr<K, V>
+    for Seize<K, V>
+{
+    type Guard<'g>
+        = SeizeGuard<'g, V>
+    where
+        V: 'g,
+        Self: 'g;
+
+    fn guard<'g>(&'g self, _: K::Read<'_>) -> Self::Guard<'g>
+    where
+        V: 'g,
+    {
+        SeizeGuard {
+            guard: self.collector.enter(),
+            _type: PhantomData,
+        }
+    }
+
+    fn garbage(&self) -> u32 {
+        self.collector.garbage()
+    }
+}
+
+pub struct SeizeGuard<'g, V> {
+    guard: seize::LocalGuard<'g>,
+    _type: PhantomData<V>,
+}
+
+impl<V: ::arctic::concurrent::Value> ::arctic::concurrent::smr::Guard<V> for SeizeGuard<'_, V> {
+    unsafe fn retire_node(&mut self, _: usize, node: std::num::NonZeroU64) {
+        unsafe {
+            self.guard
+                .defer_retire(node.get() as *mut (), move |node, _| {
+                    ::arctic::concurrent::smr::deallocate_node(NonZeroU64::new_unchecked(
+                        node as u64,
+                    ))
+                })
+        }
+    }
+
+    unsafe fn retire_value(&mut self, value: u64) {
+        unsafe {
+            self.guard.defer_retire(value as *mut (), move |value, _| {
+                ::arctic::concurrent::smr::deallocate_value::<V>(value as u64)
+            })
+        }
     }
 }

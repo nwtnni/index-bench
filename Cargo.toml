@@ -26,6 +26,9 @@ opt-4 = ["membarrier"]
 anyhow = "1.0.99"
 art-sys = { path = "extern/ARTSynchronized/art-sys" }
 base64 = { version = "0.22.1", optional = true }
+crossbeam-epoch = { git = "https://github.com/nwtnni/crossbeam.git", branch = "smr-benchmark" }
+seize = { git = "https://github.com/migopp/seize.git", default-features = false }
+
 # concurrent-map = "5.0.37"
 # crossbeam-skiplist = "0.1.3"
 hdrhistogram = { version = "7.5.4", optional = true, default-features = false, features = ["serialization"] }

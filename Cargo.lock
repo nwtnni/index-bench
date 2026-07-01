@@ -29,13 +29,13 @@ checksum = "993a810118f8f37e9c4411c86f1c4c940a09a7ab34b7bf2d88d06f50c553fab7"
 [[package]]
 name = "arctic"
 version = "0.1.0"
-source = "git+https://github.com/nwtnni/arctic.git#95a6707cd5cb868f776e39e67296ba25709abcdd"
+source = "git+https://github.com/nwtnni/arctic.git#b77d0dca5ea1d057a8a7a7f179865d271a646ced"
 dependencies = [
  "base64 0.22.1",
  "hdrhistogram",
  "libc",
  "ribbit",
- "seize",
+ "seize 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
 ]
 
@@ -181,6 +181,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "crossbeam-epoch"
+version = "0.9.13"
+source = "git+https://github.com/nwtnni/crossbeam.git?branch=smr-benchmark#d7f027a7ed633323f065a8b8974f2d546e00303c"
+dependencies = [
+ "autocfg",
+ "cfg-if",
+ "crossbeam-utils 0.8.14",
+ "memoffset 0.7.1",
+ "scopeguard",
+]
+
+[[package]]
+name = "crossbeam-utils"
+version = "0.8.14"
+source = "git+https://github.com/nwtnni/crossbeam.git?branch=smr-benchmark#d7f027a7ed633323f065a8b8974f2d546e00303c"
+dependencies = [
+ "cfg-if",
+]
+
+[[package]]
 name = "crossbeam-utils"
 version = "0.8.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -289,7 +309,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5041cc499144891f3790297212f32a74fb938e5136a14943f338ef9e0ae276cf"
 dependencies = [
  "cfg-if",
- "crossbeam-utils",
+ "crossbeam-utils 0.8.21",
  "hashbrown 0.14.5",
  "lock_api",
  "once_cell",
@@ -496,6 +516,7 @@ dependencies = [
  "base64 0.22.1",
  "bitflags",
  "cartesian",
+ "crossbeam-epoch",
  "dashmap",
  "fbtree-sys",
  "hdrhistogram",
@@ -507,6 +528,7 @@ dependencies = [
  "perf-event2",
  "rand",
  "rapidhash",
+ "seize 0.5.1 (git+https://github.com/migopp/seize.git)",
  "serde",
  "serde_json",
  "toml",
@@ -590,6 +612,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "714098028fe011992e1c3962653c96b2d578c4b4bce9036e15ff220319b1e0e3"
 dependencies = [
  "libc",
+]
+
+[[package]]
+name = "memoffset"
+version = "0.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5de893c32cde5f383baa4c04c5d6dbdd735cfd4a794b0debdb2bb1b421da5ff4"
+dependencies = [
+ "autocfg",
 ]
 
 [[package]]
@@ -680,7 +711,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d9c25955321465255e437600b54296983fab1feac2cd0c38958adeb26dbae49e"
 dependencies = [
  "libc",
- "memoffset",
+ "memoffset 0.9.1",
 ]
 
 [[package]]
@@ -889,6 +920,11 @@ dependencies = [
  "libc",
  "windows-sys",
 ]
+
+[[package]]
+name = "seize"
+version = "0.5.1"
+source = "git+https://github.com/migopp/seize.git#863ff99645223c778ae20ec8fee5e0f20f324391"
 
 [[package]]
 name = "semver"
