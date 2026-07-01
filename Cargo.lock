@@ -163,6 +163,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "congee"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "72819224a9c43e0a5d64bdad35a71fde68bf479992fb8989635c72bc547909be"
+dependencies = [
+ "crossbeam-epoch 0.9.18",
+]
+
+[[package]]
 name = "convert_case"
 version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -190,6 +199,15 @@ dependencies = [
  "crossbeam-utils 0.8.14",
  "memoffset 0.7.1",
  "scopeguard",
+]
+
+[[package]]
+name = "crossbeam-epoch"
+version = "0.9.18"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5b82ac4a3c2ca9c3460964f020e1402edd5753411d7737aa39c3714ad1b5420e"
+dependencies = [
+ "crossbeam-utils 0.8.21",
 ]
 
 [[package]]
@@ -516,7 +534,8 @@ dependencies = [
  "base64 0.22.1",
  "bitflags",
  "cartesian",
- "crossbeam-epoch",
+ "congee",
+ "crossbeam-epoch 0.9.13",
  "dashmap",
  "fbtree-sys",
  "hdrhistogram",

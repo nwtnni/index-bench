@@ -1,3 +1,5 @@
+use core::cell::RefCell;
+
 use crate::Index;
 use crate::index;
 
@@ -25,42 +27,55 @@ impl<H: index::Hasher> index::IndexSend<u64, u64, H> for &'_ congee::Congee<usiz
 }
 
 impl index::IndexPin<u64, u64> for &'_ congee::Congee<usize, usize> {
-    fn get(&mut self, key: u64) -> Option<u64> {
+    fn get(&mut self, key: u64) {
         let guard = self.pin();
-        congee::Congee::get(self, &(key as usize), &guard).map(|value| value as u64)
+        core::hint::black_box(
+            congee::Congee::get(self, &(key as usize), &guard).map(|value| value as u64),
+        );
     }
 
-    fn insert(&mut self, key: u64, value: u64) -> Option<u64> {
+    fn insert(&mut self, key: u64, value: u64) {
         let guard = self.pin();
-        congee::Congee::insert(self, key as usize, value as usize, &guard)
-            .unwrap()
-            .map(|value| value as u64)
+        core::hint::black_box(
+            congee::Congee::insert(self, key as usize, value as usize, &guard)
+                .unwrap()
+                .map(|value| value as u64),
+        );
     }
 
-    fn update(&mut self, key: u64, value: u64) -> Option<u64> {
+    fn update(&mut self, key: u64, value: u64) {
         let guard = self.pin();
-        congee::Congee::compute_if_present(self, &(key as usize), |_| Some(value as usize), &guard)
-            .map(|(old, _)| old as u64)
+        core::hint::black_box(
+            congee::Congee::compute_if_present(
+                self,
+                &(key as usize),
+                |_| Some(value as usize),
+                &guard,
+            )
+            .map(|(old, _)| old as u64),
+        );
     }
 
-    fn remove(&mut self, key: u64) -> Option<u64> {
+    fn remove(&mut self, key: u64) {
         let guard = self.pin();
-        congee::Congee::remove(self, &(key as usize), &guard).map(|value| value as u64)
+        core::hint::black_box(
+            congee::Congee::remove(self, &(key as usize), &guard).map(|value| value as u64),
+        );
     }
 
-    fn scan(&mut self, key: u64, count: usize, buffer: &mut Vec<u64>) {
+    fn scan(&mut self, key: u64, count: usize) {
         const {
             assert!(core::mem::align_of::<(usize, usize)>() == core::mem::align_of::<u64>());
         }
 
-        // HACK: work around congee API
-        // Reserve enough room for (usize, usize)
-        buffer.resize(count * 2, 0);
-        let buffer = unsafe {
-            core::slice::from_raw_parts_mut(buffer.as_mut_ptr().cast::<(usize, usize)>(), count)
-        };
+        thread_local! {
+            static BUFFER: RefCell<Vec<(usize, usize)>> = const { RefCell::new(Vec::new()) };
+        }
 
-        let guard = self.pin();
-        congee::Congee::range(self, &(key as usize), &usize::MAX, buffer, &guard);
+        BUFFER.with_borrow_mut(|buffer| {
+            let guard = self.pin();
+            buffer.resize(count, (0, 0));
+            congee::Congee::range(self, &(key as usize), &usize::MAX, buffer, &guard);
+        })
     }
 }

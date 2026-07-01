@@ -6,7 +6,7 @@ mod art;
 // mod b_plus_tree;
 // mod bz_tree;
 // mod concurrent_map;
-// mod congee;
+mod congee;
 // mod contrie;
 // mod crossbeam_skiplist;
 mod dash_map;
@@ -76,7 +76,7 @@ pub enum Name {
     // BPlusTree,
     // BzTree,
     // ConcurrentMap,
-    // Congee,
+    Congee,
     // Contrie,
     // CrossbeamSkiplist,
     DashMap,

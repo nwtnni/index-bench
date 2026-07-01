@@ -59,15 +59,17 @@ fn main() -> anyhow::Result<()> {
             config.workload.ycsb.record_count = 33_600_000;
         }
 
-        // // HACK: congee doesn't support string keys
-        // if matches!(config.index.name, index_bench::index::Name::Congee)
-        //     && matches!(
-        //         config.workload.key,
-        //         index_bench::workload::Key::Url | index_bench::workload::Key::Email
-        //     )
-        // {
-        //     continue;
-        // }
+        // HACK: congee only supports u64 keys
+        if matches!(config.index.name, index_bench::index::Name::Congee)
+            && matches!(
+                config.workload.key,
+                index_bench::workload::Key::UuidV4
+                    | index_bench::workload::Key::Url
+                    | index_bench::workload::Key::Email
+            )
+        {
+            continue;
+        }
 
         eprintln!("{config:?}");
 

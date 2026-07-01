@@ -57,6 +57,7 @@ fn specialize_index_u64<
     match config.index.name {
         index::Name::Art => index_bench::run::<K, u64, art_sys::Rowex<K::Key>, H>(config),
         index::Name::Arctic => index_bench::run::<K, V, index::arctic::Map<K::Key, V>, H>(config),
+        index::Name::Congee => index_bench::run::<K, u64, congee::Congee<usize, usize>, H>(config),
         index::Name::DashMap => {
             index_bench::run::<K, u64, dashmap::DashMap<K::Key, u64, H>, H>(config)
         }
@@ -76,6 +77,7 @@ fn specialize_index_u128<
     match config.index.name {
         index::Name::Art => index_bench::run::<K, u64, art_sys::Rowex<Vec<u8>>, H>(config),
         index::Name::Arctic => index_bench::run::<K, V, index::arctic::Map<K::Key, V>, H>(config),
+        index::Name::Congee => unimplemented!(),
         index::Name::DashMap => {
             index_bench::run::<K, u64, dashmap::DashMap<K::Key, u64, H>, H>(config)
         }
@@ -101,6 +103,7 @@ fn specialize_index_slice<
             index::arctic::Map<&'static ::arctic::key::Slice<::arctic::key::Terminated<b'\n'>>, V>,
             H,
         >(config),
+        index::Name::Congee => unimplemented!(),
         index::Name::DashMap => {
             index_bench::run::<K, u64, dashmap::DashMap<&'static [u8], u64, H>, H>(config)
         }
@@ -126,6 +129,7 @@ fn specialize_index_boxed_slice<
             index::arctic::Map<::arctic::key::BoxedSlice<::arctic::key::Terminated<b'\n'>>, V>,
             H,
         >(config),
+        index::Name::Congee => unimplemented!(),
         index::Name::DashMap => {
             index_bench::run::<K, u64, dashmap::DashMap<Box<[u8]>, u64, H>, H>(config)
         }
