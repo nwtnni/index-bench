@@ -36,7 +36,7 @@ bitflags = "2.9.4"
 cartesian = { git = "https://github.com/nwtnni/cartesian.git" }
 concurrent-map = "5.0.37"
 congee = "0.4.1"
-# contrie = "0.1.4"
+contrie = "0.1.4"
 crossbeam-skiplist = "0.1.3"
 dashmap = "6.1.0"
 fbtree-sys = { path = "extern/IndexResearch/fbtree-sys" }

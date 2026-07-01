@@ -61,6 +61,9 @@ fn specialize_index_u64<
             index_bench::run::<K, u64, concurrent_map::ConcurrentMap<K::Key, u64>, H>(config)
         }
         index::Name::Congee => index_bench::run::<K, u64, congee::Congee<usize, usize>, H>(config),
+        index::Name::Contrie => {
+            index_bench::run::<K, u64, contrie::CloneConMap<K::Key, u64>, H>(config)
+        }
         index::Name::CrossbeamSkiplist => {
             index_bench::run::<K, u64, crossbeam_skiplist::SkipMap<K::Key, u64>, H>(config)
         }
@@ -99,6 +102,9 @@ fn specialize_index_u128<
             index_bench::run::<K, u64, concurrent_map::ConcurrentMap<K::Key, u64>, H>(config)
         }
         index::Name::Congee => unimplemented!(),
+        index::Name::Contrie => {
+            index_bench::run::<K, u64, contrie::CloneConMap<K::Key, u64>, H>(config)
+        }
         index::Name::CrossbeamSkiplist => {
             index_bench::run::<K, u64, crossbeam_skiplist::SkipMap<K::Key, u64>, H>(config)
         }
@@ -143,6 +149,9 @@ fn specialize_index_slice<
             index_bench::run::<K, u64, concurrent_map::ConcurrentMap<K::Key, u64>, H>(config)
         }
         index::Name::Congee => unimplemented!(),
+        index::Name::Contrie => {
+            index_bench::run::<K, u64, contrie::CloneConMap<K::Key, u64>, H>(config)
+        }
         index::Name::CrossbeamSkiplist => {
             index_bench::run::<K, u64, crossbeam_skiplist::SkipMap<K::Key, u64>, H>(config)
         }
@@ -187,6 +196,9 @@ fn specialize_index_boxed_slice<
             unimplemented!("Box<[u8]> does not implement concurrent_map::Minimum")
         }
         index::Name::Congee => unimplemented!(),
+        index::Name::Contrie => {
+            index_bench::run::<K, u64, contrie::CloneConMap<Box<[u8]>, u64>, H>(config)
+        }
         index::Name::CrossbeamSkiplist => {
             index_bench::run::<K, u64, crossbeam_skiplist::SkipMap<Box<[u8]>, u64>, H>(config)
         }
