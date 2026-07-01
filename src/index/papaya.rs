@@ -33,71 +33,99 @@ macro_rules! impl_index {
 impl_index!(u64, u64);
 
 impl<H: index::Hasher> index::IndexPin<u64, u64> for &'_ papaya::HashMap<u64, u64, H> {
-    fn get(&mut self, key: u64) -> Option<u64> {
+    fn get(&mut self, key: u64) {
         let map = self.pin();
-        map.get(&key).copied()
+        core::hint::black_box(map.get(&key));
     }
 
-    fn insert(&mut self, key: u64, value: u64) -> Option<u64> {
+    fn insert(&mut self, key: u64, value: u64) {
         let map = self.pin();
-        map.insert(key, value).copied()
+        core::hint::black_box(map.insert(key, value));
     }
 
-    fn update(&mut self, key: u64, value: u64) -> Option<u64> {
+    fn update(&mut self, key: u64, value: u64) {
         let map = self.pin();
-        map.update(key, |_| value).copied()
+        core::hint::black_box(map.update(key, |_| value));
     }
 
-    fn remove(&mut self, key: u64) -> Option<u64> {
+    fn remove(&mut self, key: u64) {
         let map = self.pin();
-        map.remove(&key).copied()
-    }
-}
-
-impl_index!(String, &'static str);
-
-impl<H: index::Hasher> index::IndexPin<String, u64> for &'_ papaya::HashMap<&'static str, u64, H> {
-    fn get(&mut self, key: &'static str) -> Option<u64> {
-        let map = self.pin();
-        map.get(&key).copied()
-    }
-
-    fn insert(&mut self, key: &'static str, value: u64) -> Option<u64> {
-        let map = self.pin();
-        map.insert(key, value).copied()
-    }
-
-    fn update(&mut self, key: &'static str, value: u64) -> Option<u64> {
-        let map = self.pin();
-        map.update(key, |_| value).copied()
-    }
-
-    fn remove(&mut self, key: &'static str) -> Option<u64> {
-        let map = self.pin();
-        map.remove(&key).copied()
+        core::hint::black_box(map.remove(&key));
     }
 }
 
-impl_index!(String, String);
+impl_index!(u128, u128);
 
-impl<H: index::Hasher> index::IndexPin<String, u64> for &'_ papaya::HashMap<String, u64, H> {
-    fn get(&mut self, key: &'static str) -> Option<u64> {
+impl<H: index::Hasher> index::IndexPin<u128, u64> for &'_ papaya::HashMap<u128, u64, H> {
+    fn get(&mut self, key: u128) {
         let map = self.pin();
-        map.get(key).copied()
+        core::hint::black_box(map.get(&key));
     }
 
-    fn insert(&mut self, key: &'static str, value: u64) -> Option<u64> {
+    fn insert(&mut self, key: u128, value: u64) {
         let map = self.pin();
-        map.insert(key.to_owned(), value).copied()
+        core::hint::black_box(map.insert(key, value));
     }
 
-    fn update(&mut self, key: &'static str, value: u64) -> Option<u64> {
+    fn update(&mut self, key: u128, value: u64) {
         let map = self.pin();
-        map.update(key.to_owned(), |_| value).copied()
+        core::hint::black_box(map.update(key, |_| value));
     }
 
-    fn remove(&mut self, key: &'static str) -> Option<u64> {
+    fn remove(&mut self, key: u128) {
         let map = self.pin();
-        map.remove(key).copied()
+        core::hint::black_box(map.remove(&key));
+    }
+}
+
+impl_index!(&'static [u8], Box<[u8]>);
+
+impl<H: index::Hasher> index::IndexPin<&'static [u8], u64>
+    for &'_ papaya::HashMap<Box<[u8]>, u64, H>
+{
+    fn get(&mut self, key: &'static [u8]) {
+        let map = self.pin();
+        core::hint::black_box(map.get(key));
+    }
+
+    fn insert(&mut self, key: &'static [u8], value: u64) {
+        let map = self.pin();
+        core::hint::black_box(map.insert(Box::from(key), value));
+    }
+
+    fn update(&mut self, key: &'static [u8], value: u64) {
+        let map = self.pin();
+        core::hint::black_box(map.update(Box::from(key), |_| value));
+    }
+
+    fn remove(&mut self, key: &'static [u8]) {
+        let map = self.pin();
+        core::hint::black_box(map.remove(key));
+    }
+}
+
+impl_index!(&'static [u8], &'static [u8]);
+
+impl<H: index::Hasher> index::IndexPin<&'static [u8], u64>
+    for &'_ papaya::HashMap<&'static [u8], u64, H>
+{
+    fn get(&mut self, key: &'static [u8]) {
+        let map = self.pin();
+        core::hint::black_box(map.get(key));
+    }
+
+    fn insert(&mut self, key: &'static [u8], value: u64) {
+        let map = self.pin();
+        core::hint::black_box(map.insert(key, value));
+    }
+
+    fn update(&mut self, key: &'static [u8], value: u64) {
+        let map = self.pin();
+        core::hint::black_box(map.update(key, |_| value));
+    }
+
+    fn remove(&mut self, key: &'static [u8]) {
+        let map = self.pin();
+        core::hint::black_box(map.remove(key));
     }
 }

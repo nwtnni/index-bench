@@ -544,6 +544,7 @@ dependencies = [
  "libc",
  "log",
  "mimalloc",
+ "papaya",
  "perf-event2",
  "rand",
  "rapidhash",
@@ -698,6 +699,16 @@ name = "once_cell"
 version = "1.21.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9f7c3e4beb33f85d45ae3e3a1792185706c8e16d043238c593331cc7cd313b50"
+
+[[package]]
+name = "papaya"
+version = "0.2.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "997ee03cd38c01469a7046643714f0ad28880bcb9e6679ff0666e24817ca19b7"
+dependencies = [
+ "equivalent",
+ "seize 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
+]
 
 [[package]]
 name = "parking_lot_core"
