@@ -630,7 +630,6 @@ dependencies = [
  "arctic",
  "art-sys",
  "base64 0.22.1",
- "bitflags 2.11.0",
  "cartesian",
  "concurrent-map",
  "congee",

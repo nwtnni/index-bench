@@ -3,8 +3,6 @@ use serde::Serialize;
 
 pub mod arctic;
 mod art;
-// mod b_plus_tree;
-// mod bz_tree;
 mod concurrent_map;
 mod congee;
 mod contrie;
@@ -12,7 +10,6 @@ mod crossbeam_skiplist;
 mod dash_map;
 mod fb_tree;
 mod leapfrog;
-// pub mod kaist;
 mod hot;
 mod papaya;
 mod scc;

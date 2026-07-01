@@ -27,9 +27,6 @@ anyhow = "1.0.99"
 arctic = { git = "https://github.com/nwtnni/arctic.git", default-features = false, features = ["smr-hazard"] }
 art-sys = { path = "extern/ARTSynchronized/art-sys" }
 base64 = { version = "0.22.1", optional = true }
-bitflags = "2.9.4"
-# bplustree = "0.1.0"
-# bztree = "0.2.0"
 cartesian = { git = "https://github.com/nwtnni/cartesian.git" }
 concurrent-map = "5.0.37"
 congee = "0.4.1"
