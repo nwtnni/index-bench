@@ -2,6 +2,7 @@ use serde::Deserialize;
 use serde::Serialize;
 
 pub mod concurrent;
+pub mod sequential;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case")]
@@ -58,9 +59,6 @@ pub enum Smr {
 pub enum Name {
     Art,
     Arctic,
-    // Bonsai,
-    // BPlusTree,
-    // BzTree,
     ConcurrentMap,
     Congee,
     Contrie,
@@ -73,6 +71,7 @@ pub enum Name {
     SccHashIndex,
     SccHashMap,
     SccTreeIndex,
+    StdBTreeMap,
     Wormhole,
     Hot,
 }
@@ -87,6 +86,9 @@ pub trait Hasher: core::hash::BuildHasher + Clone + Default + Send + Sync + 'sta
 impl<T> Hasher for T where T: core::hash::BuildHasher + Clone + Default + Send + Sync + 'static {}
 
 pub trait Index<K, V, H> {
+    /// Whether this index can be accessed from more than one thread
+    const CONCURRENT: bool = true;
+
     type Send<'a>: IndexSend<K, V, H> + Send
     where
         Self: 'a;

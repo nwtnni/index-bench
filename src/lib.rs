@@ -26,7 +26,7 @@ use serde::Serialize;
 pub struct Config {
     pub index: index::Config,
     #[cartesian(flatten)]
-    global: config::Global,
+    pub global: config::Global,
     #[cartesian(flatten)]
     pub workload: workload::Config,
 }

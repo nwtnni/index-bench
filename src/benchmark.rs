@@ -33,6 +33,8 @@ pub fn run<K: KeyDistribution, V: Value, I: Index<K::Key, V, H>, H: index::Hashe
         .workload
         .operation_count_per_thread(config.global.thread_count);
 
+    assert!(I::CONCURRENT || config.global.thread_count == 1);
+
     let topology = &Topology::new().context("Initialize hwloc topology")?;
     let depth = topology
         .depth_for_type(ObjectType::PU)

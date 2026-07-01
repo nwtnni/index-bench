@@ -90,6 +90,12 @@ fn specialize_index_u64<
         index::Name::SccTreeIndex => {
             index_bench::run::<K, u64, scc::TreeIndex<K::Key, u64>, H>(config)
         }
+        index::Name::StdBTreeMap => index_bench::run::<
+            K,
+            u64,
+            index_bench::index::sequential::b_tree_map::BTreeMap<K::Key, u64>,
+            H,
+        >(config),
         index::Name::Wormhole => index_bench::run::<K, u64, wormhole_sys::Wormhole, H>(config),
     }
 }
@@ -137,6 +143,12 @@ fn specialize_index_u128<
         index::Name::SccTreeIndex => {
             index_bench::run::<K, u64, scc::TreeIndex<K::Key, u64>, H>(config)
         }
+        index::Name::StdBTreeMap => index_bench::run::<
+            K,
+            u64,
+            index_bench::index::sequential::b_tree_map::BTreeMap<K::Key, u64>,
+            H,
+        >(config),
         index::Name::Wormhole => index_bench::run::<K, u64, wormhole_sys::Wormhole, H>(config),
     }
 }
@@ -192,6 +204,12 @@ fn specialize_index_slice<
         index::Name::SccTreeIndex => {
             index_bench::run::<K, u64, scc::TreeIndex<K::Key, u64>, H>(config)
         }
+        index::Name::StdBTreeMap => index_bench::run::<
+            K,
+            u64,
+            index_bench::index::sequential::b_tree_map::BTreeMap<K::Key, u64>,
+            H,
+        >(config),
         index::Name::Wormhole => index_bench::run::<K, u64, wormhole_sys::Wormhole, H>(config),
     }
 }
@@ -246,6 +264,12 @@ fn specialize_index_boxed_slice<
         index::Name::SccTreeIndex => {
             index_bench::run::<K, u64, scc::TreeIndex<Box<[u8]>, u64>, H>(config)
         }
+        index::Name::StdBTreeMap => index_bench::run::<
+            K,
+            u64,
+            index_bench::index::sequential::b_tree_map::BTreeMap<Box<[u8]>, u64>,
+            H,
+        >(config),
         index::Name::Wormhole => index_bench::run::<K, u64, wormhole_sys::Wormhole, H>(config),
     }
 }
