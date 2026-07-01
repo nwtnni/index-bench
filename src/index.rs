@@ -73,6 +73,7 @@ pub enum Name {
     SccHashMap,
     SccTreeIndex,
     StdBTreeMap,
+    StdHashMap,
     Wormhole,
     Hot,
 }

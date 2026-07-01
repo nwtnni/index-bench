@@ -96,7 +96,13 @@ fn specialize_index_u64<
         index::Name::StdBTreeMap => index_bench::run::<
             K,
             u64,
-            index_bench::index::sequential::b_tree_map::BTreeMap<K::Key, u64>,
+            index_bench::index::sequential::std_b_tree_map::BTreeMap<K::Key, u64>,
+            H,
+        >(config),
+        index::Name::StdHashMap => index_bench::run::<
+            K,
+            u64,
+            index_bench::index::sequential::std_hash_map::HashMap<K::Key, u64, H>,
             H,
         >(config),
         index::Name::Wormhole => index_bench::run::<K, u64, wormhole_sys::Wormhole, H>(config),
@@ -152,7 +158,13 @@ fn specialize_index_u128<
         index::Name::StdBTreeMap => index_bench::run::<
             K,
             u64,
-            index_bench::index::sequential::b_tree_map::BTreeMap<K::Key, u64>,
+            index_bench::index::sequential::std_b_tree_map::BTreeMap<K::Key, u64>,
+            H,
+        >(config),
+        index::Name::StdHashMap => index_bench::run::<
+            K,
+            u64,
+            index_bench::index::sequential::std_hash_map::HashMap<K::Key, u64, H>,
             H,
         >(config),
         index::Name::Wormhole => index_bench::run::<K, u64, wormhole_sys::Wormhole, H>(config),
@@ -222,7 +234,13 @@ fn specialize_index_slice<
         index::Name::StdBTreeMap => index_bench::run::<
             K,
             u64,
-            index_bench::index::sequential::b_tree_map::BTreeMap<K::Key, u64>,
+            index_bench::index::sequential::std_b_tree_map::BTreeMap<K::Key, u64>,
+            H,
+        >(config),
+        index::Name::StdHashMap => index_bench::run::<
+            K,
+            u64,
+            index_bench::index::sequential::std_hash_map::HashMap<K::Key, u64, H>,
             H,
         >(config),
         index::Name::Wormhole => index_bench::run::<K, u64, wormhole_sys::Wormhole, H>(config),
@@ -291,7 +309,13 @@ fn specialize_index_boxed_slice<
         index::Name::StdBTreeMap => index_bench::run::<
             K,
             u64,
-            index_bench::index::sequential::b_tree_map::BTreeMap<Box<[u8]>, u64>,
+            index_bench::index::sequential::std_b_tree_map::BTreeMap<Box<[u8]>, u64>,
+            H,
+        >(config),
+        index::Name::StdHashMap => index_bench::run::<
+            K,
+            u64,
+            index_bench::index::sequential::std_hash_map::HashMap<Box<[u8]>, u64, H>,
             H,
         >(config),
         index::Name::Wormhole => index_bench::run::<K, u64, wormhole_sys::Wormhole, H>(config),

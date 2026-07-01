@@ -73,7 +73,9 @@ fn main() -> anyhow::Result<()> {
 
         if matches!(
             config.index.name,
-            index_bench::index::Name::ArcticSeq | index_bench::index::Name::StdBTreeMap
+            index_bench::index::Name::ArcticSeq
+                | index_bench::index::Name::StdBTreeMap
+                | index_bench::index::Name::StdHashMap
         ) && config.global.thread_count > 1
         {
             continue;
