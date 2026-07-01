@@ -7,6 +7,7 @@ pub mod sequential;
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub struct Config {
+    #[serde(default)]
     pub hash: Hash,
     pub name: Name,
     #[serde(default)]
@@ -39,9 +40,10 @@ fn membarrier() -> bool {
     cfg!(feature = "membarrier")
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Hash {
+    #[default]
     RapidHash,
 }
 
