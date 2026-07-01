@@ -56,7 +56,7 @@ fn main() -> anyhow::Result<()> {
         }
 
         if matches!(config.workload.key, index_bench::workload::Key::Url) {
-            config.workload.ycsb.record_count = 33_600_000;
+            config.workload.ycsb.record_count = config.workload.ycsb.record_count.min(33_600_000);
         }
 
         // HACK: congee only supports u64 keys
