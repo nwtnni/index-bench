@@ -9,8 +9,9 @@ mod contrie;
 mod crossbeam_skiplist;
 mod dash_map;
 mod fb_tree;
-mod leapfrog;
 mod hot;
+mod leapfrog;
+mod masstree;
 mod papaya;
 mod scc;
 mod wormhole;
@@ -80,6 +81,7 @@ pub enum Name {
     DashMap,
     FbTree,
     Leapfrog,
+    Masstree,
     Papaya,
     SccHashIndex,
     SccHashMap,

@@ -75,6 +75,7 @@ fn specialize_index_u64<
         index::Name::Leapfrog => {
             index_bench::run::<K, u64, leapfrog::LeapMap<K::Key, u64, H>, H>(config)
         }
+        index::Name::Masstree => index_bench::run::<K, u64, masstree::MassTree<u64>, H>(config),
         index::Name::Papaya => {
             index_bench::run::<K, u64, papaya::HashMap<K::Key, u64, H>, H>(config)
         }
@@ -119,6 +120,7 @@ fn specialize_index_u128<
         index::Name::Leapfrog => {
             index_bench::run::<K, u64, leapfrog::LeapMap<K::Key, u64, H>, H>(config)
         }
+        index::Name::Masstree => index_bench::run::<K, u64, masstree::MassTree<u64>, H>(config),
         index::Name::Papaya => {
             index_bench::run::<K, u64, papaya::HashMap<K::Key, u64, H>, H>(config)
         }
@@ -170,6 +172,7 @@ fn specialize_index_slice<
         index::Name::Leapfrog => {
             index_bench::run::<K, u64, leapfrog::LeapMap<K::Key, u64, H>, H>(config)
         }
+        index::Name::Masstree => index_bench::run::<K, u64, masstree::MassTree<u64>, H>(config),
         index::Name::Papaya => {
             index_bench::run::<K, u64, papaya::HashMap<K::Key, u64, H>, H>(config)
         }
@@ -220,6 +223,7 @@ fn specialize_index_boxed_slice<
         index::Name::Leapfrog => {
             unimplemented!("LeapMap requires K: Copy")
         }
+        index::Name::Masstree => index_bench::run::<K, u64, masstree::MassTree<u64>, H>(config),
         index::Name::Papaya => {
             index_bench::run::<K, u64, papaya::HashMap<Box<[u8]>, u64, H>, H>(config)
         }
