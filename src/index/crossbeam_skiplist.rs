@@ -6,9 +6,6 @@ macro_rules! impl_index {
         impl<H: index::Hasher> Index<$index, u64, H> for crossbeam_skiplist::SkipMap<$map, u64> {
             type Send<'a> = &'a Self;
 
-            const IGNORE_INSERT: bool = true;
-            const IGNORE_GET: bool = true;
-
             fn new(_: &index::Config) -> Self {
                 crossbeam_skiplist::SkipMap::new()
             }
@@ -36,64 +33,91 @@ macro_rules! impl_index {
 impl_index!(u64, u64);
 
 impl index::IndexPin<u64, u64> for &'_ crossbeam_skiplist::SkipMap<u64, u64> {
-    fn get(&mut self, key: u64) -> Option<u64> {
-        Some(*crossbeam_skiplist::SkipMap::get(self, &key)?.value())
+    fn get(&mut self, key: u64) {
+        core::hint::black_box(crossbeam_skiplist::SkipMap::get(self, &key));
     }
 
-    fn insert(&mut self, key: u64, value: u64) -> Option<u64> {
-        Some(*crossbeam_skiplist::SkipMap::insert(self, key, value).value())
+    fn insert(&mut self, key: u64, value: u64) {
+        core::hint::black_box(crossbeam_skiplist::SkipMap::insert(self, key, value));
     }
 
-    fn scan(&mut self, key: u64, count: usize, buffer: &mut Vec<u64>) {
-        buffer.extend(
+    fn scan(&mut self, key: u64, count: usize) {
+        core::hint::black_box(
             crossbeam_skiplist::SkipMap::range(self, key..)
                 .take(count)
-                .map(|entry| *entry.value()),
-        )
+                .count(),
+        );
     }
 }
 
-impl_index!(String, &'static str);
+impl_index!(u128, u128);
 
-impl index::IndexPin<String, u64> for &'_ crossbeam_skiplist::SkipMap<&'static str, u64> {
-    fn get(&mut self, key: &'static str) -> Option<u64> {
-        Some(*crossbeam_skiplist::SkipMap::get(self, &key)?.value())
+impl index::IndexPin<u128, u64> for &'_ crossbeam_skiplist::SkipMap<u128, u64> {
+    fn get(&mut self, key: u128) {
+        core::hint::black_box(crossbeam_skiplist::SkipMap::get(self, &key));
     }
 
-    fn insert(&mut self, key: &'static str, value: u64) -> Option<u64> {
-        Some(*crossbeam_skiplist::SkipMap::insert(self, key, value).value())
+    fn insert(&mut self, key: u128, value: u64) {
+        core::hint::black_box(crossbeam_skiplist::SkipMap::insert(self, key, value));
     }
 
-    fn scan(&mut self, key: &'static str, count: usize, buffer: &mut Vec<u64>) {
-        buffer.extend(
+    fn scan(&mut self, key: u128, count: usize) {
+        core::hint::black_box(
             crossbeam_skiplist::SkipMap::range(self, key..)
                 .take(count)
-                .map(|entry| *entry.value()),
-        )
+                .count(),
+        );
     }
 }
 
-impl_index!(String, String);
+impl_index!(&'static [u8], Box<[u8]>);
 
-impl index::IndexPin<String, u64> for &'_ crossbeam_skiplist::SkipMap<String, u64> {
-    fn get(&mut self, key: &'static str) -> Option<u64> {
-        Some(*crossbeam_skiplist::SkipMap::get(self, key)?.value())
+impl index::IndexPin<&'static [u8], u64> for &'_ crossbeam_skiplist::SkipMap<Box<[u8]>, u64> {
+    fn get(&mut self, key: &'static [u8]) {
+        core::hint::black_box(crossbeam_skiplist::SkipMap::get(self, key));
     }
 
-    fn insert(&mut self, key: &'static str, value: u64) -> Option<u64> {
-        Some(*crossbeam_skiplist::SkipMap::insert(self, key.to_owned(), value).value())
+    fn insert(&mut self, key: &'static [u8], value: u64) {
+        core::hint::black_box(crossbeam_skiplist::SkipMap::insert(
+            self,
+            Box::from(key),
+            value,
+        ));
     }
 
-    fn scan(&mut self, key: &'static str, count: usize, buffer: &mut Vec<u64>) {
-        buffer.extend(
-            crossbeam_skiplist::SkipMap::range::<str, _>(
+    fn scan(&mut self, key: &'static [u8], count: usize) {
+        core::hint::black_box(
+            crossbeam_skiplist::SkipMap::range::<[u8], _>(
+                self,
+                (core::ops::Bound::Included(key), core::ops::Bound::Unbounded),
+            )
+            .take(count)
+            .count(),
+        );
+    }
+}
+
+impl_index!(&'static [u8], &'static [u8]);
+
+impl index::IndexPin<&'static [u8], u64> for &'_ crossbeam_skiplist::SkipMap<&'static [u8], u64> {
+    fn get(&mut self, key: &'static [u8]) {
+        core::hint::black_box(crossbeam_skiplist::SkipMap::get(self, key));
+    }
+
+    fn insert(&mut self, key: &'static [u8], value: u64) {
+        core::hint::black_box(crossbeam_skiplist::SkipMap::insert(self, key, value));
+    }
+
+    fn scan(&mut self, key: &'static [u8], count: usize) {
+        core::hint::black_box(
+            crossbeam_skiplist::SkipMap::range::<[u8], _>(
                 self,
                 // NOTE: `key..` doesn't work due to 'static lifetime?
                 // Not sure why (&*key).. doesn't work
                 (core::ops::Bound::Included(key), core::ops::Bound::Unbounded),
             )
             .take(count)
-            .map(|entry| *entry.value()),
-        )
+            .count(),
+        );
     }
 }

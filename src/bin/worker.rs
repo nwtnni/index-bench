@@ -58,6 +58,9 @@ fn specialize_index_u64<
         index::Name::Art => index_bench::run::<K, u64, art_sys::Rowex<K::Key>, H>(config),
         index::Name::Arctic => index_bench::run::<K, V, index::arctic::Map<K::Key, V>, H>(config),
         index::Name::Congee => index_bench::run::<K, u64, congee::Congee<usize, usize>, H>(config),
+        index::Name::CrossbeamSkiplist => {
+            index_bench::run::<K, u64, crossbeam_skiplist::SkipMap<K::Key, u64>, H>(config)
+        }
         index::Name::DashMap => {
             index_bench::run::<K, u64, dashmap::DashMap<K::Key, u64, H>, H>(config)
         }
@@ -81,6 +84,9 @@ fn specialize_index_u128<
         index::Name::Art => index_bench::run::<K, u64, art_sys::Rowex<Vec<u8>>, H>(config),
         index::Name::Arctic => index_bench::run::<K, V, index::arctic::Map<K::Key, V>, H>(config),
         index::Name::Congee => unimplemented!(),
+        index::Name::CrossbeamSkiplist => {
+            index_bench::run::<K, u64, crossbeam_skiplist::SkipMap<K::Key, u64>, H>(config)
+        }
         index::Name::DashMap => {
             index_bench::run::<K, u64, dashmap::DashMap<K::Key, u64, H>, H>(config)
         }
@@ -110,8 +116,11 @@ fn specialize_index_slice<
             H,
         >(config),
         index::Name::Congee => unimplemented!(),
+        index::Name::CrossbeamSkiplist => {
+            index_bench::run::<K, u64, crossbeam_skiplist::SkipMap<K::Key, u64>, H>(config)
+        }
         index::Name::DashMap => {
-            index_bench::run::<K, u64, dashmap::DashMap<&'static [u8], u64, H>, H>(config)
+            index_bench::run::<K, u64, dashmap::DashMap<K::Key, u64, H>, H>(config)
         }
         index::Name::FbTree => index_bench::run::<K, u64, fbtree_sys::FbString, H>(config),
         index::Name::Hot => index_bench::run::<K, u64, hot_sys::HotTreeString, H>(config),
@@ -139,6 +148,9 @@ fn specialize_index_boxed_slice<
             H,
         >(config),
         index::Name::Congee => unimplemented!(),
+        index::Name::CrossbeamSkiplist => {
+            index_bench::run::<K, u64, crossbeam_skiplist::SkipMap<Box<[u8]>, u64>, H>(config)
+        }
         index::Name::DashMap => {
             index_bench::run::<K, u64, dashmap::DashMap<Box<[u8]>, u64, H>, H>(config)
         }

@@ -8,7 +8,7 @@ mod art;
 // mod concurrent_map;
 mod congee;
 // mod contrie;
-// mod crossbeam_skiplist;
+mod crossbeam_skiplist;
 mod dash_map;
 mod fb_tree;
 // pub mod kaist;
@@ -78,7 +78,7 @@ pub enum Name {
     // ConcurrentMap,
     Congee,
     // Contrie,
-    // CrossbeamSkiplist,
+    CrossbeamSkiplist,
     DashMap,
     FbTree,
     Papaya,

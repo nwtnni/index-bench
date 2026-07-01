@@ -211,6 +211,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "crossbeam-skiplist"
+version = "0.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "df29de440c58ca2cc6e587ec3d22347551a32435fbde9d2bff64e78a9ffa151b"
+dependencies = [
+ "crossbeam-epoch 0.9.18",
+ "crossbeam-utils 0.8.21",
+]
+
+[[package]]
 name = "crossbeam-utils"
 version = "0.8.14"
 source = "git+https://github.com/nwtnni/crossbeam.git?branch=smr-benchmark#d7f027a7ed633323f065a8b8974f2d546e00303c"
@@ -536,6 +546,7 @@ dependencies = [
  "cartesian",
  "congee",
  "crossbeam-epoch 0.9.13",
+ "crossbeam-skiplist",
  "dashmap",
  "fbtree-sys",
  "hdrhistogram",
