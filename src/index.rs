@@ -59,6 +59,7 @@ pub enum Smr {
 pub enum Name {
     Art,
     Arctic,
+    ArcticSeq,
     ConcurrentMap,
     Congee,
     Contrie,
