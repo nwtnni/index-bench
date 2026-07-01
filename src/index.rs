@@ -5,7 +5,7 @@ pub mod arctic;
 mod art;
 // mod b_plus_tree;
 // mod bz_tree;
-// mod concurrent_map;
+mod concurrent_map;
 mod congee;
 // mod contrie;
 mod crossbeam_skiplist;
@@ -75,7 +75,7 @@ pub enum Name {
     // Bonsai,
     // BPlusTree,
     // BzTree,
-    // ConcurrentMap,
+    ConcurrentMap,
     Congee,
     // Contrie,
     CrossbeamSkiplist,

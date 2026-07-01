@@ -30,62 +30,85 @@ macro_rules! impl_index {
 impl_index!(u64, u64);
 
 impl index::IndexPin<u64, u64> for &'_ concurrent_map::ConcurrentMap<u64, u64> {
-    fn get(&mut self, key: u64) -> Option<u64> {
-        concurrent_map::ConcurrentMap::get(self, &key)
+    fn get(&mut self, key: u64) {
+        core::hint::black_box(concurrent_map::ConcurrentMap::get(self, &key));
     }
 
-    fn insert(&mut self, key: u64, value: u64) -> Option<u64> {
-        concurrent_map::ConcurrentMap::insert(self, key, value)
+    fn insert(&mut self, key: u64, value: u64) {
+        core::hint::black_box(concurrent_map::ConcurrentMap::insert(self, key, value));
     }
 
-    fn scan(&mut self, key: u64, count: usize, buffer: &mut Vec<u64>) {
-        buffer.extend(
+    fn scan(&mut self, key: u64, count: usize) {
+        core::hint::black_box(
             concurrent_map::ConcurrentMap::range(self, key..)
                 .take(count)
-                .map(|(_, value)| value),
+                .count(),
         );
     }
 }
 
-impl_index!(String, &'static str);
+impl_index!(u128, u128);
 
-impl index::IndexPin<String, u64> for &'_ concurrent_map::ConcurrentMap<&'static str, u64> {
-    fn get(&mut self, key: &'static str) -> Option<u64> {
-        concurrent_map::ConcurrentMap::get(self, &key)
+impl index::IndexPin<u128, u64> for &'_ concurrent_map::ConcurrentMap<u128, u64> {
+    fn get(&mut self, key: u128) {
+        core::hint::black_box(concurrent_map::ConcurrentMap::get(self, &key));
     }
 
-    fn insert(&mut self, key: &'static str, value: u64) -> Option<u64> {
-        concurrent_map::ConcurrentMap::insert(self, key, value)
+    fn insert(&mut self, key: u128, value: u64) {
+        core::hint::black_box(concurrent_map::ConcurrentMap::insert(self, key, value));
     }
 
-    fn scan(&mut self, key: &'static str, count: usize, buffer: &mut Vec<u64>) {
-        buffer.extend(
+    fn scan(&mut self, key: u128, count: usize) {
+        core::hint::black_box(
             concurrent_map::ConcurrentMap::range(self, key..)
                 .take(count)
-                .map(|(_, value)| value),
+                .count(),
         );
     }
 }
 
-impl_index!(String, String);
+// impl_index!(&'static [u8], Box<[u8]>);
+//
+// impl index::IndexPin<&'static [u8], u64> for &'_ concurrent_map::ConcurrentMap<Box<[u8]>, u64> {
+//     fn get(&mut self, key: &'static [u8]) {
+//         core::hint::black_box(concurrent_map::ConcurrentMap::get(self, key));
+//     }
+//
+//     fn insert(&mut self, key: &'static [u8], value: u64) {
+//         core::hint::black_box(concurrent_map::ConcurrentMap::insert(self, key, value));
+//     }
+//
+//     fn scan(&mut self, key: &'static [u8], count: usize) {
+//         core::hint::black_box(
+//             concurrent_map::ConcurrentMap::range::<[u8], _>(
+//                 self,
+//                 (core::ops::Bound::Included(key), core::ops::Bound::Unbounded),
+//             )
+//             .take(count)
+//             .count(),
+//         );
+//     }
+// }
 
-impl index::IndexPin<String, u64> for &'_ concurrent_map::ConcurrentMap<String, u64> {
-    fn get(&mut self, key: &'static str) -> Option<u64> {
-        concurrent_map::ConcurrentMap::get(self, key)
+impl_index!(&'static [u8], &'static [u8]);
+
+impl index::IndexPin<&'static [u8], u64> for &'_ concurrent_map::ConcurrentMap<&'static [u8], u64> {
+    fn get(&mut self, key: &'static [u8]) {
+        core::hint::black_box(concurrent_map::ConcurrentMap::get(self, key));
     }
 
-    fn insert(&mut self, key: &'static str, value: u64) -> Option<u64> {
-        concurrent_map::ConcurrentMap::insert(self, key.to_owned(), value)
+    fn insert(&mut self, key: &'static [u8], value: u64) {
+        core::hint::black_box(concurrent_map::ConcurrentMap::insert(self, key, value));
     }
 
-    fn scan(&mut self, key: &'static str, count: usize, buffer: &mut Vec<u64>) {
-        buffer.extend(
-            concurrent_map::ConcurrentMap::range::<str, _>(
+    fn scan(&mut self, key: &'static [u8], count: usize) {
+        core::hint::black_box(
+            concurrent_map::ConcurrentMap::range::<[u8], _>(
                 self,
                 (core::ops::Bound::Included(key), core::ops::Bound::Unbounded),
             )
             .take(count)
-            .map(|(_, value)| value),
+            .count(),
         );
     }
 }
