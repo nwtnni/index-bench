@@ -191,7 +191,8 @@ pub trait Value {
 impl Value for u64 {
     fn checksum(key: &[u8]) -> Self {
         let mut buffer = [0; 8];
-        buffer.copy_from_slice(key);
+        let len = key.len().min(buffer.len());
+        buffer[..len].copy_from_slice(&key[..len]);
         Self::from_ne_bytes(buffer)
     }
 }
