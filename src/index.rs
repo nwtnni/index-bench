@@ -12,9 +12,9 @@ mod crossbeam_skiplist;
 mod dash_map;
 mod fb_tree;
 // pub mod kaist;
-// mod scc;
 mod hot;
 mod papaya;
+mod scc;
 mod wormhole;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -82,8 +82,9 @@ pub enum Name {
     DashMap,
     FbTree,
     Papaya,
-    // SccHashMap,
-    // SccTreeIndex,
+    SccHashIndex,
+    SccHashMap,
+    SccTreeIndex,
     Wormhole,
     Hot,
 }

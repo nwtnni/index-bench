@@ -42,7 +42,7 @@ ycsb = { git = "https://github.com/nwtnni/ycsb.git", features = ["cartesian", "s
 arctic = { git = "https://github.com/nwtnni/arctic.git", default-features = false, features = ["smr-hazard"] }
 cartesian = { git = "https://github.com/nwtnni/cartesian.git" }
 toml = "0.9.5"
-# scc = "3.0.2"
+scc = "3.8.3"
 rapidhash = "4.0.0"
 rand = "0.9.2"
 papaya = "0.2.4"

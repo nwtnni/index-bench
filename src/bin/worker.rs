@@ -69,6 +69,15 @@ fn specialize_index_u64<
         index::Name::Papaya => {
             index_bench::run::<K, u64, papaya::HashMap<K::Key, u64, H>, H>(config)
         }
+        index::Name::SccHashIndex => {
+            index_bench::run::<K, u64, scc::HashIndex<K::Key, u64, H>, H>(config)
+        }
+        index::Name::SccHashMap => {
+            index_bench::run::<K, u64, scc::HashMap<K::Key, u64, H>, H>(config)
+        }
+        index::Name::SccTreeIndex => {
+            index_bench::run::<K, u64, scc::TreeIndex<K::Key, u64>, H>(config)
+        }
         index::Name::Wormhole => index_bench::run::<K, u64, wormhole_sys::Wormhole, H>(config),
     }
 }
@@ -94,6 +103,15 @@ fn specialize_index_u128<
         index::Name::Hot => index_bench::run::<K, u64, hot_sys::HotTreeString, H>(config),
         index::Name::Papaya => {
             index_bench::run::<K, u64, papaya::HashMap<K::Key, u64, H>, H>(config)
+        }
+        index::Name::SccHashIndex => {
+            index_bench::run::<K, u64, scc::HashIndex<K::Key, u64, H>, H>(config)
+        }
+        index::Name::SccHashMap => {
+            index_bench::run::<K, u64, scc::HashMap<K::Key, u64, H>, H>(config)
+        }
+        index::Name::SccTreeIndex => {
+            index_bench::run::<K, u64, scc::TreeIndex<K::Key, u64>, H>(config)
         }
         index::Name::Wormhole => index_bench::run::<K, u64, wormhole_sys::Wormhole, H>(config),
     }
@@ -127,6 +145,15 @@ fn specialize_index_slice<
         index::Name::Papaya => {
             index_bench::run::<K, u64, papaya::HashMap<K::Key, u64, H>, H>(config)
         }
+        index::Name::SccHashIndex => {
+            index_bench::run::<K, u64, scc::HashIndex<K::Key, u64, H>, H>(config)
+        }
+        index::Name::SccHashMap => {
+            index_bench::run::<K, u64, scc::HashMap<K::Key, u64, H>, H>(config)
+        }
+        index::Name::SccTreeIndex => {
+            index_bench::run::<K, u64, scc::TreeIndex<K::Key, u64>, H>(config)
+        }
         index::Name::Wormhole => index_bench::run::<K, u64, wormhole_sys::Wormhole, H>(config),
     }
 }
@@ -158,6 +185,15 @@ fn specialize_index_boxed_slice<
         index::Name::Hot => index_bench::run::<K, u64, hot_sys::HotTreeString, H>(config),
         index::Name::Papaya => {
             index_bench::run::<K, u64, papaya::HashMap<Box<[u8]>, u64, H>, H>(config)
+        }
+        index::Name::SccHashIndex => {
+            index_bench::run::<K, u64, scc::HashIndex<Box<[u8]>, u64, H>, H>(config)
+        }
+        index::Name::SccHashMap => {
+            index_bench::run::<K, u64, scc::HashMap<Box<[u8]>, u64, H>, H>(config)
+        }
+        index::Name::SccTreeIndex => {
+            index_bench::run::<K, u64, scc::TreeIndex<Box<[u8]>, u64>, H>(config)
         }
         index::Name::Wormhole => index_bench::run::<K, u64, wormhole_sys::Wormhole, H>(config),
     }
