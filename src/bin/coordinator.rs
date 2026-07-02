@@ -31,8 +31,7 @@ fn main() -> anyhow::Result<()> {
             continue;
         }
 
-        // HACK: hashing doesn't make sense for time-ordered snowflake IDs, but we also
-        // don't want to duplicate the configuration file to avoid one case
+        // Preserve ordering for snowflake keys
         if matches!(
             config.workload.key,
                 | index_bench::workload::Key::Snowflake
@@ -41,7 +40,7 @@ fn main() -> anyhow::Result<()> {
             continue;
         }
 
-        // HACK: similarly, skip ordering for random keys
+        // Skip ordering for random keys
         if matches!(
             config.workload.key,
             index_bench::workload::Key::Url
@@ -55,11 +54,7 @@ fn main() -> anyhow::Result<()> {
             continue;
         }
 
-        if matches!(config.workload.key, index_bench::workload::Key::Url) {
-            config.workload.ycsb.record_count = config.workload.ycsb.record_count.min(33_600_000);
-        }
-
-        // HACK: congee only supports u64 keys
+        // Congee only supports u64 keys
         if matches!(config.index.name, index_bench::index::Name::Congee)
             && matches!(
                 config.workload.key,
@@ -71,6 +66,14 @@ fn main() -> anyhow::Result<()> {
             continue;
         }
 
+        // Masstree only supports keys up to 256 bytes
+        if matches!(config.index.name, index_bench::index::Name::Masstree)
+            && matches!(config.workload.key, index_bench::workload::Key::Url)
+        {
+            continue;
+        }
+
+        // Sequential indexes only support one thread
         if matches!(
             config.index.name,
             index_bench::index::Name::ArcticSeq
@@ -79,6 +82,11 @@ fn main() -> anyhow::Result<()> {
         ) && config.global.thread_count > 1
         {
             continue;
+        }
+
+        // Clamp record count for URL dataset (contains 38.3M, but leave room for insertion)
+        if matches!(config.workload.key, index_bench::workload::Key::Url) {
+            config.workload.ycsb.record_count = config.workload.ycsb.record_count.min(33_600_000);
         }
 
         eprintln!("{config:?}");
