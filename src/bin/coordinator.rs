@@ -84,9 +84,9 @@ fn main() -> anyhow::Result<()> {
             continue;
         }
 
-        // Clamp record count for URL dataset (contains 38.3M, but leave room for insertion)
+        // Clamp record count for URL dataset (contains 38.3M, but leave room for inserts)
         if matches!(config.workload.key, index_bench::workload::Key::Url) {
-            config.workload.ycsb.record_count = config.workload.ycsb.record_count.min(33_600_000);
+            config.workload.ycsb.record_count = config.workload.ycsb.record_count.min(30_000_000);
         }
 
         eprintln!("{config:?}");
