@@ -1,0 +1,75 @@
+[global]
+thread_count = [1]
+numa = [{ policy = "bind", node = 0 }]
+
+[[index]]
+name = "arctic"
+
+[[index]]
+name = "arctic_seq"
+
+[[index]]
+name = "art"
+
+[[index]]
+name = "concurrent_map"
+
+[[index]]
+name = "congee"
+
+[[index]]
+name = "contrie"
+
+[[index]]
+name = "crossbeam_skiplist"
+
+[[index]]
+name = "dash_map"
+
+[[index]]
+name = "fb_tree"
+
+[[index]]
+name = "hot"
+
+[[index]]
+name = "leapfrog"
+
+[[index]]
+name = "masstree"
+
+[[index]]
+name = "papaya"
+
+[[index]]
+name = "scc_hash_index"
+
+[[index]]
+name = "scc_hash_map"
+
+[[index]]
+name = "scc_tree_index"
+
+[[index]]
+name = "std_b_tree_map"
+
+[[index]]
+name = "std_hash_map"
+
+[[index]]
+name = "wormhole"
+
+[workload]
+load = [true]
+key = ["ipv4", "u64", "snowflake", "uuid_v4", "email", "url"]
+value = ["u64"]
+insert_order = ["ordered", "hashed"]
+record_count = [10800, 108000, 1080000, 10800000, 108000000]
+operation_count = [0]
+update_proportion = [0.0]
+read_proportion = [0.0]
+insert_proportion = [1.0]
+delete_proportion = [0.0]
+scan_proportion = [0.0]
+read_modify_write_proportion = [0.0]
+request_distribution = ["uniform"]
