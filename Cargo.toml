@@ -24,7 +24,7 @@ opt-4 = ["membarrier"]
 
 [dependencies]
 anyhow = "1.0.99"
-arctic = { git = "https://github.com/nwtnni/arctic.git", default-features = false, features = ["smr-hazard"] }
+arctic = { package = "arctic-map", git = "https://github.com/nwtnni/arctic.git", default-features = false, features = ["smr-hazard"] }
 art-sys = { path = "extern/ARTSynchronized/art-sys" }
 base64 = { version = "0.22.1", optional = true }
 cartesian = { git = "https://github.com/nwtnni/cartesian.git" }

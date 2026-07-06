@@ -1,6 +1,8 @@
 use core::cell::UnsafeCell;
 use core::ops::ControlFlow;
 
+use ::arctic::Order;
+
 use crate::Index;
 use crate::index;
 
@@ -70,7 +72,7 @@ impl index::IndexPin<u64, u64> for &'_ Map<u64, u64> {
     fn scan(&mut self, key: u64, mut count: usize) {
         let shard = unsafe { self.0.get().as_mut_unchecked() }.range(key..);
 
-        shard.values::<arctic::Ascend>().for_each_internal(|_| {
+        let _ = shard.values(Order::Ascend).try_fold((), |(), _| {
             if count == 0 {
                 ControlFlow::Break(())
             } else {
@@ -111,7 +113,7 @@ impl index::IndexPin<u128, u64> for &'_ Map<u128, u64> {
     fn scan(&mut self, key: u128, mut count: usize) {
         let shard = unsafe { self.0.get().as_mut_unchecked() }.range(key..);
 
-        shard.values::<arctic::Ascend>().for_each_internal(|_| {
+        let _ = shard.values(Order::Ascend).try_fold((), |(), _| {
             if count == 0 {
                 ControlFlow::Break(())
             } else {
@@ -159,7 +161,7 @@ impl index::IndexPin<&'static [u8], u64>
     fn scan(&mut self, key: &'static [u8], mut count: usize) {
         let shard = unsafe { self.0.get().as_mut_unchecked() }.range(key..);
 
-        shard.values::<arctic::Ascend>().for_each_internal(|_| {
+        let _ = shard.values(Order::Ascend).try_fold((), |(), _| {
             if count == 0 {
                 ControlFlow::Break(())
             } else {
@@ -207,7 +209,7 @@ impl index::IndexPin<&'static [u8], u64>
     fn scan(&mut self, key: &'static [u8], mut count: usize) {
         let shard = unsafe { self.0.get().as_mut_unchecked() }.range(key..);
 
-        shard.values::<arctic::Ascend>().for_each_internal(|_| {
+        let _ = shard.values(Order::Ascend).try_fold((), |(), _| {
             if count == 0 {
                 ControlFlow::Break(())
             } else {

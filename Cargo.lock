@@ -33,9 +33,9 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "993a810118f8f37e9c4411c86f1c4c940a09a7ab34b7bf2d88d06f50c553fab7"
 
 [[package]]
-name = "arctic"
-version = "0.1.0"
-source = "git+https://github.com/nwtnni/arctic.git#b77d0dca5ea1d057a8a7a7f179865d271a646ced"
+name = "arctic-map"
+version = "0.1.2"
+source = "git+https://github.com/nwtnni/arctic.git#5c55e972bf5df7fba19c2cc78057caa648727ba5"
 dependencies = [
  "base64 0.22.1",
  "hdrhistogram",
@@ -636,7 +636,7 @@ name = "index-bench"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "arctic",
+ "arctic-map",
  "art-sys",
  "base64 0.22.1",
  "cartesian",

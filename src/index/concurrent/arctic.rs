@@ -3,6 +3,7 @@ use core::num::NonZeroU64;
 use core::ops::ControlFlow;
 use core::sync::atomic::Ordering;
 
+use ::arctic::Order;
 use seize::Guard as _;
 
 use crate::Index;
@@ -132,9 +133,9 @@ macro_rules! impl_index {
                 $(let key = ($convert)(key);)?
                 let shard = Map::range(self, key..);
 
-                shard
-                    .values::<arctic::Ascend>()
-                    .for_each_internal(|_| {
+                let _ = shard
+                    .values(Order::Ascend)
+                    .try_fold((), |(), _| {
                         if count == 0 {
                             ControlFlow::Break(())
                         } else {
