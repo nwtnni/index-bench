@@ -42,6 +42,20 @@ impl index::IndexPin<u64, u64> for &'_ masstree::MassTree<u64> {
     fn remove(&mut self, key: u64) {
         let _ = core::hint::black_box(masstree::MassTree::remove(self, &key.to_be_bytes()));
     }
+
+    fn scan(&mut self, key: u64, count: usize) {
+        let guard = self.guard();
+        core::hint::black_box(
+            masstree::MassTree::range(
+                self,
+                masstree::RangeBound::Included(&key.to_be_bytes()),
+                masstree::RangeBound::Unbounded,
+                &guard,
+            )
+            .take(count)
+            .count(),
+        );
+    }
 }
 
 impl_index!(u128, u128);
@@ -58,6 +72,20 @@ impl index::IndexPin<u128, u64> for &'_ masstree::MassTree<u64> {
     fn remove(&mut self, key: u128) {
         let _ = core::hint::black_box(masstree::MassTree::remove(self, &key.to_be_bytes()));
     }
+
+    fn scan(&mut self, key: u128, count: usize) {
+        let guard = self.guard();
+        core::hint::black_box(
+            masstree::MassTree::range(
+                self,
+                masstree::RangeBound::Included(&key.to_be_bytes()),
+                masstree::RangeBound::Unbounded,
+                &guard,
+            )
+            .take(count)
+            .count(),
+        );
+    }
 }
 
 impl_index!(&'static [u8], &'static [u8]);
@@ -73,5 +101,19 @@ impl index::IndexPin<&'static [u8], u64> for &'_ masstree::MassTree<u64> {
 
     fn remove(&mut self, key: &'static [u8]) {
         let _ = core::hint::black_box(masstree::MassTree::remove(self, key));
+    }
+
+    fn scan(&mut self, key: &'static [u8], count: usize) {
+        let guard = self.guard();
+        core::hint::black_box(
+            masstree::MassTree::range(
+                self,
+                masstree::RangeBound::Included(key),
+                masstree::RangeBound::Unbounded,
+                &guard,
+            )
+            .take(count)
+            .count(),
+        );
     }
 }
