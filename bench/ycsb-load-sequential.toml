@@ -33,9 +33,6 @@ name = "fb_tree"
 name = "hot"
 
 [[index]]
-name = "leapfrog"
-
-[[index]]
 name = "masstree"
 
 [[index]]

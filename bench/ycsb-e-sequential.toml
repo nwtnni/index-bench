@@ -1,9 +1,12 @@
 [global]
-thread_count = [20, 40, 60, 80]
-numa = [{ policy = "interleave", nodes = [0, 1] }]
+thread_count = [1]
+numa = [{ policy = "bind", node = 0 }]
 
 [[index]]
 name = "arctic"
+
+[[index]]
+name = "arctic_seq"
 
 [[index]]
 name = "art"
@@ -15,49 +18,34 @@ name = "concurrent_map"
 name = "congee"
 
 [[index]]
-name = "contrie"
-
-[[index]]
 name = "crossbeam_skiplist"
-
-[[index]]
-name = "dash_map"
 
 [[index]]
 name = "fb_tree"
 
 [[index]]
-name = "hot"
-
-[[index]]
 name = "masstree"
-
-[[index]]
-name = "papaya"
-
-[[index]]
-name = "scc_hash_index"
-
-[[index]]
-name = "scc_hash_map"
 
 [[index]]
 name = "scc_tree_index"
 
 [[index]]
+name = "std_b_tree_map"
+
+[[index]]
 name = "wormhole"
 
 [workload]
-load = [true]
+load = [false]
 key = ["ipv4", "u64", "snowflake", "uuid_v4", "email", "url"]
 value = ["u64"]
 insert_order = ["ordered", "hashed"]
 record_count = [10000, 100000, 1000000, 10000000, 100000000]
-operation_count = [0]
-update_proportion = [0.0]
+operation_count = [100000000]
 read_proportion = [0.0]
-insert_proportion = [1.0]
+update_proportion = [0.0]
+insert_proportion = [0.05]
 delete_proportion = [0.0]
-scan_proportion = [0.0]
+scan_proportion = [0.95]
 read_modify_write_proportion = [0.0]
-request_distribution = ["uniform"]
+request_distribution = [{ "zipfian" = 0.0 }, { "zipfian" = 0.99 }]

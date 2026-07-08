@@ -3,19 +3,15 @@ thread_count = [1, 20, 40, 60, 80, 100, 120, 140, 160]
 numa = [{ policy = "interleave", nodes = [0, 1] }]
 
 [[index]]
-hash = "rapid_hash"
 name = "arctic"
 
 [[index]]
-hash = "rapid_hash"
 name = "art"
 
 [[index]]
-hash = "rapid_hash"
 name = "fb_tree"
 
 [[index]]
-hash = "rapid_hash"
 name = "wormhole"
 
 [workload]
