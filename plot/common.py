@@ -117,6 +117,21 @@ class Workload(enum.StrEnum):
     def index(self):
         return list(Workload).index(self)
 
+    def description(self):
+        match self:
+            case Workload.L:
+                return "100% I"
+            case Workload.A:
+                return "50% R, 50% U"
+            case Workload.B:
+                return "95% R, 5% I"
+            case Workload.C:
+                return "100% R"
+            case Workload.D:
+                return "95% R, 5% I"
+            case Workload.E:
+                return "95% S, 5% I"
+
 
 class Key(enum.StrEnum):
     IP = "ip-v4"

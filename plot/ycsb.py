@@ -10,6 +10,12 @@ from common import bold
 
 YCSB = [wl for wl in common.Workload if wl.startswith("YCSB")]
 
+FONT_SIZE_TITLE = 18  # 24
+FONT_SIZE_LEGEND = 16  # 20
+FONT_SIZE = 14  # 18
+WIDTH = 1080  # 2000 for slide
+HEIGHT = 700  # 200 * key for slide
+
 
 def main():
     df = (
@@ -22,6 +28,13 @@ def main():
             common.SELECT_MEM,
             common.SELECT_TP,
         )
+        # .filter(pl.col("key").is_in([common.Key.SEQ, common.Key.RAND]))
+        # .filter(
+        #     pl.col("key").is_in(
+        #         [common.Key.IP, common.Key.SNOWFLAKE, common.Key.UUID_V4]
+        #     )
+        # )
+        # .filter(pl.col("key").is_in([common.Key.EMAIL, common.Key.URL]))
         .group_by(cs.exclude("tp", "mem"))
         .agg(
             pl.col("tp").mean(),
@@ -37,18 +50,22 @@ def main():
         .collect()
     )
 
+    key_count = len(df.select(pl.col("key").unique()))
+    map_count = len(df.select(pl.col("map").unique()))
+
     fig = sp.make_subplots(
-        rows=len(common.Key),
+        rows=key_count,
+        # cols=len(YCSB),
         cols=len(YCSB) + 1,
         shared_xaxes=True,
-        subplot_titles=[bold(title) for title in list(YCSB) + ["YCSB-Load"]],
-        # y_title=Y_TITLE,
+        column_titles=[bold(title) for title in list(YCSB) + ["YCSB-Load"]],
+        # column_titles=[bold(wl + f" ({wl.description()})") for wl in list(YCSB)],
         horizontal_spacing=0.025,
         vertical_spacing=0.015,
     )
 
-    for (key,), row_data in df.group_by("key", maintain_order=True):
-        i = common.Key(key).index() + 1
+    for i, ((key,), row_data) in enumerate(df.group_by("key", maintain_order=True)):
+        i = i + 1
 
         for (wl,), col_data in row_data.group_by("wl", maintain_order=True):
             j = common.Workload(wl).index() + 1
@@ -91,9 +108,7 @@ def main():
                 col=j,
             )
 
-    map_count = len(df.select(pl.col("map").unique()))
-
-    for (key,), row_data in (
+    for i, ((key,), row_data) in enumerate(
         df.filter(pl.col("wl") == common.Workload.L, pl.col("tc") == 80)
         .with_columns(
             mem=(
@@ -118,7 +133,7 @@ def main():
         key = common.Key(key)
         max_mem = row_data.select("mem").max().item()
 
-        i = key.index() + 1
+        i = i + 1
         j = len(YCSB) + 1
 
         for (map,), map_data in row_data.group_by("map", maintain_order=True):
@@ -171,14 +186,16 @@ def main():
 
     fig.update_xaxes(
         **common.title("Thread Count"),
-        row=len(common.Key),
-        col=5,
+        row=key_count,
+        col=len(YCSB),
+        title_font_size=FONT_SIZE_TITLE,
     )
 
     fig.update_yaxes(
         **common.title("Peak Memory Usage (GiB)"),
-        row=4,
+        row=key_count // 2 + 1,
         col=len(YCSB) + 1,
+        title_font_size=FONT_SIZE_TITLE,
     )
 
     # Deduplicate legend entries
@@ -190,16 +207,28 @@ def main():
         else unique.add(trace.name)
     )
 
-    for row, key in enumerate(common.Key):
-        fig.update_yaxes(**common.title(key), row=row + 1, col=1)
+    for row, key in enumerate(
+        df.select(pl.col("key")).unique(maintain_order=True).to_series()
+    ):
+        fig.update_yaxes(
+            **common.title(key), row=row + 1, col=1, title_font_size=FONT_SIZE_TITLE
+        )
 
     fig.update_layout(
-        legend=dict(orientation="h", y=-0.04, title=bold("Index"), font=dict(size=16)),
-        width=1080,
-        height=700,
+        legend=dict(
+            orientation="h",
+            y=-0.04,
+            title=bold("Index"),
+            font=dict(size=FONT_SIZE_LEGEND),
+        ),
+        width=WIDTH,
+        height=HEIGHT,
         margin=dict(l=0, r=0, t=20, b=0),
-        uniformtext=dict(minsize=16, mode="show"),
+        uniformtext=dict(minsize=FONT_SIZE, mode="show"),
+        font=dict(size=FONT_SIZE),
     )
+    # https://community.plotly.com/t/setting-subplot-title-font-sizes/46612/2
+    fig.update_annotations(font_size=FONT_SIZE_TITLE)
     fig.write_image("ycsb.pdf")
 
 
