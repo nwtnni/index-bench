@@ -1,0 +1,15 @@
+# Maintained on best-effort basis to support uv
+# Python dependencies are usually managed by nix
+[project]
+name = "index-bench"
+version = "0.1.0"
+requires-python = ">= 3.13"
+dependencies = [
+  "click==8.1.8",
+  "dash==3.0.4",
+  "dash_bootstrap_components==2.0.3",
+  "hdrhistogram==0.10.7",
+  "numpy==2.3.1",
+  "plotly==6.3.0",
+  "polars==1.31.0",
+]

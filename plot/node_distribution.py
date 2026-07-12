@@ -1,10 +1,15 @@
 import sys
 
-# HACK: https://stackoverflow.com/questions/9059699/use-a-library-locally-instead-of-installing-it
-# HdrHistogram_py is not packaged for nix, possibly because it builds a C extension.
-# Just vendor and build locally for now.
-sys.path.insert(0, "HdrHistogram_py")
-from HdrHistogram_py.hdrh.histogram import HdrHistogram
+try:
+    # If we're in a uv environment, this should work
+    from hdrh.histogram import HdrHistogram
+except ImportError:
+    # Otherwise assume we're in nix
+    # HACK: https://stackoverflow.com/questions/9059699/use-a-library-locally-instead-of-installing-it
+    # HdrHistogram_py is not packaged for nix, possibly because it builds a C extension.
+    # Just vendor and build locally for now.
+    sys.path.insert(0, "HdrHistogram_py")
+    from HdrHistogram_py.hdrh.histogram import HdrHistogram
 import polars as pl
 import plotly.graph_objects as go
 

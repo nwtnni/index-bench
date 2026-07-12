@@ -1,5 +1,4 @@
 import sys
-import math
 from pathlib import PurePath
 from typing import Optional
 
@@ -10,11 +9,16 @@ from dash.dash_table import DataTable
 from dash.dash_table.Format import Format, Scheme
 import dash_bootstrap_components as dbc
 
-# HACK: https://stackoverflow.com/questions/9059699/use-a-library-locally-instead-of-installing-it
-# HdrHistogram_py is not packaged for nix, possibly because it builds a C extension.
-# Just vendor and build locally for now.
-sys.path.insert(0, "HdrHistogram_py")
-from HdrHistogram_py.hdrh.histogram import HdrHistogram
+try:
+    # If we're in a uv environment, this should work
+    from hdrh.histogram import HdrHistogram
+except ImportError:
+    # Otherwise assume we're in nix
+    # HACK: https://stackoverflow.com/questions/9059699/use-a-library-locally-instead-of-installing-it
+    # HdrHistogram_py is not packaged for nix, possibly because it builds a C extension.
+    # Just vendor and build locally for now.
+    sys.path.insert(0, "HdrHistogram_py")
+    from HdrHistogram_py.hdrh.histogram import HdrHistogram
 import plotly.express as px
 import polars as pl
 from polars import selectors as cs
@@ -125,7 +129,7 @@ class Col:
     ),
 )
 def main(vary, persist, paths):
-    df = pl.concat([load(vary, path) for path in paths])
+    df = pl.concat([load(vary, path) for path in paths], how="diagonal_relaxed")
 
     ui_control = [html.H2("Control")]
     ui_independent = [html.H2("Independent")]
