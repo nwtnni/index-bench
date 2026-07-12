@@ -11,7 +11,7 @@ stat-latency = ["dep:base64", "dep:hdrhistogram"]
 stat-garbage = ["arctic/stat-garbage"]
 
 smr-disable = []
-smr-hazard = []
+smr-hazard = ["arctic/smr-hazard"]
 smr-epoch = []
 
 membarrier = ["arctic/opt-membarrier"]
@@ -20,11 +20,11 @@ opt-0 = ["opt-1", "arctic/opt-no-path"]
 opt-1 = ["opt-2", "arctic/opt-no-int", "arctic/opt-no-expand"]
 opt-2 = ["arctic/opt-no-node3-get", "arctic/opt-no-node3-iter", "arctic/opt-no-node15-get", "arctic/opt-no-node15-iter", "arctic/opt-no-node47-iter"]
 opt-3 = []
-opt-4 = ["membarrier"]
+opt-4 = ["membarrier", "seize/fast-barrier"]
 
 [dependencies]
 anyhow = "1.0.99"
-arctic = { package = "arctic-map", git = "https://github.com/nwtnni/arctic.git", default-features = false, features = ["smr-hazard"] }
+arctic = { package = "arctic-map", version = "0.1.3", default-features = false }
 art-sys = { path = "extern/ARTSynchronized/art-sys" }
 base64 = { version = "0.22.1", optional = true }
 cartesian = { git = "https://github.com/nwtnni/cartesian.git" }
