@@ -2,9 +2,11 @@
 
 Benchmark harness for concurrent shared memory index data structures.
 
-This is the main artifact for "Arctic: a practical lock-free adaptive radix tree",
-published in OSDI 2026. The source code for `arctic` itself can be found in
-[this repository](https://github.com/nwtnni/arctic).
+This is the main evaluation artifact for
+["Arctic: a practical lock-free adaptive radix tree"](https://www.usenix.org/conference/osdi26/presentation/ni),
+published in OSDI 2026.
+The source code for `arctic` itself is in [this repository](https://github.com/nwtnni/arctic).
+Archived benchmark results can be found in the [archive](./archive/) directory.
 
 ## Getting started
 
@@ -47,20 +49,7 @@ python3 dashboard.py ../result.ndjson
 
 We will now explain how to reproduce each figure in our paper.
 
-### Node type distribution (Figure 8)
-
-![Plot of node type distribution](img/node-distribution.png)
-
-```bash
-cargo build --release --features stat
-cargo run --release --features stat ./bench/load-stat.toml
-# Output in result.ndjson
-cd plot
-python3 node_distribution.py ../result.ndjson
-# Output in node-distribution.pdf
-```
-
-### YCSB microbenchmarks (Figure 9)
+### YCSB microbenchmarks (Figure 7)
 
 ![Plot of YCSB microbenchmark results](img/ycsb.png)
 
@@ -81,7 +70,7 @@ python3 ycsb.py ../ycsb-*.ndjson
 # Output in ycsb.pdf
 ```
 
-### Macrobenchmarks (Figure 10)
+### Macrobenchmarks (Table 3, Figure 8)
 
 ![Plot of macrobenchmark results](img/macro.png)
 
@@ -107,7 +96,7 @@ python3 \
 # Output in macro.pdf
 ```
 
-### Safe memory reclamation (Figure 11)
+### Safe memory reclamation (Figure 9)
 
 ![Plot of SMR results](img/smr.png)
 
@@ -120,7 +109,7 @@ python3 smr.py ../smr.ndjson
 # Output in smr.pdf
 ```
 
-### Ablation (Figure 12)
+### Ablation (Figure 10)
 
 ![Plot of ablation results](img/ablation.png)
 
@@ -130,4 +119,17 @@ python3 smr.py ../smr.ndjson
 cd plot
 python3 ablation.py ../ablation.ndjson
 # Output in ablation.pdf
+```
+
+### Node type distribution (removed from final submission)
+
+![Plot of node type distribution](img/node-distribution.png)
+
+```bash
+cargo build --release --features stat
+cargo run --release --features stat ./bench/load-stat.toml
+# Output in result.ndjson
+cd plot
+python3 node_distribution.py ../result.ndjson
+# Output in node-distribution.pdf
 ```
