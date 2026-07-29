@@ -1,11 +1,16 @@
 # Concurrent
 
 ```js
-const table = FileAttachment("./data/concurrent-load-thread.tsv").arquero();
+import { decompressSync, strFromU8 } from "fflate";
 ```
 
 ```js
-const base = table
+const compressed = FileAttachment("./data/concurrent-load-thread.tsv.gz").arrayBuffer();
+```
+
+```js
+const decompressed = strFromU8(decompressSync(new Uint8Array(compressed)))
+const base = aq.fromCSV(decompressed, { delimiter: "\t" })
     .derive({
         "config/workload/key": (d => {
             if (d["config/workload/key"] === "u64") {
