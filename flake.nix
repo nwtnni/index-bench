@@ -44,6 +44,8 @@
             unrar
           ];
           buildInputs = [
+            nodejs
+
             (python3.withPackages (python-pkgs: with python-pkgs; [
               dash
               dash-bootstrap-components
