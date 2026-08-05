@@ -1,5 +1,12 @@
 # index-bench
 
+Experiments run on a [Chameleon](https://www.chameleoncloud.org/) compute_icelake_r650 instance ([example](https://www.chameleoncloud.org/hardware/node/sites/tacc/clusters/chameleon/nodes/dde004bf-b99b-4c0a-b2d4-d5537378626a/)).
+Each instance has two Intel(R) Xeon(R) Platinum 8380 CPUs, each with:
+- 2.30 GHz
+- 40 cores
+- 120 MiB LL
+- 128 GiB DDR4 3200 DRAM
+
 ```js
 import { decompressSync, strFromU8 } from "npm:fflate";
 ```
