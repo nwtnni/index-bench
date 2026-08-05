@@ -4,7 +4,7 @@ Experiments run on a [Chameleon](https://www.chameleoncloud.org/) compute_icelak
 Each instance has two Intel(R) Xeon(R) Platinum 8380 CPUs, each with:
 - 2.30 GHz
 - 40 cores
-- 120 MiB LL
+- 120 MiB LLC
 - 128 GiB DDR4 3200 DRAM
 
 ```js
