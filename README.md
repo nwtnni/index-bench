@@ -7,6 +7,8 @@ This is the main evaluation artifact for
 published in OSDI 2026.
 The source code for `arctic` itself is in [this repository](https://github.com/nwtnni/arctic).
 Archived benchmark results can be found in the [archive](./archive/) directory.
+The latest results in [archive/all](./archive/all) can be viewed through the
+[interactive web UI](https://nwtnni.github.io/index-bench/).
 
 ## Getting started
 

@@ -7,15 +7,6 @@ Each instance has two Intel(R) Xeon(R) Platinum 8380 CPUs, each with:
 - 120 MiB LL
 - 128 GiB DDR4 3200 DRAM
 
-The easiest way to visualize at the data is through the interactive
-web UI provided in `index-bench/plot/dashboard.py`, which allows you
-to select dimensions of interest. For example,
-
-```bash
-cd index-bench/plot
-uv run dashboard.py ../archive/osdi-2026/ycsb-load.ndjson.gz
-```
-
 # osdi-2026
 
 This directory contains peer-reviewed benchmark results referenced
@@ -26,7 +17,7 @@ this repository and [arctic](github.com/nwtnni/arctic).
 # all
 
 This directory contains **non-peer-reviewed** benchmark results collected after publication, with
-[arctic v0.1.3](https://crates.io/crates/arctic-map/0.1.3)
+[arctic v0.1.4](https://crates.io/crates/arctic-map/0.1.4)
 and a larger set of concurrent Rust baselines.
 
 # sequential
