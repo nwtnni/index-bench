@@ -1,0 +1,39 @@
+# https://observablehq.com/framework/deploying
+name: Deploy
+
+on:
+  # Run this workflow whenever a new commit is pushed to main.
+  push: {branches: [main]}
+  # Run this workflow when triggered manually in GitHub’s UI.
+  workflow_dispatch: {}
+
+defaults:
+  run:
+    working-directory: ./dashboard
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: 'dashboard/package-lock.json'
+      - run: npm ci
+      - run: npm run build
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: 'dashboard/dist'
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

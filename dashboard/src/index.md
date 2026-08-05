@@ -1,111 +1,153 @@
----
-toc: false
----
+# index-bench
 
-<div class="hero">
-  <h1>dashboard</h1>
-  <h2>Welcome to your new app! Edit&nbsp;<code style="font-size: 90%;">src/index.md</code> to change this page.</h2>
-  <a href="https://observablehq.com/framework/getting-started">Get started<span style="display: inline-block; margin-left: 0.25rem;">↗︎</span></a>
-</div>
+```js
+import { decompressSync, strFromU8 } from "npm:fflate";
+import * as core from "./components/core.js";
+```
 
-<div class="grid grid-cols-2" style="grid-auto-rows: 504px;">
-  <div class="card">${
-    resize((width) => Plot.plot({
-      title: "Your awesomeness over time 🚀",
-      subtitle: "Up and to the right!",
-      width,
-      y: {grid: true, label: "Awesomeness"},
-      marks: [
-        Plot.ruleY([0]),
-        Plot.lineY(aapl, {x: "Date", y: "Close", tip: true})
-      ]
-    }))
-  }</div>
-  <div class="card">${
-    resize((width) => Plot.plot({
-      title: "How big are penguins, anyway? 🐧",
-      width,
-      grid: true,
-      x: {label: "Body mass (g)"},
-      y: {label: "Flipper length (mm)"},
-      color: {legend: true},
-      marks: [
-        Plot.linearRegressionY(penguins, {x: "body_mass_g", y: "flipper_length_mm", stroke: "species"}),
-        Plot.dot(penguins, {x: "body_mass_g", y: "flipper_length_mm", stroke: "species", tip: true})
-      ]
-    }))
-  }</div>
-</div>
+```js
+const compressed = await FileAttachment("./data/data.tsv.gz").arrayBuffer();
+const decompressed = strFromU8(decompressSync(new Uint8Array(compressed)))
+const base = aq.fromCSV(decompressed, { delimiter: "\t" })
 
----
+const control = []
+const config = {}
+const output = []
 
-## Next steps
-
-Here are some ideas of things you could try…
-
-<div class="grid grid-cols-4">
-  <div class="card">
-    Chart your own data using <a href="https://observablehq.com/framework/lib/plot"><code>Plot</code></a> and <a href="https://observablehq.com/framework/files"><code>FileAttachment</code></a>. Make it responsive using <a href="https://observablehq.com/framework/javascript#resize(render)"><code>resize</code></a>.
-  </div>
-  <div class="card">
-    Create a <a href="https://observablehq.com/framework/project-structure">new page</a> by adding a Markdown file (<code>whatever.md</code>) to the <code>src</code> folder.
-  </div>
-  <div class="card">
-    Add a drop-down menu using <a href="https://observablehq.com/framework/inputs/select"><code>Inputs.select</code></a> and use it to filter the data shown in a chart.
-  </div>
-  <div class="card">
-    Write a <a href="https://observablehq.com/framework/loaders">data loader</a> that queries a local database or API, generating a data snapshot on build.
-  </div>
-  <div class="card">
-    Import a <a href="https://observablehq.com/framework/imports">recommended library</a> from npm, such as <a href="https://observablehq.com/framework/lib/leaflet">Leaflet</a>, <a href="https://observablehq.com/framework/lib/dot">GraphViz</a>, <a href="https://observablehq.com/framework/lib/tex">TeX</a>, or <a href="https://observablehq.com/framework/lib/duckdb">DuckDB</a>.
-  </div>
-  <div class="card">
-    Ask for help, or share your work or ideas, on our <a href="https://github.com/observablehq/framework/discussions">GitHub discussions</a>.
-  </div>
-  <div class="card">
-    Visit <a href="https://github.com/observablehq/framework">Framework on GitHub</a> and give us a star. Or file an issue if you’ve found a bug!
-  </div>
-</div>
-
-<style>
-
-.hero {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  font-family: var(--sans-serif);
-  margin: 4rem 0 8rem;
-  text-wrap: balance;
-  text-align: center;
+for (const name of base.columnNames()) {
+    if (name.startsWith("config")) {
+        const distinct = core.distinct(base, name)
+        if (distinct.length == 1) {
+            control.push({ key: name, value: distinct[0] });
+        } else {
+            config[name] = distinct;
+        }
+    } else {
+        output.push(name);
+    }
 }
 
-.hero h1 {
-  margin: 1rem 0;
-  padding: 1rem 0;
-  max-width: none;
-  font-size: 14vw;
-  font-weight: 900;
-  line-height: 1;
-  background: linear-gradient(30deg, var(--theme-foreground-focus), currentColor);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+const id = "default";
+```
+
+## Control
+
+```js
+Inputs.table(control, { select: false })
+```
+
+## Filter
+
+```js
+const checkboxes = {};
+const DEFAULTS = {
+    "config/workload/load": [false],
+    "config/workload/record_count": [30000000, 100000000],
+    "config/workload/read_proportion": [0.95],
+    "config/workload/update_proportion": [0.05],
+    "config/workload/insert_proportion": [0.0],
+    "config/workload/request_distribution/zipfian": [0.99],
+    "config/workload/key": ["rand-u64"],
+};
+
+for (const [key, values] of Object.entries(config)) {
+
+    checkboxes[key] = core.load(id, key, Inputs.checkbox(values, { label: key, value: DEFAULTS[key] ?? values, sort: true }));
+}
+const filters = view(Inputs.form(checkboxes));
+```
+
+## Configure
+
+```js
+const x = view(core.load(id, "x", Inputs.select(
+    Object.keys(config),
+    { label: "X-axis", value: "config/global/thread_count", sort: true }
+)))
+
+const ys = view(core.load(id, "ys", Inputs.checkbox(
+    output,
+    { label: "Y-axis", value: ["output/throughput"], sort: true }
+)));
+
+const color = view(core.load(id, "c", Inputs.select(
+    Object.keys(config),
+    { label: "Color", value: "config/index/name", sort: true }
+)))
+
+const facet_x = view(core.load(id, "fx", Inputs.select(
+    Object.keys(config).concat([null]),
+    { label: "Facet X", value: null, sort: true }
+)))
+
+const facet_y = view(core.load(id, "fy", Inputs.select(
+    Object.keys(config).concat([null]),
+    { label: "Facet Y", value: null, sort: true }
+)))
+```
+
+## Plot
+
+```js
+let df = base;
+
+for (const [key, values] of Object.entries(filters)) {
+    core.store(id, key, values);
+
+    df = df.params({ key, values }).filter((d, $) => {
+        return aq.op.includes($.values, d[$.key]);
+    });
 }
 
-.hero h2 {
-  margin: 0;
-  max-width: 34em;
-  font-size: 20px;
-  font-style: initial;
-  font-weight: 500;
-  line-height: 1.5;
-  color: var(--theme-foreground-muted);
-}
+core.store(id, "x", x);
+core.store(id, "ys", ys);
+core.store(id, "c", color);
+core.store(id, "fx", facet_x);
+core.store(id, "fy", facet_y);
 
-@media (min-width: 640px) {
-  .hero h1 {
-    font-size: 90px;
-  }
-}
+for (const y of ys) {
+    const marks = x === color ? [
+            Plot.barY(df, {
+                x,
+                y,
+                fx: facet_x,
+                fy: facet_y,
+                fill: color,
+                tip: true
+            }),
+        ] : [
+            Plot.lineY(df, {
+                x,
+                y,
+                fx: facet_x,
+                fy: facet_y,
+                stroke: color,
+            }),
+            Plot.dot(df, {
+                x,
+                y,
+                stroke: color,
+                symbol: color,
+                fx: facet_x,
+                fy: facet_y,
+                tip: true,
+            })
+        ];
 
-</style>
+    view(Plot.plot({
+        grid: true,
+        symbol: { legend: true },
+        width: width,
+        height: 1000,
+        x: {
+            tickRotate: -45,
+        },
+        y: {
+            tickFormat: ".2g",
+        },
+        marginLeft: 100,
+        marginBottom: 100,
+        marks,
+    }));
+}
+```
