@@ -44,13 +44,15 @@ function store(id, label, value) {
 }
 ```
 
-## Control
+<details><summary><h2 style="display: inline-block">Control</h2></summary>
 
 ```js
 Inputs.table(control, { select: false })
 ```
 
-## Configure
+</details>
+
+<details open><summary><h2 style="display: inline-block">Configure</h2></summary>
 
 ```js
 const x = view(Inputs.select(
@@ -79,8 +81,9 @@ const facet_y = view(Inputs.select(
 ))
 ```
 
+</details>
 
-## Filter
+<details open><summary><h2 style="display: inline-block">Filter</h2></summary>
 
 ```js
 const DEFAULTS = {
@@ -108,6 +111,8 @@ for (const [key, values] of Object.entries(config)) {
 }
 const filters = view(Inputs.form(inputs));
 ```
+
+</details>
 
 ## Plot
 
@@ -160,20 +165,31 @@ for (const y of ys) {
             })
         ];
 
-    view(Plot.plot({
-        grid: true,
-        symbol: { legend: true },
-        width: width,
-        height: 1000,
-        x: {
-            tickRotate: -45,
-        },
-        y: {
-            tickFormat: ".2g",
-        },
-        marginLeft: 100,
-        marginBottom: 100,
-        marks,
-    }));
+    display(html`
+        <details open>
+            <summary>
+                <h3 style="display: inline-block">${ y }</h3>
+            </summary>
+
+            ${
+                Plot.plot({
+                    grid: true,
+                    symbol: { legend: true },
+                    width: width,
+                    height: 1000,
+                    x: {
+                        tickRotate: -45,
+                    },
+                    y: {
+                        tickFormat: ".2g",
+                    },
+                    marginLeft: 100,
+                    marginBottom: 100,
+                    marks,
+                })
+            }
+        </details>
+    `);
+
 }
 ```
