@@ -2,7 +2,6 @@
 
 ```js
 import { decompressSync, strFromU8 } from "npm:fflate";
-import * as core from "./components/core.js";
 ```
 
 ```js
@@ -16,7 +15,7 @@ const output = []
 
 for (const name of base.columnNames()) {
     if (name.startsWith("config")) {
-        const distinct = core.distinct(base, name)
+        const distinct = base.rollup({ distinct: aq.op.array_agg_distinct(name) }).columnAt(0)[0]
         if (distinct.length == 1) {
             control.push({ key: name, value: distinct[0] });
         } else {
@@ -28,6 +27,14 @@ for (const name of base.columnNames()) {
 }
 
 const id = "default";
+
+function load(id, label) {
+    return JSON.parse(window.localStorage.getItem(id.concat("/", label)));
+}
+
+function store(id, label, value) {
+    window.localStorage.setItem(id.concat("/", label), JSON.stringify(value));
+}
 ```
 
 ## Control
@@ -36,13 +43,42 @@ const id = "default";
 Inputs.table(control, { select: false })
 ```
 
+## Configure
+
+```js
+const x = view(Inputs.select(
+    Object.keys(config),
+    { label: "X-axis", value: load(id, "x") ?? "config/global/thread_count", sort: true }
+))
+
+const ys = view(Inputs.checkbox(
+    output,
+    { label: "Y-axis", value: load(id, "ys") ?? ["output/throughput"], sort: true }
+));
+
+const color = view(Inputs.select(
+    Object.keys(config),
+    { label: "Color", value: load(id, "c") ?? "config/index/name", sort: true }
+))
+
+const facet_x = view(Inputs.select(
+    Object.keys(config).concat([null]),
+    { label: "Facet X", value: load(id, "fx"), sort: true }
+))
+
+const facet_y = view(Inputs.select(
+    Object.keys(config).concat([null]),
+    { label: "Facet Y", value: load(id, "fy"), sort: true }
+))
+```
+
+
 ## Filter
 
 ```js
-const checkboxes = {};
 const DEFAULTS = {
     "config/workload/load": [false],
-    "config/workload/record_count": [30000000, 100000000],
+    "config/workload/record_count": [100000000, 30000000],
     "config/workload/read_proportion": [0.95],
     "config/workload/update_proportion": [0.05],
     "config/workload/insert_proportion": [0.0],
@@ -50,40 +86,20 @@ const DEFAULTS = {
     "config/workload/key": ["rand-u64"],
 };
 
+const inputs = {};
 for (const [key, values] of Object.entries(config)) {
+    const multiple = [x, color, facet_x, facet_y].includes(key);
+    const input = multiple ? Inputs.checkbox : Inputs.radio;
+    const defaults = DEFAULTS[key] ?? values;
+    const value = load(id, key) ?? defaults;
 
-    checkboxes[key] = core.load(id, key, Inputs.checkbox(values, { label: key, value: DEFAULTS[key] ?? values, sort: true }));
+    inputs[key] = input(values, {
+        label: key,
+        value: multiple ? value : value[0],
+        sort: true
+    });
 }
-const filters = view(Inputs.form(checkboxes));
-```
-
-## Configure
-
-```js
-const x = view(core.load(id, "x", Inputs.select(
-    Object.keys(config),
-    { label: "X-axis", value: "config/global/thread_count", sort: true }
-)))
-
-const ys = view(core.load(id, "ys", Inputs.checkbox(
-    output,
-    { label: "Y-axis", value: ["output/throughput"], sort: true }
-)));
-
-const color = view(core.load(id, "c", Inputs.select(
-    Object.keys(config),
-    { label: "Color", value: "config/index/name", sort: true }
-)))
-
-const facet_x = view(core.load(id, "fx", Inputs.select(
-    Object.keys(config).concat([null]),
-    { label: "Facet X", value: null, sort: true }
-)))
-
-const facet_y = view(core.load(id, "fy", Inputs.select(
-    Object.keys(config).concat([null]),
-    { label: "Facet Y", value: null, sort: true }
-)))
+const filters = view(Inputs.form(inputs));
 ```
 
 ## Plot
@@ -91,19 +107,22 @@ const facet_y = view(core.load(id, "fy", Inputs.select(
 ```js
 let df = base;
 
-for (const [key, values] of Object.entries(filters)) {
-    core.store(id, key, values);
+for (const [key, value] of Object.entries(filters)) {
+    const multiple = [x, color, facet_x, facet_y].includes(key);
+    const values = multiple ? value : [value];
+
+    store(id, key, values);
 
     df = df.params({ key, values }).filter((d, $) => {
         return aq.op.includes($.values, d[$.key]);
     });
 }
 
-core.store(id, "x", x);
-core.store(id, "ys", ys);
-core.store(id, "c", color);
-core.store(id, "fx", facet_x);
-core.store(id, "fy", facet_y);
+store(id, "x", x);
+store(id, "ys", ys);
+store(id, "c", color);
+store(id, "fx", facet_x);
+store(id, "fy", facet_y);
 
 for (const y of ys) {
     const marks = x === color ? [
