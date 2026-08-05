@@ -44,7 +44,7 @@ function store(id, label, value) {
 }
 ```
 
-<details><summary><h2 style="display: inline-block">Control</h2></summary>
+<details><summary><h2 style="display: inline-block">Control variables</h2></summary>
 
 ```js
 Inputs.table(control, { select: false })
@@ -52,18 +52,13 @@ Inputs.table(control, { select: false })
 
 </details>
 
-<details open><summary><h2 style="display: inline-block">Configure</h2></summary>
+<details open><summary><h2 style="display: inline-block">Independent variables</h2></summary>
 
 ```js
 const x = view(Inputs.select(
     Object.keys(config),
     { label: "X-axis", value: load(id, "x") ?? "config/global/thread_count", sort: true }
 ))
-
-const ys = view(Inputs.checkbox(
-    output,
-    { label: "Y-axis", value: load(id, "ys") ?? ["output/throughput"], sort: true }
-));
 
 const color = view(Inputs.select(
     Object.keys(config),
@@ -83,7 +78,7 @@ const facet_y = view(Inputs.select(
 
 </details>
 
-<details open><summary><h2 style="display: inline-block">Filter</h2></summary>
+<details open><summary><h2 style="display: inline-block">Filter independent variables</h2></summary>
 
 ```js
 const DEFAULTS = {
@@ -114,7 +109,28 @@ const filters = view(Inputs.form(inputs));
 
 </details>
 
-## Plot
+<details open><summary><h2 style="display: inline-block">Dependent variables</h2></summary>
+
+```js
+const radios = {}
+for (const key of output) {
+    radios[key] = Inputs.radio(
+        ["linear", "log", "hide"],
+        {
+            label: key,
+            value: load(id, key) ?? (key === "output/throughput" ? "linear" : "hide"),
+            sort: true,
+            format: x => x ?? "Hide",
+        }
+    );
+}
+
+const ys = view(Inputs.form(radios));
+```
+
+</details>
+
+## Plots
 
 ```js
 let df = base;
@@ -136,15 +152,20 @@ store(id, "c", color);
 store(id, "fx", facet_x);
 store(id, "fy", facet_y);
 
-for (const y of ys) {
+for (const [y, scale] of Object.entries(ys)) {
+    if (scale === "hide") {
+        continue;
+    }
+
     const marks = x === color ? [
             Plot.barY(df, {
                 x,
-                y,
                 fx: facet_x,
                 fy: facet_y,
                 fill: color,
-                tip: true
+                tip: true,
+                // HACK: https://observablehq.com/@tschaub/bar-plot-with-log-scale
+                ...(scale == "Log" ? { y1: 1, y2: y } : { y }),
             }),
         ] : [
             Plot.lineY(df, {
@@ -182,6 +203,7 @@ for (const y of ys) {
                     },
                     y: {
                         tickFormat: ".2g",
+                        type: scale,
                     },
                     marginLeft: 100,
                     marginBottom: 100,
