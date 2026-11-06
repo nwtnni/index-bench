@@ -62,6 +62,7 @@ pub enum Name {
     Art,
     Arctic,
     ArcticSeq,
+    BbTree,
     ConcurrentMap,
     Congee,
     Contrie,

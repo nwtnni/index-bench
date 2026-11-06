@@ -6,6 +6,9 @@ numa = [{ policy = "interleave", nodes = [0, 1] }]
 name = "arctic"
 
 [[index]]
+name = "bb_tree"
+
+[[index]]
 name = "art"
 
 [[index]]

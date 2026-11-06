@@ -62,6 +62,9 @@ fn specialize_index_u64<
         index::Name::ArcticSeq => {
             index_bench::run::<K, u64, index::sequential::arctic::Map<K::Key, u64>, H>(config)
         }
+        index::Name::BbTree => {
+            index_bench::run::<K, u64, bbtree::BBTreeMap<K::Key, u64>, H>(config)
+        }
         index::Name::ConcurrentMap => {
             index_bench::run::<K, u64, concurrent_map::ConcurrentMap<K::Key, u64>, H>(config)
         }
@@ -123,6 +126,9 @@ fn specialize_index_u128<
         }
         index::Name::ArcticSeq => {
             index_bench::run::<K, u64, index::sequential::arctic::Map<K::Key, u64>, H>(config)
+        }
+        index::Name::BbTree => {
+            index_bench::run::<K, u64, bbtree::BBTreeMap<K::Key, u64>, H>(config)
         }
         index::Name::ConcurrentMap => {
             index_bench::run::<K, u64, concurrent_map::ConcurrentMap<K::Key, u64>, H>(config)
@@ -200,6 +206,9 @@ fn specialize_index_slice<
             >,
             H,
         >(config),
+        index::Name::BbTree => {
+            index_bench::run::<K, u64, bbtree::BBTreeMap<K::Key, u64>, H>(config)
+        }
         index::Name::ConcurrentMap => {
             index_bench::run::<K, u64, concurrent_map::ConcurrentMap<K::Key, u64>, H>(config)
         }
@@ -275,6 +284,9 @@ fn specialize_index_boxed_slice<
             >,
             H,
         >(config),
+        index::Name::BbTree => {
+            index_bench::run::<K, u64, bbtree::BBTreeMap<K::Key, u64>, H>(config)
+        }
         index::Name::ConcurrentMap => {
             unimplemented!("Box<[u8]> does not implement concurrent_map::Minimum")
         }

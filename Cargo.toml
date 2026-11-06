@@ -27,6 +27,7 @@ anyhow = "1.0.99"
 arctic = { package = "arctic-map", version = "0.1.3", default-features = false }
 art-sys = { path = "extern/ARTSynchronized/art-sys" }
 base64 = { version = "0.22.1", optional = true }
+bbtree = "0.2.0"
 cartesian = { git = "https://github.com/nwtnni/cartesian.git" }
 concurrent-map = "5.0.37"
 congee = "0.4.1"
