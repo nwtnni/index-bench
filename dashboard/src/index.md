@@ -91,6 +91,15 @@ const DEFAULTS = {
     "config/workload/key": ["rand-u64"],
 };
 
+const LABELS = {
+    "ycsb-a": "ycsb-a (50% read, 50% update)",
+    "ycsb-b": "ycsb-b (95% read, 5% update)",
+    "ycsb-c": "ycsb-c (100% read)",
+    "ycsb-d": "ycsb-d (95% read, 5% update, skewed latest)",
+    "ycsb-e": "ycsb-e (95% scan, 5% insert)",
+    "ycsb-load": "ycsb-load (100% insert)",
+};
+
 const inputs = {};
 for (const [key, values] of Object.entries(config)) {
     const multiple = [x, color, facet_x, facet_y].includes(key);
@@ -101,6 +110,7 @@ for (const [key, values] of Object.entries(config)) {
     inputs[key] = input(values, {
         label: key,
         value: multiple ? value : value[0],
+        format: (value) => LABELS[value] ?? value,
         sort: true
     });
 }

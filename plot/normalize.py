@@ -34,17 +34,31 @@ def main(paths):
             col.selector.alias(col.name)
             for col in flatten(df)
             if (not col.aggregate or col.distribution)
-            and col.name not in ["config/workload/key"]
+            and (
+                not col.name.startswith("config/workload")
+                or col.name
+                in [
+                    "config/workload/record_count",
+                    "config/workload/min_scan_length",
+                    "config/workload/value",
+                ]
+            )
         ],
         common.SELECT_KEY.alias("config/workload/key"),
+        common.SELECT_WORKLOAD.alias("config/workload")
+        .cast(pl.String)
+        .str.to_lowercase(),
         common.SELECT_TP.alias("output/throughput"),
+        common.SELECT_ZIPF.alias("config/workload/zipfian"),
+        # HACK: default is 1k (non-YCSB-E workloads) but YCSB-E uses 100
+        pl.lit(100).alias("config/workload/max_scan_length"),
     ).drop(
         "date",
         cs.starts_with("output/index"),
         "output/garbage",
         "output/memory_key_value",
-        "config/workload/operation_count",
-        "config/workload/insert_order",
+        "output/mimalloc/committed/total",
+        "output/mimalloc/committed/current",
     ).collect().write_csv("data.tsv", separator="\t")
 
 
